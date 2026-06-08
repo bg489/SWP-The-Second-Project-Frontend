@@ -24,6 +24,21 @@ const userSlice = createSlice({
             state.loading = false;
             state.error = action.payload;
         },
+
+        addUser: (state, action) => {
+            state.users.unshift(action.payload);
+        },
+
+        editUser: (state, action) => {
+            const index = state.users.findIndex(u => u.id === action.payload.id);
+            if (index !== -1) {
+                state.users[index] = { ...state.users[index], ...action.payload };
+            }
+        },
+
+        deleteUser: (state, action) => {
+            state.users = state.users.filter(u => u.id !== action.payload);
+        }
     },
 });
 
@@ -31,6 +46,9 @@ export const {
     fetchUsersRequest,
     fetchUsersSuccess,
     fetchUsersFailure,
+    addUser,
+    editUser,
+    deleteUser
 } = userSlice.actions;
 
 export default userSlice.reducer;
