@@ -1,0 +1,188 @@
+.login-container,
+.dashboard-mock {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 85vh;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.login-card,
+.dashboard-card {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 35px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.login-header h2 {
+    margin: 0 0 6px 0;
+    color: #fff;
+    font-size: 24px;
+    letter-spacing: 0.5px;
+}
+
+.login-header p {
+    color: #777;
+    font-size: 13px;
+    margin: 0;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: left;
+}
+
+.input-group label {
+    color: #bbb;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.input-group input,
+.role-select {
+    background: #242424;
+    border: 1px solid #444;
+    padding: 11px 14px;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.input-group input:focus,
+.role-select:focus {
+    outline: none;
+    border-color: #646cff;
+    box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+/* Style khi ô input gặp lỗi validate */
+.input-group input.input-error {
+    border-color: #ff4d4d;
+    background: rgba(255, 77, 77, 0.03);
+}
+
+.error-text {
+    color: #ff4d4d;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+/* Toast thông báo thành công */
+.success-toast {
+    background: rgba(46, 204, 113, 0.15);
+    border: 1px solid #2ecc71;
+    color: #2ecc71;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 18px;
+    text-align: center;
+}
+
+.role-select {
+    cursor: pointer;
+    appearance: none;
+    /* Ẩn style mặc định của trình duyệt */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'><path stroke='%23bbb' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='m1 1 4 4 4-4'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 35px;
+}
+
+.login-btn,
+.logout-btn {
+    background-color: #646cff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    margin-top: 8px;
+}
+
+.login-btn:hover {
+    background-color: #535bf2;
+}
+
+.login-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13.5px;
+    color: #888;
+}
+
+.switch-view-btn {
+    background: none;
+    border: none;
+    color: #646cff;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 5px;
+    font-size: 13.5px;
+}
+
+.switch-view-btn:hover {
+    text-decoration: underline;
+}
+
+/* --- CSS CHO TRANG DASHBOARD MOCK --- */
+.dashboard-card {
+    text-align: center;
+    max-width: 450px;
+    border-color: #444;
+}
+
+.dashboard-card h2 {
+    color: #fff;
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+.dashboard-card p {
+    color: #aaa;
+    font-size: 14px;
+}
+
+.status-badge {
+    display: inline-block;
+    background: #242424;
+    border: 1px solid #646cff;
+    color: #646cff;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    margin: 15px 0 25px 0;
+    letter-spacing: 1px;
+}
+
+.logout-btn {
+    background-color: #333;
+    width: 100%;
+}
+
+.logout-btn:hover {
+    background-color: #444;
+}
