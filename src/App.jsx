@@ -1,13 +1,16 @@
-import React from 'react';
-import VehicleList from './features/users/vehicles/VehicleList'; // Đường dẫn đến file danh sách xe
-import './App.css';
+import React from "react";
+import { BrowserRouter } from "react-router-dom";
+import { MockAuthProvider } from "./context/MockAuthContext";
+import AppRoutes from "./routes/AppRoutes";
+import "./App.css";
 
 function App() {
   return (
-    <div id="center">
-      {/* Ép ứng dụng gọi thẳng danh sách xe, không thông qua login nữa */}
-      <VehicleList />
-    </div>
+    <MockAuthProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </MockAuthProvider>
   );
 }
 
