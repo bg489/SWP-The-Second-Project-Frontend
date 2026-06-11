@@ -2,132 +2,118 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-sans);
-  font-weight: 600;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  cursor: pointer;
-  outline: none;
   gap: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  outline: none;
   user-select: none;
-  transition: background-color var(--transition-fast), 
-              border-color var(--transition-fast), 
-              box-shadow var(--transition-fast),
-              transform 0.1s ease;
+  transition:
+    transform var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    color var(--transition-fast);
 }
 
-.btn:active {
-  transform: scale(0.97);
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 
 .btn:disabled {
-  opacity: 0.6;
   cursor: not-allowed;
-  transform: none !important;
+  opacity: 0.58;
+  transform: none;
 }
 
-/* Sizes */
 .btn-sm {
-  padding: 6px 12px;
-  font-size: 13px;
-  border-radius: var(--radius-sm);
+  min-height: 34px;
+  padding: 7px 12px;
+  font-size: 12px;
 }
 
 .btn-md {
-  padding: 10px 18px;
+  min-height: 42px;
+  padding: 10px 16px;
   font-size: 14px;
-  border-radius: var(--radius-sm);
 }
 
 .btn-lg {
-  padding: 12px 24px;
-  font-size: 16px;
-  border-radius: var(--radius-md);
+  min-height: 48px;
+  padding: 12px 22px;
+  font-size: 15px;
 }
 
-/* Variants */
 .btn-primary {
-  background-color: var(--primary);
-  color: white;
-  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+  background: linear-gradient(135deg, var(--orange), var(--pink-strong));
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(237, 153, 81, 0.28);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--primary-hover);
-  box-shadow: 0 4px 12px var(--primary-glow);
+  box-shadow: 0 14px 34px rgba(237, 153, 81, 0.34);
 }
 
-.btn-primary:focus-visible {
-  box-shadow: 0 0 0 3px var(--primary-glow);
+.btn-primary:focus-visible,
+.btn-outline:focus-visible,
+.btn-secondary:focus-visible {
+  box-shadow: 0 0 0 4px var(--primary-glow);
 }
 
 .btn-secondary {
-  background-color: var(--bg-secondary);
-  color: var(--text-secondary);
+  background: linear-gradient(135deg, rgba(255, 184, 245, 0.26), rgba(237, 153, 81, 0.16));
+  color: var(--text-primary);
   border-color: var(--border-color);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: var(--border-color);
-  color: var(--text-primary);
-}
-
-.btn-secondary:focus-visible {
-  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.3);
-}
-
-.btn-danger {
-  background-color: var(--danger);
-  color: white;
-  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
-}
-
-.btn-danger:hover:not(:disabled) {
-  background-color: #dc2626;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-}
-
-.btn-danger:focus-visible {
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+  border-color: rgba(237, 153, 81, 0.44);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-outline {
-  background-color: transparent;
+  background: rgba(255, 255, 255, 0.52);
   color: var(--text-primary);
   border-color: var(--border-color);
 }
 
 .btn-outline:hover:not(:disabled) {
-  background-color: var(--bg-secondary);
-  border-color: var(--text-muted);
+  background: var(--surface);
+  border-color: rgba(237, 153, 81, 0.44);
+  box-shadow: var(--shadow-sm);
 }
 
-.btn-outline:focus-visible {
-  box-shadow: 0 0 0 3px var(--primary-glow);
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(220, 74, 74, 0.2);
 }
 
-/* Icon placement */
+.btn-danger:hover:not(:disabled) {
+  background: #c93636;
+}
+
 .btn-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
 }
 
-/* Loading state styles */
 .btn-loading {
-  position: relative;
   cursor: wait;
 }
 
 .btn-spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
   border-top-color: currentColor;
-  animation: btn-spin 0.6s linear infinite;
-  flex-shrink: 0;
+  border-radius: 50%;
+  animation: btn-spin 0.65s linear infinite;
 }
 
 @keyframes btn-spin {
