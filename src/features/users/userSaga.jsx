@@ -3,7 +3,6 @@ import api from "../../services/api";
 import {
     fetchUsersRequest,
     fetchUsersSuccess,
-    fetchUsersFailure,
 } from "./userSlice";
 
 function* fetchUsersSaga() {
@@ -11,8 +10,8 @@ function* fetchUsersSaga() {
         const response = yield call(api.get, "/users");
         const users = response.data.data || response.data;
         yield put(fetchUsersSuccess(users));
-    } catch (error) {
-        // Dự án đang chạy mock data, tự động fallback trả về dữ liệu mẫu khi chưa có API
+    } catch {
+        // Dự án đang chạy mock data, tự động fallback trả về dữ liệu mẫu khi chưa có API.
         const mockUsers = [
             { id: 1, name: "Lê Văn Tám", email: "tamtam@example.com", created_at: "2026-05-12" },
             { id: 2, name: "Trần Thế Anh", email: "anh.tt@example.com", created_at: "2026-05-18" },

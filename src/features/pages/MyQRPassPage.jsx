@@ -1,280 +1,169 @@
-import React, { useState } from "react";
-import { mockVehicles } from "../../services/mockParkingData";
+import { useState } from "react";
 import Button from "../../components/Button/Button";
-import { QrCode, Calendar, Info, ShieldAlert, ShieldCheck, Minimize2, Maximize2 } from "lucide-react";
+import { useMockAuth } from "../../context/MockAuthContext";
+import {
+  formatCurrency,
+  formatDate,
+  getStatusLabel,
+  getStatusTone,
+  getVehicleTypeLabel,
+  monthlyPackages,
+  monthlyPasses,
+  slotRegistrations,
+  vehicles,
+} from "../../services/mockParkingData";
+import { Calendar, CreditCard, QrCode, ShieldCheck, X } from "lucide-react";
 
 const MyQRPassPage = () => {
-  // Let's add an expired vehicle mock to test both states: "Còn hạn" & "Hết hạn"
-  const qrPassesList = [
-    ...mockVehicles.filter(v => v.status === "Đã duyệt" && v.package && v.package !== "Chưa đăng ký"),
-    {
-      id: "V004",
-      plate: "29C-555.22",
-      type: "Ô tô",
-      status: "Đã duyệt",
-      package: "Gói tháng ô tô thường",
-      expires: "2026-05-10", // Expired
-      owner: "Nguyễn Văn A"
-    }
-  ];
-
-  const [activeModalPass, setActiveModalPass] = useState(null);
-
-  // Check if a pass is expired compared to a fixed current date (2026-06-07)
-  const isExpired = (expiryDateStr) => {
-    if (!expiryDateStr) return true;
-    const expiry = new Date(expiryDateStr);
-    const currentDate = new Date("2026-06-07");
-    return expiry < currentDate;
-  };
+  const { user } = useMockAuth();
+  const [selectedPass, setSelectedPass] = useState(null);
+  const myPasses = monthlyPasses.filter((pass) => pass.userId === user.id);
+  const myVehicles = vehicles.filter((vehicle) => vehicle.userId === user.id);
+  const pendingRegistrations = slotRegistrations.filter((registration) => registration.userId === user.id);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      {/* Page Header */}
-      <div className="card" style={{ padding: "24px" }}>
-        <h1 style={{ fontSize: "22px", fontWeight: "800" }}>Mã QR Pass của tôi</h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "4px" }}>
-          Sử dụng mã QR kỹ thuật số dưới đây để quẹt quét ra/vào tại bãi đỗ xe tự động. Các phương tiện cần đăng ký gói tháng và được duyệt mới có QR Pass.
-        </p>
-      </div>
+    <div className="parking-page">
+      <section className="page-hero">
+        <div className="page-hero-content">
+          <div className="page-eyebrow"><QrCode size={16} /> QR Digital Pass</div>
+          <h1 className="page-title">QR dùng để xác thực xe vào/ra và thay thẻ vật lý</h1>
+          <p className="page-subtitle">
+            Mỗi QR gắn với đúng một phương tiện. Nếu hết hạn, sai xe hoặc xe chưa duyệt, staff xử lý như xe không có gói hợp lệ.
+          </p>
+        </div>
+        <div className="page-hero-aside">
+          <span className="page-hero-label">QR còn hạn</span>
+          <span className="page-hero-number">{myPasses.filter((pass) => pass.status === "ACTIVE").length}</span>
+          <span className="page-hero-label">pass</span>
+        </div>
+      </section>
 
-      {/* QR Passes Cards Grid */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-        gap: "24px"
-      }}>
-        {qrPassesList.map((pass) => {
-          const expired = isExpired(pass.expires);
-          return (
-            <div key={pass.id} className="card qr-pass-card" style={{
-              padding: "24px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "20px",
-              borderTop: expired ? "6px solid var(--danger)" : "6px solid var(--success)",
-              position: "relative",
-              overflow: "hidden"
-            }}>
-              {/* Header inside Card */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <h3 style={{ fontSize: "18px", fontWeight: "800" }}>{pass.plate}</h3>
-                  <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>{pass.type}</span>
-                </div>
-                
-                <span className={`status-badge-custom ${expired ? "expired" : "active"}`}>
-                  {expired ? (
-                    <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      <ShieldAlert size={14} /> Hết hạn
-                    </span>
-                  ) : (
-                    <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      <ShieldCheck size={14} /> Còn hạn
-                    </span>
-                  )}
-                </span>
+      <div className="dashboard-grid">
+        {myPasses.map((pass) => (
+          <div className="card section-card" key={pass.id}>
+            <div className="section-header">
+              <div>
+                <h2 className="section-title"><QrCode size={19} /> {pass.plateNumber}</h2>
+                <p className="section-copy">{pass.packageName} - {getVehicleTypeLabel(pass.vehicleType)}</p>
               </div>
-
-              {/* QR and Details Layout */}
-              <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
-                {/* QR Code Container */}
-                <div
-                  onClick={() => setActiveModalPass(pass)}
-                  style={{
-                    width: "110px",
-                    height: "110px",
-                    backgroundColor: "white",
-                    padding: "8px",
-                    borderRadius: "12px",
-                    border: "1px solid var(--border-color)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "zoom-in",
-                    position: "relative",
-                    flexShrink: 0
-                  }}
-                  className="qr-img-wrapper"
-                  title="Nhấn để phóng to"
-                >
-                  <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ opacity: expired ? 0.35 : 1 }}>
-                    <rect width="10" height="10" x="0" y="0" fill="black" />
-                    <rect width="10" height="10" x="20" y="0" fill="black" />
-                    <rect width="10" height="10" x="0" y="20" fill="black" />
-                    <rect width="10" height="10" x="20" y="20" fill="black" />
-                    <rect width="10" height="10" x="70" y="0" fill="black" />
-                    <rect width="10" height="10" x="90" y="0" fill="black" />
-                    <rect width="10" height="10" x="70" y="20" fill="black" />
-                    <rect width="10" height="10" x="90" y="20" fill="black" />
-                    <rect width="10" height="10" x="0" y="70" fill="black" />
-                    <rect width="10" height="10" x="20" y="70" fill="black" />
-                    <rect width="10" height="10" x="0" y="90" fill="black" />
-                    <rect width="10" height="10" x="20" y="90" fill="black" />
-                    <rect width="10" height="10" x="40" y="40" fill="black" />
-                    <rect width="10" height="10" x="60" y="40" fill="black" />
-                    <rect width="10" height="10" x="40" y="60" fill="black" />
-                    <rect width="20" height="10" x="70" y="70" fill="black" />
-                    <rect width="10" height="20" x="50" y="80" fill="black" />
-                  </svg>
-                  {expired && (
-                    <div style={{
-                      position: "absolute",
-                      inset: 0,
-                      backgroundColor: "rgba(239, 68, 68, 0.1)",
-                      borderRadius: "12px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "var(--danger)"
-                    }}>
-                      <ShieldAlert size={28} />
-                    </div>
-                  )}
-                </div>
-
-                {/* Details list */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px" }}>
-                  <div>
-                    <span style={{ color: "var(--text-muted)" }}>Gói tháng:</span>
-                    <div style={{ fontWeight: "700", color: "var(--text-primary)" }}>{pass.package}</div>
-                  </div>
-                  <div>
-                    <span style={{ color: "var(--text-muted)" }}>Hạn dùng:</span>
-                    <div style={{ fontWeight: "600", display: "flex", alignItems: "center", gap: "4px" }}>
-                      <Calendar size={14} /> {pass.expires}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tips banner inside card */}
-              <div style={{
-                padding: "10px 12px",
-                borderRadius: "8px",
-                backgroundColor: expired ? "var(--danger-light)" : "var(--bg-secondary)",
-                color: expired ? "var(--danger)" : "var(--text-secondary)",
-                fontSize: "12px",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px"
-              }}>
-                <Info size={16} />
-                <span>
-                  {expired
-                    ? "Vui lòng mua thêm gói cước để kích hoạt lại QR Pass này."
-                    : "Hướng QR này vào máy quét khi vào hoặc ra khỏi hầm đỗ xe."}
-                </span>
+              <span className={`pill ${getStatusTone(pass.status)}`}>{getStatusLabel(pass.status)}</span>
+            </div>
+            <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+              <button className="qr-box" onClick={() => setSelectedPass(pass)} aria-label={`Phóng to QR ${pass.plateNumber}`}>
+                <div className="mock-qr" />
+              </button>
+              <div className="data-list" style={{ flex: 1 }}>
+                <div className="data-row"><span>Hiệu lực</span><strong>{formatDate(pass.startDate)} - {formatDate(pass.endDate)}</strong></div>
+                <div className="data-row"><span>Giá trị gói</span><strong>{formatCurrency(pass.amount)}</strong></div>
+                <div className="data-row"><span>Mã QR</span><strong>{pass.qrCode}</strong></div>
               </div>
             </div>
-          );
-        })}
+            <div className="action-row" style={{ marginTop: 16 }}>
+              <Button variant="primary" size="sm" icon={QrCode} onClick={() => setSelectedPass(pass)}>Phóng to QR</Button>
+              <Button variant="outline" size="sm" icon={Calendar}>Gia hạn gói</Button>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* QR Zoom Modal Dialog */}
-      {activeModalPass && (
-        <div style={{
-          position: "fixed",
-          inset: 0,
-          backgroundColor: "rgba(15, 23, 42, 0.8)",
-          backdropFilter: "blur(8px)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 100,
-          padding: "20px"
-        }} onClick={() => setActiveModalPass(null)}>
-          <div className="card animate-fade-in" style={{
-            maxWidth: "380px",
-            width: "100%",
-            padding: "32px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "24px",
-            textAlign: "center",
-            boxShadow: "var(--shadow-premium)"
-          }} onClick={(e) => e.stopPropagation()}>
-            
-            <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: "14px", fontWeight: "700" }}>Quét mã QR để Check-in/out</span>
-              <button
-                onClick={() => setActiveModalPass(null)}
-                style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer" }}
-              >
-                <Minimize2 size={20} />
+      <div className="two-column-grid">
+        <section className="card section-card">
+          <div className="section-header">
+            <div>
+              <h2 className="section-title"><CreditCard size={19} /> Gói tháng và VNPay</h2>
+              <p className="section-copy">Mock flow tạo slot registration/payment trước khi nối `/api/slot-registrations` và `/api/payments`.</p>
+            </div>
+          </div>
+          <div className="data-list">
+            {monthlyPackages.map((pkg) => (
+              <div className="soft-panel" key={pkg.id}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <div>
+                    <strong>{pkg.name}</strong>
+                    <p className="section-copy">{getVehicleTypeLabel(pkg.vehicleType)} - {pkg.duration}</p>
+                  </div>
+                  <strong>{formatCurrency(pkg.price)}</strong>
+                </div>
+                <div className="action-row" style={{ marginTop: 12 }}>
+                  <Button size="sm" variant="secondary" icon={ShieldCheck}>
+                    Chọn xe đã duyệt
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="card section-card">
+          <div className="section-header">
+            <div>
+              <h2 className="section-title"><Calendar size={19} /> Đăng ký đang xử lý</h2>
+              <p className="section-copy">Các request mua gói/giữ slot theo từng phương tiện.</p>
+            </div>
+          </div>
+          <div className="data-list">
+            {pendingRegistrations.map((registration) => (
+              <div className="soft-panel" key={registration.id}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <strong>{registration.plateNumber}</strong>
+                  <span className={`pill ${getStatusTone(registration.status)}`}>{getStatusLabel(registration.status)}</span>
+                </div>
+                <p className="section-copy">Số tiền: {formatCurrency(registration.amount)} {registration.slotCode ? `- Slot ${registration.slotCode}` : "- Theo capacity xe máy"}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section className="card section-card">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title"><ShieldCheck size={19} /> Xe đủ điều kiện mua gói</h2>
+            <p className="section-copy">Chỉ xe đã được admin duyệt mới dùng gói tháng và QR hợp lệ.</p>
+          </div>
+        </div>
+        <div className="dashboard-grid">
+          {myVehicles.map((vehicle) => (
+            <div className="soft-panel" key={vehicle.id}>
+              <strong>{vehicle.plateNumber}</strong>
+              <p className="section-copy">{getVehicleTypeLabel(vehicle.vehicleType)} - {vehicle.brand}</p>
+              <span className={`pill ${getStatusTone(vehicle.status)}`}>{getStatusLabel(vehicle.status)}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {selectedPass && (
+        <div
+          onClick={() => setSelectedPass(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1000,
+            display: "grid",
+            placeItems: "center",
+            padding: 20,
+            background: "rgba(37, 21, 38, 0.72)",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <div className="card section-card animate-fade-in" onClick={(event) => event.stopPropagation()} style={{ width: "min(420px, 100%)", textAlign: "center" }}>
+            <div className="section-header">
+              <div>
+                <h2 className="section-title"><QrCode size={19} /> {selectedPass.plateNumber}</h2>
+                <p className="section-copy">{selectedPass.packageName}</p>
+              </div>
+              <button className="theme-toggle-btn" onClick={() => setSelectedPass(null)} aria-label="Đóng QR">
+                <X size={18} />
               </button>
             </div>
-
-            <div style={{
-              width: "240px",
-              height: "240px",
-              backgroundColor: "white",
-              padding: "16px",
-              borderRadius: "16px",
-              border: "1px solid var(--border-color)",
-              boxShadow: "var(--shadow-md)"
-            }}>
-              <svg viewBox="0 0 100 100" width="100%" height="100%">
-                <rect width="10" height="10" x="0" y="0" fill="black" />
-                <rect width="10" height="10" x="20" y="0" fill="black" />
-                <rect width="10" height="10" x="0" y="20" fill="black" />
-                <rect width="10" height="10" x="20" y="20" fill="black" />
-                <rect width="10" height="10" x="70" y="0" fill="black" />
-                <rect width="10" height="10" x="90" y="0" fill="black" />
-                <rect width="10" height="10" x="70" y="20" fill="black" />
-                <rect width="10" height="10" x="90" y="20" fill="black" />
-                <rect width="10" height="10" x="0" y="70" fill="black" />
-                <rect width="10" height="10" x="20" y="70" fill="black" />
-                <rect width="10" height="10" x="0" y="90" fill="black" />
-                <rect width="10" height="10" x="20" y="90" fill="black" />
-                <rect width="10" height="10" x="40" y="40" fill="black" />
-                <rect width="10" height="10" x="60" y="40" fill="black" />
-                <rect width="10" height="10" x="40" y="60" fill="black" />
-                <rect width="20" height="10" x="70" y="70" fill="black" />
-                <rect width="10" height="20" x="50" y="80" fill="black" />
-              </svg>
+            <div className="qr-box" style={{ width: 250, height: 250, margin: "0 auto" }}>
+              <div className="mock-qr" />
             </div>
-
-            <div>
-              <h2 style={{ fontSize: "20px", fontWeight: "800", color: "var(--text-primary)" }}>{activeModalPass.plate}</h2>
-              <span style={{ fontSize: "13px", color: "var(--text-muted)", display: "block", marginTop: "4px" }}>
-                Gói tháng: {activeModalPass.package}
-              </span>
-            </div>
-
-            <Button variant="outline" onClick={() => setActiveModalPass(null)}>
-              Đóng lại
-            </Button>
+            <p className="section-copy" style={{ marginTop: 16 }}>Đưa mã này cho staff quét khi vào/ra bãi.</p>
           </div>
         </div>
       )}
-
-      {/* Embedding Custom styles for QR Pass Badge */}
-      <style>{`
-        .status-badge-custom {
-          display: inline-flex;
-          font-size: 11px;
-          font-weight: 700;
-          padding: 4px 8px;
-          border-radius: var(--radius-sm);
-          text-transform: uppercase;
-        }
-        .status-badge-custom.active {
-          background-color: var(--success-light);
-          color: var(--success);
-        }
-        .status-badge-custom.expired {
-          background-color: var(--danger-light);
-          color: var(--danger);
-        }
-        .qr-img-wrapper:hover {
-          border-color: var(--primary) !important;
-          box-shadow: var(--shadow-md);
-          transform: scale(1.02);
-          transition: all var(--transition-fast);
-        }
-      `}</style>
     </div>
   );
 };

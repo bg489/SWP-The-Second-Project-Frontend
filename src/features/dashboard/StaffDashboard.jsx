@@ -1,216 +1,153 @@
-import React, { useState } from "react";
-import { useMockAuth } from "../../context/MockAuthContext";
+import { useMemo, useState } from "react";
 import Button from "../../components/Button/Button";
 import Table from "../../components/Table/Table";
-import { CheckCircle2, Circle, AlertCircle, Play, Eye } from "lucide-react";
+import { useMockAuth } from "../../context/MockAuthContext";
+import {
+  carSlots,
+  floors,
+  formatCurrency,
+  formatDateTime,
+  getStatusLabel,
+  getStatusTone,
+  getVehicleTypeLabel,
+  parkingSessions,
+  tempQrCards,
+  violations,
+} from "../../services/mockParkingData";
+import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Car, Layers, QrCode, ShieldCheck } from "lucide-react";
 
 const StaffDashboard = () => {
   const { user } = useMockAuth();
+  const [activeSessions] = useState(parkingSessions.filter((session) => session.status === "ACTIVE"));
 
-  // Mock tasks
-  const [tasks, setTasks] = useState([
-    { id: "TSK-129", customer: "Lê Văn Tám", service: "Bảo dưỡng định kỳ máy phát", priority: "Cao", status: "Chờ xử lý", deadline: "2026-06-08" },
-    { id: "TSK-128", customer: "Trần Thế Anh", service: "Khảo sát hạ tầng mạng công ty", priority: "Trung bình", status: "Đang tiến hành", deadline: "2026-06-09" },
-    { id: "TSK-114", customer: "Hoàng Khánh Vy", service: "Tư vấn lắp đặt hệ thống lọc nước", priority: "Cao", status: "Hoàn thành", deadline: "2026-06-05" },
-    { id: "TSK-102", customer: "Ngô Quốc Khánh", service: "Cài đặt lại hệ điều hành Linux", priority: "Thấp", status: "Đang tiến hành", deadline: "2026-06-11" }
-  ]);
+  const motorbikeLeft = floors
+    .filter((floor) => floor.floorType === "MOTORBIKE")
+    .reduce((sum, floor) => sum + floor.capacity - floor.currentCount, 0);
+  const availableCarSlots = carSlots.filter((slot) => slot.status === "AVAILABLE").length;
+  const readyQr = tempQrCards.filter((card) => card.status === "READY").length;
+  const unpaidViolations = violations.filter((violation) => violation.status === "UNPAID").length;
 
-  const [activeTab, setActiveTab] = useState("Tất cả");
+  const queue = useMemo(
+    () => [
+      { id: "IN-01", title: "Khách ô tô vãng lai", desc: "Nhập biển 51G-776.51, gán slot C-09, phát QR TMP-002.", action: "Đã gán slot" },
+      { id: "IN-02", title: "User xe máy có gói", desc: "QR-MB-59S1-22345 hợp lệ, cho vào B1 nếu còn capacity.", action: "Cho vào" },
+      { id: "OUT-01", title: "Ô tô chờ thanh toán", desc: "SESS-0990 có phí 400.000đ gồm vi phạm.", action: "Thu phí" },
+    ],
+    []
+  );
 
-  const updateTaskStatus = (taskId, newStatus) => {
-    setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
-  };
-
-  const filteredTasks = tasks.filter(task => {
-    if (activeTab === "Tất cả") return true;
-    return task.status === activeTab;
-  });
-
-  const columns = [
-    { header: "Mã Task", key: "id" },
-    { header: "Khách hàng", key: "customer" },
-    { header: "Nhiệm vụ chuyên môn", key: "service" },
-    {
-      header: "Độ ưu tiên",
-      key: "priority",
-      render: (row) => {
-        let badgeColor = "";
-        if (row.priority === "Cao") badgeColor = "#ef4444";
-        if (row.priority === "Trung bình") badgeColor = "#f59e0b";
-        if (row.priority === "Thấp") badgeColor = "#64748b";
-
-        return (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontWeight: "600", fontSize: "13px", color: badgeColor }}>
-            <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: badgeColor }}></span>
-            {row.priority}
-          </span>
-        );
-      }
-    },
-    { header: "Hạn chót", key: "deadline" },
-    {
-      header: "Trạng thái",
-      key: "status",
-      render: (row) => {
-        let badgeClass = "";
-        if (row.status === "Chờ xử lý") badgeClass = "badge-danger";
-        if (row.status === "Đang tiến hành") badgeClass = "badge-warning";
-        if (row.status === "Hoàn thành") badgeClass = "badge-success";
-
-        return <span className={`status-badge ${badgeClass}`}>{row.status}</span>;
-      }
-    },
-    {
-      header: "Hành động",
-      key: "actions",
-      render: (row) => {
-        return (
-          <div style={{ display: "flex", gap: "6px" }}>
-            {row.status === "Chờ xử lý" && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => updateTaskStatus(row.id, "Đang tiến hành")}
-                icon={Play}
-              >
-                Bắt đầu
-              </Button>
-            )}
-            {row.status === "Đang tiến hành" && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => updateTaskStatus(row.id, "Hoàn thành")}
-                icon={CheckCircle2}
-              >
-                Hoàn thành
-              </Button>
-            )}
-            <Button variant="secondary" size="sm" icon={Eye} title="Xem chi tiết" />
-          </div>
-        );
-      }
-    }
+  const sessionColumns = [
+    { header: "Phiên", key: "id" },
+    { header: "Biển số", key: "plateNumber" },
+    { header: "Loại khách", key: "customerType", render: (row) => (row.customerType === "REGISTERED_USER" ? "User đăng ký" : "Khách vãng lai") },
+    { header: "Xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
+    { header: "Vị trí", key: "slotCode", render: (row) => row.slotCode || "Capacity xe máy" },
+    { header: "Check-in", key: "checkInAt", render: (row) => formatDateTime(row.checkInAt) },
   ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      {/* Brand Header */}
-      <div className="card" style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "8px" }}>
-        <h1 style={{ fontSize: "22px", fontWeight: "800" }}>Khu vực vận hành nhân viên</h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
-          Xin chào <strong>{user.name}</strong> ({user.details}). Theo dõi và xử lý các đầu việc được giao trong ngày của bạn tại đây.
-        </p>
-      </div>
-
-      {/* Quick stats counter */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px" }}>
-        <div className="card" style={{ padding: "20px", display: "flex", alignItems: "center", gap: "16px", borderLeft: "4px solid var(--danger)" }}>
-          <div style={{ padding: "12px", borderRadius: "12px", backgroundColor: "var(--danger-light)", color: "var(--danger)" }}>
-            <AlertCircle size={24} />
-          </div>
-          <div>
-            <span style={{ fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>Chờ xử lý</span>
-            <h3 style={{ fontSize: "22px", fontWeight: "800", marginTop: "4px" }}>
-              {tasks.filter(t => t.status === "Chờ xử lý").length}
-            </h3>
-          </div>
+    <div className="parking-page">
+      <section className="page-hero">
+        <div className="page-hero-content">
+          <div className="page-eyebrow"><QrCode size={16} /> Parking Staff</div>
+          <h1 className="page-title">Bàn vận hành của {user.name}</h1>
+          <p className="page-subtitle">
+            Quét QR, nhập biển số, phát QR tạm, gán slot ô tô, kiểm tra vi phạm và xác nhận xe ra/vào.
+          </p>
         </div>
-
-        <div className="card" style={{ padding: "20px", display: "flex", alignItems: "center", gap: "16px", borderLeft: "4px solid var(--warning)" }}>
-          <div style={{ padding: "12px", borderRadius: "12px", backgroundColor: "var(--warning-light)", color: "var(--warning)" }}>
-            <Circle size={24} />
-          </div>
-          <div>
-            <span style={{ fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>Đang tiến hành</span>
-            <h3 style={{ fontSize: "22px", fontWeight: "800", marginTop: "4px" }}>
-              {tasks.filter(t => t.status === "Đang tiến hành").length}
-            </h3>
-          </div>
+        <div className="page-hero-aside">
+          <span className="page-hero-label">Đang trong bãi</span>
+          <span className="page-hero-number">{activeSessions.length}</span>
+          <span className="page-hero-label">phiên mở</span>
         </div>
+      </section>
 
-        <div className="card" style={{ padding: "20px", display: "flex", alignItems: "center", gap: "16px", borderLeft: "4px solid var(--success)" }}>
-          <div style={{ padding: "12px", borderRadius: "12px", backgroundColor: "var(--success-light)", color: "var(--success)" }}>
-            <CheckCircle2 size={24} />
-          </div>
-          <div>
-            <span style={{ fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>Đã hoàn thành</span>
-            <h3 style={{ fontSize: "22px", fontWeight: "800", marginTop: "4px" }}>
-              {tasks.filter(t => t.status === "Hoàn thành").length}
-            </h3>
-          </div>
+      <div className="dashboard-grid">
+        <div className="card metric-card">
+          <div className="metric-icon"><Layers size={22} /></div>
+          <div className="metric-label">Xe máy còn chỗ</div>
+          <div className="metric-value">{motorbikeLeft}</div>
+          <div className="metric-note">Theo capacity, không gán slot</div>
+        </div>
+        <div className="card metric-card">
+          <div className="metric-icon"><Car size={22} /></div>
+          <div className="metric-label">Slot ô tô trống</div>
+          <div className="metric-value">{availableCarSlots}</div>
+          <div className="metric-note">Chỉ chọn slot hợp lệ</div>
+        </div>
+        <div className="card metric-card">
+          <div className="metric-icon"><QrCode size={22} /></div>
+          <div className="metric-label">QR tạm sẵn sàng</div>
+          <div className="metric-value">{readyQr}</div>
+          <div className="metric-note">Phát như thẻ xe vật lý</div>
+        </div>
+        <div className="card metric-card">
+          <div className="metric-icon"><AlertTriangle size={22} /></div>
+          <div className="metric-label">Vi phạm chưa thu</div>
+          <div className="metric-value">{unpaidViolations}</div>
+          <div className="metric-note">Cộng vào phí khi xe ra</div>
         </div>
       </div>
 
-      {/* Task Filter Tab & List Table */}
-      <div className="card" style={{ padding: "24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", marginBottom: "20px" }}>
-          <h3 style={{ fontSize: "18px", fontWeight: "700" }}>Danh sách công việc của tôi</h3>
-          <div className="tabs-container">
-            {["Tất cả", "Chờ xử lý", "Đang tiến hành", "Hoàn thành"].map((tab) => (
-              <button
-                key={tab}
-                className={`tab-btn ${activeTab === tab ? "active" : ""}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </button>
+      <div className="two-column-grid">
+        <section className="card section-card">
+          <div className="section-header">
+            <div>
+              <h2 className="section-title"><ArrowDownLeft size={19} /> Hàng đợi xử lý tại cổng</h2>
+              <p className="section-copy">Mock thao tác nhanh của staff trước khi gọi API check-in/check-out.</p>
+            </div>
+            <div className="action-row">
+              <Button variant="primary" icon={ArrowDownLeft} onClick={() => (window.location.pathname = "/staff/check-in")}>Xe vào</Button>
+              <Button variant="outline" icon={ArrowUpRight} onClick={() => (window.location.pathname = "/staff/check-out")}>Xe ra</Button>
+            </div>
+          </div>
+          <div className="timeline">
+            {queue.map((item, index) => (
+              <div className="timeline-item" key={item.id}>
+                <div className="timeline-dot">{index + 1}</div>
+                <div className="soft-panel">
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                    <strong>{item.title}</strong>
+                    <span className="pill success">{item.action}</span>
+                  </div>
+                  <p className="section-copy">{item.desc}</p>
+                </div>
+              </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        <Table columns={columns} data={filteredTasks} />
+        <section className="card section-card">
+          <div className="section-header">
+            <div>
+              <h2 className="section-title"><ShieldCheck size={19} /> Vi phạm cần chú ý</h2>
+              <p className="section-copy">Staff ghi nhận thủ công, không dùng camera AI trong MVP.</p>
+            </div>
+          </div>
+          <div className="data-list">
+            {violations.slice(0, 3).map((violation) => (
+              <div className="soft-panel" key={violation.id}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <strong>{violation.plateNumber}</strong>
+                  <span className={`pill ${getStatusTone(violation.status)}`}>{getStatusLabel(violation.status)}</span>
+                </div>
+                <p className="section-copy">{violation.type}</p>
+                <strong>{formatCurrency(violation.fine)}</strong>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
 
-      {/* Styling specific to tabs */}
-      <style>{`
-        .tabs-container {
-          display: flex;
-          background-color: var(--bg-secondary);
-          padding: 4px;
-          border-radius: var(--radius-sm);
-          border: 1px solid var(--border-color);
-        }
-        .tab-btn {
-          background: none;
-          border: none;
-          color: var(--text-secondary);
-          padding: 6px 14px;
-          font-family: var(--font-sans);
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          border-radius: var(--radius-sm);
-          transition: all var(--transition-fast);
-        }
-        .tab-btn:hover {
-          color: var(--text-primary);
-        }
-        .tab-btn.active {
-          background-color: var(--card-bg);
-          color: var(--primary);
-          box-shadow: var(--shadow-sm);
-        }
-        .status-badge {
-          display: inline-block;
-          font-size: 12px;
-          font-weight: 700;
-          padding: 4px 10px;
-          border-radius: var(--radius-full);
-        }
-        .badge-success {
-          background-color: var(--success-light);
-          color: var(--success);
-        }
-        .badge-warning {
-          background-color: var(--warning-light);
-          color: var(--warning);
-        }
-        .badge-danger {
-          background-color: var(--danger-light);
-          color: var(--danger);
-        }
-      `}</style>
+      <section className="card section-card">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title"><Car size={19} /> Phiên gửi xe đang mở</h2>
+            <p className="section-copy">Nguồn mock tương ứng `/api/parking-sessions?status=ACTIVE`.</p>
+          </div>
+        </div>
+        <Table columns={sessionColumns} data={activeSessions} />
+      </section>
     </div>
   );
 };

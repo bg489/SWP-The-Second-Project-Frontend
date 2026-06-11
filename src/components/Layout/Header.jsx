@@ -1,66 +1,54 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useMockAuth } from "../../context/MockAuthContext";
-import { Sun, Moon, Menu, ChevronDown, User, ShieldAlert } from "lucide-react";
+import { roleLabels } from "../../services/mockParkingData";
+import { Menu, Moon, Sun } from "lucide-react";
 import "./Layout.css";
 
 const Header = ({ toggleSidebar }) => {
-  const {
-    role,
-    user,
-    switchRole,
-    isDarkMode,
-    toggleDarkMode,
-    isAuthenticated
-  } = useMockAuth();
-  
+  const { role, roles, user, switchRole, isDarkMode, toggleDarkMode, isAuthenticated } = useMockAuth();
   const navigate = useNavigate();
 
-  const handleRoleChange = (e) => {
-    const newRole = e.target.value;
-    switchRole(newRole);
-    
-    // Redirect to the default dashboard for the switched role
-    if (newRole === "User") navigate("/user/dashboard");
-    else if (newRole === "Staff") navigate("/staff/dashboard");
-    else if (newRole === "Manager") navigate("/manager/dashboard");
-    else if (newRole === "Admin") navigate("/admin/dashboard");
+  const handleRoleChange = (event) => {
+    const path = switchRole(event.target.value);
+    navigate(path);
   };
 
   return (
     <header className="header-container">
       <div className="header-left">
-        <button className="menu-toggle-btn" onClick={toggleSidebar}>
-          <Menu size={22} />
+        <button className="menu-toggle-btn" onClick={toggleSidebar} aria-label="Mở menu">
+          <Menu size={21} />
         </button>
         <div className="header-title">
-          <h2>Hệ thống quản trị</h2>
+          <h2>Parking Building Management</h2>
+          <p>Mock UI trước khi nối Redux Saga với backend</p>
         </div>
       </div>
 
       <div className="header-right">
+        <div className="role-switcher-widget">
+          <span className="switcher-label">Role</span>
+          <select className="role-select-dropdown" value={role} onChange={handleRoleChange}>
+            {roles.map((roleKey) => (
+              <option key={roleKey} value={roleKey}>
+                {roleLabels[roleKey]}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        {/* Theme Toggle Button */}
         <button
           className="theme-toggle-btn"
           onClick={toggleDarkMode}
           title={isDarkMode ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
+          aria-label="Đổi theme"
         >
-          {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+          {isDarkMode ? <Sun size={19} /> : <Moon size={19} />}
         </button>
 
-        {/* User profile dropdown info */}
         {isAuthenticated && user && (
           <div className="header-user-profile">
-            <img
-              src={user.avatar}
-              alt={user.name}
-              className="user-profile-avatar"
-              onError={(e) => {
-                // Fallback avatar
-                e.target.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80";
-              }}
-            />
+            <img src={user.avatar} alt={user.name} className="user-profile-avatar" />
             <div className="user-profile-info">
               <span className="profile-name">{user.name}</span>
               <span className="profile-role">{user.details}</span>
