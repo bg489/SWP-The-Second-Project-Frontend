@@ -1,16 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { mockManagerFloors } from "../../services/mockParkingData";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchFloorsRequest,
+  createFloorRequest,
+  updateFloorRequest,
+  deleteFloorRequest
+} from "../floors/floorSlice";
 import Button from "../../components/Button/Button";
 import Table from "../../components/Table/Table";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import Select from "../../components/Form/Select";
-import { Plus, Pencil, Trash2, Check, X, Layers } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X, Layers, AlertCircle } from "lucide-react";
 
 const FloorManagementPage = () => {
-  const [floors, setFloors] = useState(mockManagerFloors);
-  
+  const dispatch = useDispatch();
+  const { floors, loading, error } = useSelector((state) => state.floors);
+
   // Form states
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -21,6 +28,10 @@ const FloorManagementPage = () => {
   const [slotsCount, setSlotsCount] = useState("");
   const [status, setStatus] = useState("Đang hoạt động");
   const [formError, setFormError] = useState({});
+
+  useEffect(() => {
+    dispatch(fetchFloorsRequest());
+  }, [dispatch]);
 
   const handleEditClick = (floor) => {
     setIsEditing(true);
@@ -35,8 +46,8 @@ const FloorManagementPage = () => {
   };
 
   const handleDeleteClick = (floorId) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa tầng này?")) {
-      setFloors(floors.filter(f => f.id !== floorId));
+    if (window.confirm("Bạn có chắc chắn muốn xóa tầng này? Thao tác này sẽ gỡ bỏ cấu hình của tầng khỏi hệ thống.")) {
+      dispatch(deleteFloorRequest(floorId));
     }
   };
 
@@ -57,26 +68,22 @@ const FloorManagementPage = () => {
     }
 
     if (isEditing) {
-      setFloors(floors.map(f => f.id === currentFloorId ? {
-        ...f,
+      dispatch(updateFloorRequest({
+        id: currentFloorId,
         name,
         type,
         capacity: type === "Xe máy" ? parseInt(capacity) : 0,
         slotsCount: type === "Ô tô" ? parseInt(slotsCount) : 0,
         status
-      } : f));
-      setIsEditing(false);
-      setCurrentFloorId(null);
+      }));
     } else {
-      const newFloor = {
-        id: `FL-B${floors.length + 1}`,
+      dispatch(createFloorRequest({
         name,
         type,
         capacity: type === "Xe máy" ? parseInt(capacity) : 0,
         slotsCount: type === "Ô tô" ? parseInt(slotsCount) : 0,
         status
-      };
-      setFloors([...floors, newFloor]);
+      }));
     }
 
     handleCancel();
@@ -113,6 +120,7 @@ const FloorManagementPage = () => {
         let badgeColor = "var(--success)";
         if (row.status === "Bảo trì") badgeColor = "var(--warning)";
         if (row.status === "Tạm đóng") badgeColor = "var(--danger)";
+        if (row.status === "Không hoạt động") badgeColor = "var(--text-muted)";
 
         return (
           <span style={{
@@ -156,6 +164,25 @@ const FloorManagementPage = () => {
           </Button>
         )}
       </div>
+
+      {/* System Error Display (e.g. deletion block) */}
+      {error && (
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          padding: "16px 20px",
+          backgroundColor: "rgba(239, 68, 68, 0.1)",
+          border: "1px solid var(--danger)",
+          borderRadius: "8px",
+          color: "var(--danger)",
+          fontSize: "14px",
+          fontWeight: "600"
+        }}>
+          <AlertCircle size={20} style={{ flexShrink: 0 }} />
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Editor Form Modal Popup */}
       {showForm && createPortal(
@@ -236,7 +263,8 @@ const FloorManagementPage = () => {
                     options={[
                       { value: "Đang hoạt động", label: "Đang hoạt động" },
                       { value: "Bảo trì", label: "Đang bảo trì" },
-                      { value: "Tạm đóng", label: "Tạm đóng cửa" }
+                      { value: "Tạm đóng", label: "Tạm đóng cửa" },
+                      { value: "Không hoạt động", label: "Không hoạt động" }
                     ]}
                     placeholder={null}
                   />
@@ -305,7 +333,7 @@ const FloorManagementPage = () => {
 
       {/* Floors Table */}
       <div className="card" style={{ padding: "24px" }}>
-        <Table columns={columns} data={floors} />
+        <Table columns={columns} data={floors} loading={loading} />
       </div>
     </div>
   );

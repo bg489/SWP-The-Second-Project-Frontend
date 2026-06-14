@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { useMockAuth } from "../../context/MockAuthContext";
 import UserList from "../users/UserList";
 import Button from "../../components/Button/Button";
-import { ShieldCheck, HardDrive, RefreshCw, Cpu, Server } from "lucide-react";
+import { ShieldCheck, HardDrive, RefreshCw, Cpu, Server, Users } from "lucide-react";
 
 const AdminDashboard = () => {
   const { user } = useMockAuth();

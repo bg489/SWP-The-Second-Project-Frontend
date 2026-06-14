@@ -1,11 +1,47 @@
-import React, { useState } from "react";
-import { mockCarSlots, mockViolations } from "../../services/mockParkingData";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchFloorsRequest,
+  fetchSlotsRequest,
+  addSlotRequest,
+  updateSlotStatusLocal
+} from "../floors/floorSlice";
+import { mockViolations } from "../../services/mockParkingData";
 import Button from "../../components/Button/Button";
-import { X, ShieldAlert, Sparkles, Wrench, Clock, RefreshCw } from "lucide-react";
+import Select from "../../components/Form/Select";
+import FormField from "../../components/Form/FormField";
+import { X, ShieldAlert, Sparkles, Wrench, Clock, RefreshCw, Plus } from "lucide-react";
 
 const CarSlotMapPage = () => {
-  const [slots, setSlots] = useState(mockCarSlots);
+  const dispatch = useDispatch();
+  const { floors } = useSelector((state) => state.floors);
+  const { slots, loading, error } = useSelector((state) => state.floors); // We keep floors and slots in the same slice
+
+  const [selectedFloorId, setSelectedFloorId] = useState("");
   const [selectedSlot, setSelectedSlot] = useState(null);
+
+  // Filter CAR floors (Ô tô)
+  const carFloors = floors.filter(f => f.type === "Ô tô");
+
+  // Load floors on component mount
+  useEffect(() => {
+    dispatch(fetchFloorsRequest());
+  }, [dispatch]);
+
+  // Set default selected floor
+  useEffect(() => {
+    if (carFloors.length > 0 && !selectedFloorId) {
+      setSelectedFloorId(carFloors[0].id);
+    }
+  }, [carFloors, selectedFloorId]);
+
+  // Load slots when selected floor changes
+  useEffect(() => {
+    if (selectedFloorId) {
+      dispatch(fetchSlotsRequest(selectedFloorId));
+      setSelectedSlot(null); // Clear selected drawer
+    }
+  }, [dispatch, selectedFloorId]);
 
   // Status mapping details
   const statusConfig = {
@@ -30,39 +66,82 @@ const CarSlotMapPage = () => {
     setSelectedSlot(null);
   };
 
-  // Mock slot state change directly in map for testing purposes
+  // Mock slot state change in Redux for testing purposes
   const toggleSlotState = (slotId, newStatus) => {
-    setSlots(slots.map(s => {
-      if (s.id === slotId) {
-        return {
-          ...s,
-          status: newStatus,
-          plate: newStatus === "đang dùng" ? "29A-999.88" : null,
-          checkInTime: newStatus === "đang dùng" ? "2026-06-07T16:00:00+07:00" : null
-        };
-      }
-      return s;
+    const plate = newStatus === "đang dùng" ? "30F-999.99" : null;
+    const checkInTime = newStatus === "đang dùng" ? new Date().toISOString() : null;
+
+    dispatch(updateSlotStatusLocal({
+      id: slotId,
+      status: newStatus,
+      plate,
+      checkInTime
     }));
-    
-    // Update drawer if opened
+
+    // Update local drawer state if it matches the current slot
     if (selectedSlot && selectedSlot.id === slotId) {
       setSelectedSlot(prev => ({
         ...prev,
         status: newStatus,
-        plate: newStatus === "đang dùng" ? "29A-999.88" : null,
-        checkInTime: newStatus === "đang dùng" ? "2026-06-07T16:00:00+07:00" : null
+        plate,
+        checkInTime
+      }));
+    }
+  };
+
+  const handleAddSlot = () => {
+    if (selectedFloorId) {
+      dispatch(addSlotRequest({
+        floorId: selectedFloorId,
+        slotData: {
+          slot_number: `C-${slots.length + 1}`
+        }
       }));
     }
   };
 
   return (
     <div style={{ display: "flex", position: "relative", minHeight: "75vh", gap: "24px", flexDirection: "column" }}>
-      {/* Page Header */}
-      <div className="card" style={{ padding: "24px" }}>
-        <h1 style={{ fontSize: "22px", fontWeight: "800" }}>Sơ đồ Vị trí đỗ xe Ô tô</h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "4px" }}>
-          Bản đồ kiểm soát vị trí đỗ xe của các tầng hầm ô tô. Nhấp chọn vào từng ô vị trí để xem chi tiết thông tin phương tiện đỗ, lịch sử đỗ xe hoặc phát hành cảnh báo.
-        </p>
+      {/* Page Header and Selector */}
+      <div className="card" style={{ padding: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+        <div style={{ flex: "1 1 300px" }}>
+          <h1 style={{ fontSize: "22px", fontWeight: "800" }}>Sơ đồ Vị trí đỗ xe Ô tô</h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "4px" }}>
+            Bản đồ kiểm soát vị trí đỗ xe của các tầng hầm ô tô. Chọn tầng hầm bên dưới để xem sơ đồ chi tiết.
+          </p>
+        </div>
+        
+        {/* Floor Selection & Actions */}
+        <div style={{ display: "flex", gap: "12px", alignItems: "flex-end", flexWrap: "wrap" }}>
+          <div style={{ width: "220px" }}>
+            <FormField label="Chọn tầng hầm ô tô">
+              <Select
+                value={selectedFloorId}
+                onChange={(e) => setSelectedFloorId(e.target.value)}
+                options={carFloors.map(f => ({ value: f.id, label: f.name }))}
+                placeholder={carFloors.length === 0 ? "Không có tầng ô tô" : null}
+                disabled={carFloors.length === 0}
+              />
+            </FormField>
+          </div>
+          <Button
+            variant="primary"
+            onClick={handleAddSlot}
+            disabled={!selectedFloorId || loading}
+            icon={Plus}
+            style={{ height: "42px" }}
+          >
+            Tạo thêm ô đỗ
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => selectedFloorId && dispatch(fetchSlotsRequest(selectedFloorId))}
+            loading={loading}
+            icon={RefreshCw}
+            style={{ height: "42px" }}
+            title="Tải lại dữ liệu ô đỗ"
+          />
+        </div>
       </div>
 
       {/* Main content grid: Map on left, drawer pushes on right */}
@@ -95,6 +174,14 @@ const CarSlotMapPage = () => {
               );
             })}
           </div>
+
+          {/* Slots count overview */}
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>
+            <span>Tổng số ô đỗ: {slots.length}</span>
+            <span>Trống: {slots.filter(s => s.status === "trống").length} | Đang dùng: {slots.filter(s => s.status === "đang dùng").length}</span>
+          </div>
+
+          {error && <p style={{ color: "var(--danger)", marginBottom: "16px" }}>{error}</p>}
 
           {/* Seat Grid Map */}
           <div style={{
@@ -151,6 +238,11 @@ const CarSlotMapPage = () => {
                 </button>
               );
             })}
+            {slots.length === 0 && (
+              <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
+                Không có dữ liệu ô đỗ nào cho tầng hầm này. Vui lòng nhấn "Tạo thêm ô đỗ".
+              </div>
+            )}
           </div>
         </div>
 
@@ -211,15 +303,17 @@ const CarSlotMapPage = () => {
                   gap: "10px"
                 }}>
                   <div>
-                    <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Biển số xe đăng ghi nhận:</span>
+                    <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Biển số xe ghi nhận:</span>
                     <div style={{ fontWeight: "700", fontSize: "15px", color: "var(--text-primary)", marginTop: "2px" }}>{selectedSlot.plate}</div>
                   </div>
-                  <div>
-                    <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Thời điểm check-in:</span>
-                    <div style={{ fontWeight: "600", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
-                      <Clock size={14} /> {new Date(selectedSlot.checkInTime).toLocaleTimeString("vi-VN")} — {new Date(selectedSlot.checkInTime).toLocaleDateString("vi-VN")}
+                  {selectedSlot.checkInTime && (
+                    <div>
+                      <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Thời điểm check-in:</span>
+                      <div style={{ fontWeight: "600", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
+                        <Clock size={14} /> {new Date(selectedSlot.checkInTime).toLocaleTimeString("vi-VN")} — {new Date(selectedSlot.checkInTime).toLocaleDateString("vi-VN")}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
 
@@ -239,7 +333,7 @@ const CarSlotMapPage = () => {
                   <ShieldAlert size={20} style={{ flexShrink: 0 }} />
                   <div>
                     <strong>Cảnh báo cảm biến!</strong>
-                    {selectedSlot.warning}. Vui lòng cử nhân viên hỗ trợ di chuyển hoặc kiểm tra lại thẻ quét.
+                    {selectedSlot.warning || "Phát hiện sai khớp thông tin đỗ."}. Vui lòng cử nhân viên hỗ trợ di chuyển hoặc kiểm tra lại thẻ quét.
                   </div>
                 </div>
               )}
@@ -258,7 +352,7 @@ const CarSlotMapPage = () => {
                   fontSize: "13px"
                 }}>
                   <Wrench size={20} />
-                  <span>Ô đỗ đang tạm khóa để sơn lại vạch kẻ đường.</span>
+                  <span>Ô đỗ đang tạm khóa để bảo trì hoặc kẻ vạch.</span>
                 </div>
               )}
 
@@ -277,8 +371,13 @@ const CarSlotMapPage = () => {
                     Giải phóng ô trống
                   </Button>
                 )}
-                <Button variant="secondary" style={{ width: "100%" }} disabled={selectedSlot.status !== "đang dùng"}>
-                  Tạo vi phạm
+                <Button
+                  variant="secondary"
+                  style={{ width: "100%" }}
+                  disabled={selectedSlot.status !== "đang dùng"}
+                  onClick={() => toggleSlotState(selectedSlot.id, "xung đột")}
+                >
+                  Tạo vi phạm / xung đột
                 </Button>
               </div>
 
