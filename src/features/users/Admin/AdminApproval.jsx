@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import './AdminApproval.css';
 
 const AdminApproval = () => {
@@ -57,8 +57,7 @@ const AdminApproval = () => {
             setPackages(packages.map(p => p.id === editId ? { ...p, name: pkgName.trim(), vehicleType: pkgVehicleType, price: parseInt(pkgPrice), duration: parseInt(pkgDuration), status: pkgStatus } : p));
             alert("✔️ Cập nhật gói cước thành công!");
         } else {
-            const nextId = packages.length ? Math.max(...packages.map((pkg) => pkg.id)) + 1 : 1;
-            setPackages([...packages, { id: nextId, name: pkgName.trim(), vehicleType: pkgVehicleType, price: parseInt(pkgPrice), duration: parseInt(pkgDuration), status: pkgStatus }]);
+            setPackages([...packages, { id: Date.now(), name: pkgName.trim(), vehicleType: pkgVehicleType, price: parseInt(pkgPrice), duration: parseInt(pkgDuration), status: pkgStatus }]);
             alert("🚀 Thêm mới gói cước thành công!");
         }
         resetPkgForm();

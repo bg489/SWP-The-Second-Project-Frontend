@@ -1,75 +1,77 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import React from "react";
+import { NavLink } from "react-router-dom";
 import { useMockAuth } from "../../context/MockAuthContext";
-import { roleLabels } from "../../services/mockParkingData";
 import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  BarChart3,
-  Building2,
-  Car,
   LayoutDashboard,
-  Layers,
-  LogOut,
   QrCode,
+  User,
+  ArrowRightLeft,
+  Layers,
+  Car,
+  Building2,
+  BarChart3,
   Settings,
   ShieldCheck,
+  LogOut,
   Sparkles,
-  User,
+  ArrowDownLeft,
+  ArrowUpRight
 } from "lucide-react";
 import "./Layout.css";
 
-const menus = {
-  USER: [
-    { path: "/user/dashboard", label: "Tổng quan của tôi", icon: LayoutDashboard },
-    { path: "/user/qr-pass", label: "QR & gói tháng", icon: QrCode },
-    { path: "/user/profile", label: "Hồ sơ & xe", icon: User },
-  ],
-  PARKING_STAFF: [
-    { path: "/staff/dashboard", label: "Bàn vận hành", icon: LayoutDashboard },
-    { path: "/staff/check-in", label: "Xe vào / QR tạm", icon: ArrowDownLeft },
-    { path: "/staff/check-out", label: "Xe ra / tính phí", icon: ArrowUpRight },
-    { path: "/staff/motorbike-status", label: "Capacity xe máy", icon: Layers },
-    { path: "/staff/car-slots", label: "Sơ đồ slot ô tô", icon: Car },
-  ],
-  PARKING_MANAGER: [
-    { path: "/manager/dashboard", label: "Dashboard quản lý", icon: LayoutDashboard },
-    { path: "/manager/building", label: "Tòa nhà", icon: Building2 },
-    { path: "/manager/floors", label: "Tầng & slot", icon: Layers },
-    { path: "/manager/reports", label: "Báo cáo", icon: BarChart3 },
-  ],
-  ADMIN: [
-    { path: "/admin/dashboard", label: "Duyệt & phân quyền", icon: ShieldCheck },
-    { path: "/admin/settings", label: "Chính sách hệ thống", icon: Settings },
-  ],
-};
-
 const Sidebar = ({ isOpen, toggleSidebar }) => {
-  const { role, user, logout } = useMockAuth();
-  const navigate = useNavigate();
-  const menuItems = menus[role] || [];
+  const { role, logout } = useMockAuth();
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  // Define menu items dynamically based on current logged in role
+  const getMenuItems = () => {
+    switch (role) {
+      case "User":
+        return [
+          { path: "/user/dashboard", label: "Dashboard", icon: LayoutDashboard },
+          { path: "/user/qr-pass", label: "Vé QR Pass của tôi", icon: QrCode },
+          { path: "/user/profile", label: "Hồ sơ cá nhân", icon: User }
+        ];
+      case "Staff":
+        return [
+          { path: "/staff/dashboard", label: "Dashboard", icon: LayoutDashboard },
+          { path: "/staff/check-in", label: "Quét Xe vào", icon: ArrowDownLeft },
+          { path: "/staff/check-out", label: "Quét Xe ra", icon: ArrowUpRight },
+          { path: "/staff/motorbike-status", label: "Trạng thái Xe máy", icon: Layers },
+          { path: "/staff/car-slots", label: "Sơ đồ đỗ Ô tô", icon: Car }
+        ];
+      case "Manager":
+        return [
+          { path: "/manager/dashboard", label: "Dashboard", icon: LayoutDashboard },
+          { path: "/manager/building", label: "Quản lý tòa nhà", icon: Building2 },
+          { path: "/manager/floors", label: "Quản lý tầng hầm", icon: Layers },
+          { path: "/manager/reports", label: "Báo cáo vận hành", icon: BarChart3 }
+        ];
+      case "Admin":
+        return [
+          { path: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+          { path: "/admin/settings", label: "Cấu hình hệ thống", icon: Settings }
+        ];
+      default:
+        return [];
+    }
   };
+
+  const menuItems = getMenuItems();
 
   return (
     <aside className={`sidebar-container ${isOpen ? "open" : ""}`}>
       <div className="sidebar-brand">
         <div className="brand-logo">
-          <div className="brand-mark">
-            <Sparkles size={20} />
-          </div>
-          <span>Sunrise Parking</span>
+          <Sparkles className="logo-icon" size={24} />
+          <span>Bãi đỗ xe</span>
         </div>
-        <button className="sidebar-close-btn" onClick={toggleSidebar} aria-label="Đóng menu">
+        <button className="sidebar-close-btn" onClick={toggleSidebar}>
           &times;
         </button>
       </div>
 
       <div className="sidebar-user-badge">
-        <div className="badge-role">{roleLabels[role] || role}</div>
-        <div className="badge-desc">{user?.details || "Mock mode"}</div>
+        <div className="badge-role">{role} Panel</div>
       </div>
 
       <nav className="sidebar-nav">
@@ -81,10 +83,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               to={item.path}
               className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
               onClick={() => {
-                if (window.innerWidth <= 1100) toggleSidebar();
+                if (window.innerWidth <= 768) {
+                  toggleSidebar();
+                }
               }}
             >
-              <Icon size={19} className="nav-icon" />
+              <Icon size={20} className="nav-icon" />
               <span>{item.label}</span>
             </NavLink>
           );
@@ -92,9 +96,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       </nav>
 
       <div className="sidebar-footer">
-        <button className="logout-btn" onClick={handleLogout}>
+        <button className="logout-btn" onClick={logout}>
           <LogOut size={18} />
-          <span>Đăng xuất mock</span>
+          <span>Đăng xuất</span>
         </button>
       </div>
     </aside>

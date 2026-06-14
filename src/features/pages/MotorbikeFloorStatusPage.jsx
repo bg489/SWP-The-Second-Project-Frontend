@@ -1,87 +1,173 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { mockMotorbikeFloors } from "../../services/mockParkingData";
 import Button from "../../components/Button/Button";
-import { floors as mockFloors, getStatusLabel, getStatusTone } from "../../services/mockParkingData";
-import { AlertTriangle, CheckCircle, Layers, Minus, Plus } from "lucide-react";
+import { Plus, Minus, Layers, AlertCircle, CheckCircle } from "lucide-react";
 
 const MotorbikeFloorStatusPage = () => {
-  const [floors, setFloors] = useState(mockFloors.filter((floor) => floor.floorType === "MOTORBIKE"));
+  const [floors, setFloors] = useState(mockMotorbikeFloors);
 
-  const updateCount = (floorId, delta) => {
-    setFloors((rows) =>
-      rows.map((floor) => {
-        if (floor.id !== floorId) return floor;
-        const nextCount = Math.min(floor.capacity, Math.max(0, floor.currentCount + delta));
-        return { ...floor, currentCount: nextCount };
-      })
-    );
+  const handleCheckIn = (floorId) => {
+    setFloors(floors.map(f => {
+      if (f.id === floorId) {
+        if (f.parkedCount >= f.capacity) return f;
+        const newCount = f.parkedCount + 1;
+        return {
+          ...f,
+          parkedCount: newCount,
+          status: newCount >= f.capacity ? "Đầy chỗ" : "Còn chỗ"
+        };
+      }
+      return f;
+    }));
   };
 
-  const totalCapacity = floors.reduce((sum, floor) => sum + floor.capacity, 0);
-  const totalCount = floors.reduce((sum, floor) => sum + floor.currentCount, 0);
+  const handleCheckOut = (floorId) => {
+    setFloors(floors.map(f => {
+      if (f.id === floorId) {
+        if (f.parkedCount <= 0) return f;
+        const newCount = f.parkedCount - 1;
+        return {
+          ...f,
+          parkedCount: newCount,
+          status: "Còn chỗ"
+        };
+      }
+      return f;
+    }));
+  };
 
   return (
-    <div className="parking-page">
-      <section className="page-hero">
-        <div className="page-hero-content">
-          <div className="page-eyebrow"><Layers size={16} /> Xe máy theo capacity</div>
-          <h1 className="page-title">Không gán slot xe máy, chỉ kiểm soát số lượng còn chỗ</h1>
-          <p className="page-subtitle">
-            Khi xe máy vào thì tăng `current_count`; khi xe ra thì giảm. Nếu tầng đầy, staff không nhận thêm xe mới.
-          </p>
-        </div>
-        <div className="page-hero-aside">
-          <span className="page-hero-label">Tổng đang gửi</span>
-          <span className="page-hero-number">{totalCount}/{totalCapacity}</span>
-          <span className="page-hero-label">{Math.round((totalCount / totalCapacity) * 100)}% capacity</span>
-        </div>
-      </section>
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      {/* Page Header */}
+      <div className="card" style={{ padding: "24px" }}>
+        <h1 style={{ fontSize: "22px", fontWeight: "800" }}>Trạng thái Khu vực Xe máy</h1>
+        <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "4px" }}>
+          Giám sát dung lượng và quản lý số lượng xe máy gửi theo từng tầng hầm. Sử dụng các điều khiển giả lập bên dưới để mô phỏng sự kiện xe ra vào bãi.
+        </p>
+      </div>
 
-      <div className="dashboard-grid">
+      {/* Floors grid layout */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "24px" }}>
         {floors.map((floor) => {
-          const percent = Math.round((floor.currentCount / floor.capacity) * 100);
-          const isFull = floor.currentCount >= floor.capacity;
+          const occupancyRate = Math.round((floor.parkedCount / floor.capacity) * 100);
+          const slotsLeft = floor.capacity - floor.parkedCount;
+          const isFull = floor.parkedCount >= floor.capacity;
+
           return (
-            <section className="card section-card" key={floor.id}>
-              <div className="section-header">
-                <div>
-                  <h2 className="section-title"><Layers size={19} /> {floor.name}</h2>
-                  <p className="section-copy">{floor.note}</p>
-                </div>
-                <span className={`pill ${isFull ? "danger" : getStatusTone(floor.status)}`}>
-                  {isFull ? "Đầy chỗ" : getStatusLabel(floor.status)}
+            <div key={floor.id} className="card" style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+              {/* Card Title Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Layers size={20} style={{ color: "var(--primary)" }} /> {floor.name}
+                </h3>
+                
+                <span className={`status-badge-custom ${isFull ? "full" : "available"}`}>
+                  {isFull ? (
+                    <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      <AlertCircle size={14} /> Đầy chỗ
+                    </span>
+                  ) : (
+                    <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      <CheckCircle size={14} /> Còn chỗ
+                    </span>
+                  )}
                 </span>
               </div>
 
-              <div className="progress-track">
-                <div className="progress-fill" style={{ width: `${percent}%` }} />
-              </div>
-
-              <div className="dashboard-grid" style={{ marginTop: 16 }}>
-                <div className="soft-panel"><span className="metric-label">Sức chứa</span><div className="metric-value">{floor.capacity}</div></div>
-                <div className="soft-panel"><span className="metric-label">Đang gửi</span><div className="metric-value">{floor.currentCount}</div></div>
-                <div className="soft-panel"><span className="metric-label">Còn trống</span><div className="metric-value">{floor.capacity - floor.currentCount}</div></div>
-              </div>
-
-              {isFull && (
-                <div className="soft-panel" style={{ marginTop: 14 }}>
-                  <span className="pill danger"><AlertTriangle size={14} /> Bãi đầy</span>
-                  <p className="section-copy">Không nhận thêm xe máy mới trừ khi có chính sách ưu tiên.</p>
+              {/* Progress visual bar */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", fontWeight: "600" }}>
+                  <span style={{ color: "var(--text-secondary)" }}>Tỷ lệ lấp đầy:</span>
+                  <span style={{ color: isFull ? "var(--danger)" : "var(--primary)" }}>{occupancyRate}%</span>
                 </div>
-              )}
-
-              <div className="action-row" style={{ marginTop: 16 }}>
-                <Button variant="primary" icon={Plus} disabled={isFull} onClick={() => updateCount(floor.id, 1)}>
-                  Xe vào
-                </Button>
-                <Button variant="outline" icon={Minus} disabled={floor.currentCount === 0} onClick={() => updateCount(floor.id, -1)}>
-                  Xe ra
-                </Button>
-                <span className="pill success"><CheckCircle size={14} /> Mock realtime</span>
+                
+                <div style={{
+                  height: "12px",
+                  backgroundColor: "var(--bg-secondary)",
+                  borderRadius: "6px",
+                  overflow: "hidden",
+                  border: "1px solid var(--border-color)"
+                }}>
+                  <div style={{
+                    width: `${occupancyRate}%`,
+                    height: "100%",
+                    backgroundColor: isFull ? "var(--danger)" : "var(--primary)",
+                    borderRadius: "6px",
+                    transition: "width 0.3s ease-out"
+                  }}></div>
+                </div>
               </div>
-            </section>
+
+              {/* Occupancy Stats grid */}
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: "10px",
+                textAlign: "center",
+                backgroundColor: "var(--bg-secondary)",
+                padding: "12px",
+                borderRadius: "var(--radius-sm)",
+                border: "1px solid var(--border-color)"
+              }}>
+                <div>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600" }}>SỨC CHỨA</span>
+                  <div style={{ fontSize: "16px", fontWeight: "800", marginTop: "2px" }}>{floor.capacity}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600" }}>ĐANG GỬI</span>
+                  <div style={{ fontSize: "16px", fontWeight: "800", color: "var(--primary)", marginTop: "2px" }}>{floor.parkedCount}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600" }}>CÒN TRỐNG</span>
+                  <div style={{ fontSize: "16px", fontWeight: "800", color: isFull ? "var(--danger)" : "var(--success)", marginTop: "2px" }}>{slotsLeft}</div>
+                </div>
+              </div>
+
+              {/* Mock check-in and out controls */}
+              <div style={{ display: "flex", gap: "12px" }}>
+                <Button
+                  variant="primary"
+                  onClick={() => handleCheckIn(floor.id)}
+                  disabled={isFull}
+                  style={{ flex: 1 }}
+                  icon={Plus}
+                >
+                  + Xe vào
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleCheckOut(floor.id)}
+                  disabled={floor.parkedCount <= 0}
+                  style={{ flex: 1 }}
+                  icon={Minus}
+                >
+                  - Xe ra
+                </Button>
+              </div>
+            </div>
           );
         })}
       </div>
+
+      {/* Embedding Custom styles for motorbike floors status */}
+      <style>{`
+        .status-badge-custom {
+          display: inline-flex;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 4px 8px;
+          border-radius: var(--radius-sm);
+          text-transform: uppercase;
+        }
+        .status-badge-custom.available {
+          background-color: var(--success-light);
+          color: var(--success);
+        }
+        .status-badge-custom.full {
+          background-color: var(--danger-light);
+          color: var(--danger);
+        }
+      `}</style>
     </div>
   );
 };
