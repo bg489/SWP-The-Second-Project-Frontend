@@ -1,79 +1,90 @@
-/* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState } from "react";
-import { ROLE_KEYS, roleHomePaths } from "../services/mockParkingData";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const MockAuthContext = createContext();
 
 const mockUsersByRole = {
-  USER: {
-    id: 1,
-    name: "Nguyễn An",
-    email: "nguyen.an@example.com",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80",
-    role: ROLE_KEYS.USER,
-    details: "Cư dân có xe đã duyệt",
+  User: {
+    id: "U001",
+    name: "Nguyễn Văn A",
+    email: "user@example.com",
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
+    role: "User",
+    details: "Khách hàng Đồng"
   },
-  PARKING_STAFF: {
-    id: 2,
-    name: "Trần Bảo",
+  Staff: {
+    id: "S054",
+    name: "Trần Thị B",
     email: "staff@example.com",
-    avatar: "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?auto=format&fit=crop&w=160&q=80",
-    role: ROLE_KEYS.PARKING_STAFF,
-    details: "Nhân viên vận hành cổng xe",
+    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80",
+    role: "Staff",
+    details: "Nhân viên hỗ trợ khách hàng"
   },
-  PARKING_MANAGER: {
-    id: 3,
-    name: "Phạm Minh Châu",
+  Manager: {
+    id: "M012",
+    name: "Phạm Minh C",
     email: "manager@example.com",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&q=80",
-    role: ROLE_KEYS.PARKING_MANAGER,
-    details: "Quản lý vận hành bãi xe",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
+    role: "Manager",
+    details: "Quản lý phòng vận hành"
   },
-  ADMIN: {
-    id: 4,
-    name: "Lê Hoàng Duy",
+  Admin: {
+    id: "A001",
+    name: "Lê Hoàng D",
     email: "admin@example.com",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=160&q=80",
-    role: ROLE_KEYS.ADMIN,
-    details: "Quản trị viên hệ thống",
-  },
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80",
+    role: "Admin",
+    details: "Quản trị viên hệ thống"
+  }
 };
 
 export const MockAuthProvider = ({ children }) => {
-  const [role, setRole] = useState(() => localStorage.getItem("mock_role") || ROLE_KEYS.USER);
+  const [role, setRole] = useState(() => {
+    return localStorage.getItem("mock_role") || "User";
+  });
+  
+  const [user, setUser] = useState(mockUsersByRole[role]);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
-  const user = mockUsersByRole[role] || mockUsersByRole.USER;
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
 
   useEffect(() => {
     localStorage.setItem("mock_role", role);
+    setUser(mockUsersByRole[role]);
   }, [role]);
 
   useEffect(() => {
-    document.body.classList.toggle("dark-theme", isDarkMode);
-    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+    if (isDarkMode) {
+      document.body.classList.add("dark-theme");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.body.classList.remove("dark-theme");
+      localStorage.setItem("theme", "light");
+    }
   }, [isDarkMode]);
 
   const login = (selectedRole) => {
-    const nextRole = mockUsersByRole[selectedRole] ? selectedRole : ROLE_KEYS.USER;
-    setRole(nextRole);
-    setIsAuthenticated(true);
-    return roleHomePaths[nextRole];
+    if (mockUsersByRole[selectedRole]) {
+      setRole(selectedRole);
+      setIsAuthenticated(true);
+    }
   };
 
   const logout = () => {
     setIsAuthenticated(false);
+    setRole("");
+    setUser(null);
   };
 
   const switchRole = (newRole) => {
-    if (!mockUsersByRole[newRole]) return roleHomePaths[ROLE_KEYS.USER];
-    setRole(newRole);
-    setIsAuthenticated(true);
-    return roleHomePaths[newRole];
+    if (mockUsersByRole[newRole]) {
+      setRole(newRole);
+      setIsAuthenticated(true);
+    }
   };
 
   const toggleDarkMode = () => {
-    setIsDarkMode((prev) => !prev);
+    setIsDarkMode(prev => !prev);
   };
 
   return (
@@ -81,13 +92,12 @@ export const MockAuthProvider = ({ children }) => {
       value={{
         role,
         user,
-        roles: Object.keys(mockUsersByRole),
         isAuthenticated,
         isDarkMode,
         login,
         logout,
         switchRole,
-        toggleDarkMode,
+        toggleDarkMode
       }}
     >
       {children}
