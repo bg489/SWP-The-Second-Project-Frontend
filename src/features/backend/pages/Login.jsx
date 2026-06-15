@@ -20,6 +20,7 @@ import Input from "../../../components/Form/Input";
 import { useMockAuth } from "../../../context/MockAuthContext";
 import {
     clearRegisterState,
+    fetchRegisterBuildingsRequest,
     loginRequest,
     registerRequest,
 } from "../auth/authSlice";
@@ -52,6 +53,7 @@ const Login = () => {
         phone: "",
         password: "",
         confirmPassword: "",
+        buildingId: "",
     });
 
     const [registerErrors, setRegisterErrors] = useState({});
@@ -66,7 +68,14 @@ const Login = () => {
         registerLoading,
         registerError,
         registerSuccess,
+        registerBuildings,
+        registerBuildingsLoading,
+        registerBuildingsError,
     } = useSelector((state) => state.auth);
+
+    useEffect(() => {
+        dispatch(fetchRegisterBuildingsRequest());
+    }, [dispatch]);
 
     const switchMode = (nextMode) => {
         setMode(nextMode);
@@ -114,6 +123,10 @@ const Login = () => {
             nextErrors.confirmPassword = "Mật khẩu nhập lại không khớp.";
         }
 
+        if (!registerForm.buildingId) {
+            nextErrors.buildingId = "Vui lòng chọn tòa nhà.";
+        }
+
         setRegisterErrors(nextErrors);
         return Object.keys(nextErrors).length === 0;
     };
@@ -127,6 +140,7 @@ const Login = () => {
             name: registerForm.name.trim(),
             email: registerForm.email.trim(),
             password: registerForm.password,
+            buildingId: Number(registerForm.buildingId),
         };
 
         if (registerForm.phone.trim()) {
@@ -437,6 +451,34 @@ const Login = () => {
                                         autoComplete="tel"
                                     />
                                 </FormField>
+
+                                <FormField label="Tòa nhà đăng ký" required error={registerErrors.buildingId}>
+                                    <select
+                                        className="form-input"
+                                        value={registerForm.buildingId}
+                                        onChange={(event) =>
+                                            updateRegisterField("buildingId", event.target.value)
+                                        }
+                                        disabled={registerLoading || registerBuildingsLoading}
+                                    >
+                                        <option value="">
+                                            {registerBuildingsLoading ? "Đang tải tòa nhà..." : "Chọn tòa nhà"}
+                                        </option>
+
+                                        {registerBuildings.map((building) => (
+                                            <option key={building.id} value={building.id}>
+                                                {building.name}
+                                                {building.address ? ` - ${building.address}` : ""}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </FormField>
+
+                                {registerBuildingsError && (
+                                    <p style={{ color: "var(--danger)", marginTop: -8 }}>
+                                        {registerBuildingsError}
+                                    </p>
+                                )}
 
                                 <FormField label="Mật khẩu" required error={registerErrors.password}>
                                     <Input

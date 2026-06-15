@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { useMockAuth } from "../../context/MockAuthContext";
 import { roleLabels } from "../../services/mockParkingData";
-import { Menu, Moon, Sun } from "lucide-react";
+import { Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
 import "./Layout.css";
 
-const Header = ({ toggleSidebar }) => {
+const Header = ({ toggleSidebar, sidebarHidden, toggleSidebarHidden }) => {
   const { role, roles, user, switchRole, isDarkMode, toggleDarkMode, isAuthenticated } = useMockAuth();
   const navigate = useNavigate();
 
@@ -18,6 +18,15 @@ const Header = ({ toggleSidebar }) => {
       <div className="header-left">
         <button className="menu-toggle-btn" onClick={toggleSidebar} aria-label="Mở menu">
           <Menu size={21} />
+        </button>
+        <button
+          type="button"
+          className="sidebar-desktop-toggle-btn"
+          onClick={toggleSidebarHidden}
+          aria-label={sidebarHidden ? "Hiện sidebar" : "Ẩn sidebar"}
+          title={sidebarHidden ? "Hiện sidebar" : "Ẩn sidebar"}
+        >
+          {sidebarHidden ? <PanelLeftOpen size={21} /> : <PanelLeftClose size={21} />}
         </button>
         <div className="header-title">
           <h2>Parking Building Management</h2>

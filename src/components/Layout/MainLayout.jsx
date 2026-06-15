@@ -7,25 +7,44 @@ import "./Layout.css";
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const [sidebarHidden, setSidebarHidden] = useState(() => {
+    return localStorage.getItem("sidebar_hidden") === "true";
+  });
+
   const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
+    setSidebarOpen((prev) => !prev);
+  };
+
+  const toggleSidebarHidden = () => {
+    setSidebarHidden((prev) => {
+      const nextValue = !prev;
+      localStorage.setItem("sidebar_hidden", String(nextValue));
+      return nextValue;
+    });
   };
 
   return (
     <div className="layout-root">
-      {/* Sidebar Component */}
-      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-      
-      {/* Mobile Sidebar Overlay */}
+      <Sidebar
+        isOpen={sidebarOpen}
+        isHidden={sidebarHidden}
+        toggleSidebar={toggleSidebar}
+      />
+
       {sidebarOpen && (
         <div className="sidebar-overlay" onClick={toggleSidebar}></div>
       )}
-      
-      <div className="layout-main-wrapper">
-        {/* Header Component */}
-        <Header toggleSidebar={toggleSidebar} />
-        
-        {/* Main Content Area */}
+
+      <div
+        className={`layout-main-wrapper ${sidebarHidden ? "sidebar-hidden" : ""
+          }`}
+      >
+        <Header
+          toggleSidebar={toggleSidebar}
+          sidebarHidden={sidebarHidden}
+          toggleSidebarHidden={toggleSidebarHidden}
+        />
+
         <main className="layout-content-area">
           <div className="content-container animate-fade-in">
             <Outlet />

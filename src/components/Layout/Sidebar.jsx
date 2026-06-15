@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Sparkles,
   User,
+  UserCheck,
 } from "lucide-react";
 import "./Layout.css";
 import { useDispatch } from "react-redux";
@@ -42,10 +43,11 @@ const menus = {
   ADMIN: [
     { path: "/admin/dashboard", label: "Duyệt & phân quyền", icon: ShieldCheck },
     { path: "/admin/settings", label: "Chính sách hệ thống", icon: Settings },
+    { label: "Duyệt tài khoản", path: "/admin/users", icon: UserCheck }
   ],
 };
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
+const Sidebar = ({ isOpen, isHidden, toggleSidebar }) => {
   const { role, user, logout: mockLogout } = useMockAuth();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -58,7 +60,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   };
 
   return (
-    <aside className={`sidebar-container ${isOpen ? "open" : ""}`}>
+    <aside
+      className={`sidebar-container ${isOpen ? "open" : ""} ${isHidden ? "collapsed" : ""
+        }`}
+    >
       <div className="sidebar-brand">
         <div className="brand-logo">
           <div className="brand-mark">

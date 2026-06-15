@@ -22,6 +22,7 @@ import FloorManagementPage from "../features/pages/FloorManagementPage";
 import ReportsPage from "../features/pages/ReportsPage";
 import UserProfilePage from "../features/pages/UserProfilePage";
 import AdminSettingsPage from "../features/pages/AdminSettingsPage";
+import AdminUserApprovalPage from "../features/backend/pages/AdminUserApprovalPage";
 
 const DefaultRedirect = () => {
   const { role } = useMockAuth();
@@ -61,6 +62,7 @@ const AppRoutes = () => {
         <Route element={<RoleProtectedRoute allowedRoles={["ADMIN"]} />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
+          <Route path="/admin/users" element={<AdminUserApprovalPage />} />
         </Route>
       </Route>
 

@@ -239,6 +239,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   background: linear-gradient(135deg, rgba(255, 184, 245, 0.12), rgba(237, 153, 81, 0.1));
+  margin-bottom: 10px;
 }
 
 .data-list {
@@ -428,6 +429,7 @@
 }
 
 @media (max-width: 1024px) {
+
   .two-column-grid,
   .login-shell {
     grid-template-columns: 1fr;
@@ -439,6 +441,7 @@
 }
 
 @media (max-width: 640px) {
+
   .page-hero,
   .section-card {
     padding: 20px;
