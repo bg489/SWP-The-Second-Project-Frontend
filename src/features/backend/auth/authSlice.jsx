@@ -27,6 +27,10 @@ const getInitialState = () => {
         registerError: null,
         registerSuccess: false,
         registeredUser: null,
+
+        registerBuildings: [],
+        registerBuildingsLoading: false,
+        registerBuildingsError: null,
     };
 };
 
@@ -100,6 +104,22 @@ const authSlice = createSlice({
         clearLoginRedirect: (state) => {
             state.loginCompleted = false;
         },
+
+        fetchRegisterBuildingsRequest: (state) => {
+            state.registerBuildingsLoading = true;
+            state.registerBuildingsError = null;
+        },
+
+        fetchRegisterBuildingsSuccess: (state, action) => {
+            state.registerBuildingsLoading = false;
+            state.registerBuildingsError = null;
+            state.registerBuildings = action.payload || [];
+        },
+
+        fetchRegisterBuildingsFailure: (state, action) => {
+            state.registerBuildingsLoading = false;
+            state.registerBuildingsError = action.payload;
+        },
     },
 });
 
@@ -113,6 +133,9 @@ export const {
     clearRegisterState,
     logout,
     clearLoginRedirect,
+    fetchRegisterBuildingsRequest,
+    fetchRegisterBuildingsSuccess,
+    fetchRegisterBuildingsFailure,
 } = authSlice.actions;
 
 export default authSlice.reducer;

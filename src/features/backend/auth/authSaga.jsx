@@ -1,6 +1,9 @@
 import { call, put, takeEvery, takeLatest } from "redux-saga/effects";
 import api from "../../../services/api";
 import {
+    fetchRegisterBuildingsFailure,
+    fetchRegisterBuildingsRequest,
+    fetchRegisterBuildingsSuccess,
     loginFailure,
     loginRequest,
     loginSuccess,
@@ -35,6 +38,31 @@ const extractLoginData = (response) => {
         frontendRole,
     };
 };
+
+const extractListData = (response) => {
+    const data = response?.data?.data || response?.data || [];
+
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.buildings)) return data.buildings;
+    if (Array.isArray(data.items)) return data.items;
+
+    return [];
+};
+
+function* handleFetchRegisterBuildings() {
+    try {
+        const response = yield call([api, api.get], "/buildings");
+
+        yield put(fetchRegisterBuildingsSuccess(extractListData(response)));
+    } catch (error) {
+        const message =
+            error?.response?.data?.message ||
+            error?.message ||
+            "Không lấy được danh sách tòa nhà.";
+
+        yield put(fetchRegisterBuildingsFailure(message));
+    }
+}
 
 function* handleLogin(action) {
     try {
@@ -100,5 +128,6 @@ function* handleLogout() {
 export default function* authSaga() {
     yield takeLatest(loginRequest.type, handleLogin);
     yield takeLatest(registerRequest.type, handleRegister);
+    yield takeLatest(fetchRegisterBuildingsRequest.type, handleFetchRegisterBuildings);
     yield takeEvery(logout.type, handleLogout);
 }
