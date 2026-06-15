@@ -26,6 +26,7 @@ const menus = {
     { path: "/user/dashboard", label: "Tổng quan của tôi", icon: LayoutDashboard },
     { path: "/user/qr-pass", label: "QR & gói tháng", icon: QrCode },
     { path: "/user/profile", label: "Hồ sơ & xe", icon: User },
+    { label: "Đổi tòa nhà", path: "/user/building-change", icon: Building2 }
   ],
   PARKING_STAFF: [
     { path: "/staff/dashboard", label: "Bàn vận hành", icon: LayoutDashboard },
@@ -43,7 +44,8 @@ const menus = {
   ADMIN: [
     { path: "/admin/dashboard", label: "Duyệt & phân quyền", icon: ShieldCheck },
     { path: "/admin/settings", label: "Chính sách hệ thống", icon: Settings },
-    { label: "Duyệt tài khoản", path: "/admin/users", icon: UserCheck }
+    { label: "Duyệt tài khoản", path: "/admin/users", icon: UserCheck },
+    { label: "Duyệt đổi tòa nhà", path: "/admin/building-change-requests", icon: Building2 }
   ],
 };
 
