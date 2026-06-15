@@ -23,6 +23,8 @@ import ReportsPage from "../features/pages/ReportsPage";
 import UserProfilePage from "../features/pages/UserProfilePage";
 import AdminSettingsPage from "../features/pages/AdminSettingsPage";
 import AdminUserApprovalPage from "../features/backend/pages/AdminUserApprovalPage";
+import UserBuildingChangeRequestPage from "../features/backend/pages/UserBuildingChangeRequestPage";
+import AdminBuildingChangeRequestsPage from "../features/backend/pages/AdminBuildingChangeRequestsPage";
 
 const DefaultRedirect = () => {
   const { role } = useMockAuth();
@@ -42,6 +44,7 @@ const AppRoutes = () => {
           <Route path="/user/dashboard" element={<UserDashboard />} />
           <Route path="/user/qr-pass" element={<MyQRPassPage />} />
           <Route path="/user/profile" element={<UserProfilePage />} />
+          <Route path="/user/building-change" element={<UserBuildingChangeRequestPage />} />
         </Route>
 
         <Route element={<RoleProtectedRoute allowedRoles={["PARKING_STAFF"]} />}>
@@ -63,6 +66,10 @@ const AppRoutes = () => {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
           <Route path="/admin/users" element={<AdminUserApprovalPage />} />
+          <Route
+            path="/admin/building-change-requests"
+            element={<AdminBuildingChangeRequestsPage />}
+          />
         </Route>
       </Route>
 
