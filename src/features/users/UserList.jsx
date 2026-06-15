@@ -1,20 +1,12 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchUsersRequest,
-  addUser,
-  deleteUser,
-  updateUserRoleStatusRequest,
-  lockUserRequest,
-  unlockUserRequest
-} from "./userSlice";
+import { fetchUsersRequest, addUser, editUser, deleteUser } from "./userSlice";
 import Button from "../../components/Button/Button";
 import Table from "../../components/Table/Table";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
-import Select from "../../components/Form/Select";
-import { UserPlus, Pencil, Trash2, Search, X, Check, Lock, Unlock } from "lucide-react";
+import { UserPlus, Pencil, Trash2, Search, X, Check } from "lucide-react";
 
 function UserList() {
   const dispatch = useDispatch();
@@ -28,8 +20,6 @@ function UserList() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
-  const [userRole, setUserRole] = useState("USER");
-  const [userStatus, setUserStatus] = useState("ACTIVE");
   const [formError, setFormError] = useState({});
   const [showForm, setShowForm] = useState(false);
 
@@ -56,8 +46,8 @@ function UserList() {
     }
 
     if (isEditing) {
-      // Edit User Role & Status Action
-      dispatch(updateUserRoleStatusRequest({ id: currentUserId, role: userRole, status: userStatus }));
+      // Edit User Action
+      dispatch(editUser({ id: currentUserId, name: userName, email: userEmail }));
       setIsEditing(false);
       setCurrentUserId(null);
     } else {
@@ -66,8 +56,6 @@ function UserList() {
         id: users.length > 0 ? Math.max(...users.map((u) => u.id)) + 1 : 1,
         name: userName,
         email: userEmail,
-        role: "USER",
-        status: "ACTIVE",
         created_at: new Date().toISOString().split("T")[0],
       };
       dispatch(addUser(newUser));
@@ -76,8 +64,6 @@ function UserList() {
     // Reset Form
     setUserName("");
     setUserEmail("");
-    setUserRole("USER");
-    setUserStatus("ACTIVE");
     setFormError({});
     setShowForm(false);
   };
@@ -87,8 +73,6 @@ function UserList() {
     setCurrentUserId(user.id);
     setUserName(user.name);
     setUserEmail(user.email);
-    setUserRole(user.role || "USER");
-    setUserStatus(user.status || "ACTIVE");
     setFormError({});
     setShowForm(true);
   };
@@ -104,8 +88,6 @@ function UserList() {
     setCurrentUserId(null);
     setUserName("");
     setUserEmail("");
-    setUserRole("USER");
-    setUserStatus("ACTIVE");
     setFormError({});
     setShowForm(false);
   };
@@ -118,85 +100,22 @@ function UserList() {
   );
 
   const columns = [
-    { header: "ID", key: "id", width: "70px" },
+    { header: "ID", key: "id", width: "80px" },
     { header: "Họ và tên", key: "name" },
     { header: "Địa chỉ Email", key: "email" },
-    {
-      header: "Vai trò",
-      key: "role",
-      render: (row) => {
-        let badgeColor = "var(--text-secondary)";
-        if (row.role === "ADMIN") badgeColor = "var(--danger)";
-        if (row.role === "MANAGER") badgeColor = "var(--success)";
-        if (row.role === "STAFF") badgeColor = "var(--warning)";
-
-        return (
-          <span style={{
-            fontSize: "11px",
-            fontWeight: "700",
-            padding: "3px 8px",
-            borderRadius: "4px",
-            backgroundColor: `${badgeColor}15`,
-            color: badgeColor,
-            border: `1px solid ${badgeColor}30`
-          }}>{row.role || "USER"}</span>
-        );
-      }
-    },
-    {
-      header: "Trạng thái",
-      key: "status",
-      render: (row) => {
-        let statusText = row.status || "ACTIVE";
-        let badgeColor = "var(--success)";
-        if (statusText === "LOCKED") badgeColor = "var(--danger)";
-        if (statusText === "INACTIVE") badgeColor = "var(--text-muted)";
-
-        return (
-          <span style={{
-            fontSize: "11px",
-            fontWeight: "700",
-            padding: "3px 8px",
-            borderRadius: "4px",
-            backgroundColor: `${badgeColor}15`,
-            color: badgeColor,
-            border: `1px solid ${badgeColor}30`
-          }}>{statusText}</span>
-        );
-      }
-    },
+    { header: "Ngày đăng ký", key: "created_at" },
     {
       header: "Hành động",
       key: "actions",
-      width: "190px",
+      width: "160px",
       render: (row) => (
         <div style={{ display: "flex", gap: "6px" }}>
-          {/* Lock / Unlock Toggle Button */}
-          {row.status === "LOCKED" ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => dispatch(unlockUserRequest(row.id))}
-              icon={Unlock}
-              title="Mở khóa tài khoản"
-              style={{ color: "var(--success)", borderColor: "var(--success)" }}
-            />
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => dispatch(lockUserRequest(row.id))}
-              icon={Lock}
-              title="Khóa tài khoản"
-              style={{ color: "var(--warning)", borderColor: "var(--warning)" }}
-            />
-          )}
           <Button
             variant="outline"
             size="sm"
             onClick={() => handleEditClick(row)}
             icon={Pencil}
-            title="Sửa vai trò & trạng thái"
+            title="Sửa thông tin"
           />
           <Button
             variant="danger"
@@ -253,7 +172,7 @@ function UserList() {
           }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
               <h3 style={{ fontSize: "18px", fontWeight: "800" }}>
-                {isEditing ? `Cấu hình phân quyền User (ID: ${currentUserId})` : "Tạo người dùng mới"}
+                {isEditing ? `Chỉnh sửa thông tin User (ID: ${currentUserId})` : "Tạo người dùng mới"}
               </h3>
               <button onClick={handleCancel} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex" }}>
                 <X size={20} />
@@ -266,7 +185,6 @@ function UserList() {
                   placeholder="Nhập họ tên đầy đủ..."
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
-                  disabled={isEditing}
                 />
               </FormField>
 
@@ -275,40 +193,8 @@ function UserList() {
                   placeholder="Nhập email..."
                   value={userEmail}
                   onChange={(e) => setUserEmail(e.target.value)}
-                  disabled={isEditing}
                 />
               </FormField>
-
-              {isEditing && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                  <FormField label="Vai trò hệ thống" required>
-                    <Select
-                      value={userRole}
-                      onChange={(e) => setUserRole(e.target.value)}
-                      options={[
-                        { value: "USER", label: "USER" },
-                        { value: "STAFF", label: "STAFF" },
-                        { value: "MANAGER", label: "MANAGER" },
-                        { value: "ADMIN", label: "ADMIN" }
-                      ]}
-                      placeholder={null}
-                    />
-                  </FormField>
-
-                  <FormField label="Trạng thái tài khoản" required>
-                    <Select
-                      value={userStatus}
-                      onChange={(e) => setUserStatus(e.target.value)}
-                      options={[
-                        { value: "ACTIVE", label: "ACTIVE" },
-                        { value: "LOCKED", label: "LOCKED" },
-                        { value: "INACTIVE", label: "INACTIVE" }
-                      ]}
-                      placeholder={null}
-                    />
-                  </FormField>
-                </div>
-              )}
 
               <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
                 <Button
@@ -318,7 +204,7 @@ function UserList() {
                   style={{
                     backgroundColor: "transparent",
                     color: "var(--text-secondary)",
-                    border: "1px solid #d1d5db",
+                    border: "1px solid #d1d5db", // Light grey border
                     borderRadius: "6px",
                     padding: "10px 18px",
                     fontWeight: "600",
@@ -341,7 +227,7 @@ function UserList() {
                   type="submit"
                   variant="primary"
                   style={{
-                    backgroundColor: "#2563eb",
+                    backgroundColor: "#2563eb", // Solid distinct blue
                     color: "#ffffff",
                     border: "none",
                     borderRadius: "6px",

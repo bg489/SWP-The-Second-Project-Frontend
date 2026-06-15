@@ -1,4 +1,3 @@
-import React from "react";
 import "./Table.css";
 import Button from "../Button/Button";
 import { ChevronLeft, ChevronRight } from "lucide-react";

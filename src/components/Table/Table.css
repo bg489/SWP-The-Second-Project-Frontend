@@ -1,11 +1,10 @@
 .table-container {
-  background-color: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
-  margin-top: 16px;
   width: 100%;
+  overflow: hidden;
+  margin-top: 14px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
 }
 
 .table-wrapper {
@@ -16,27 +15,25 @@
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-family: var(--font-sans);
 }
 
 .custom-table th {
-  background-color: var(--bg-secondary);
-  color: var(--text-secondary);
-  font-weight: 700;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 14px 18px;
+  padding: 13px 16px;
   border-bottom: 1px solid var(--border-color);
-  user-select: none;
+  background: linear-gradient(135deg, rgba(255, 184, 245, 0.2), rgba(237, 153, 81, 0.12));
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .custom-table td {
-  padding: 16px 18px;
+  padding: 15px 16px;
   border-bottom: 1px solid var(--border-color);
   color: var(--text-primary);
-  font-size: 14px;
-  transition: background-color var(--transition-fast);
+  font-size: 13px;
+  vertical-align: middle;
 }
 
 .custom-table tbody tr {
@@ -44,64 +41,53 @@
 }
 
 .custom-table tbody tr:hover {
-  background-color: var(--bg-primary);
+  background: rgba(255, 184, 245, 0.08);
 }
 
 .custom-table tbody tr:last-child td {
-  border-bottom: none;
+  border-bottom: 0;
 }
 
-/* Empty Cell Styling */
 .table-empty-cell {
-  text-align: center;
+  padding: 42px !important;
   color: var(--text-muted);
-  padding: 48px !important;
-  font-style: italic;
+  text-align: center;
 }
 
-/* Skeleton Loading Styling */
 .table-skeleton-cell {
-  background: linear-gradient(
-    90deg,
-    var(--bg-secondary) 25%,
-    var(--border-color) 50%,
-    var(--bg-secondary) 75%
-  );
+  width: 80%;
+  height: 18px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--border-color) 50%, var(--bg-secondary) 75%);
   background-size: 200% 100%;
   animation: table-shimmer 1.5s infinite linear;
-  height: 20px;
-  border-radius: var(--radius-sm);
-  width: 80%;
 }
 
-@keyframes table-shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* Pagination Styling */
 .table-pagination {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 14px 18px;
-  border-top: 1px solid var(--border-color);
-  background-color: var(--card-bg);
-  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 12px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--border-color);
+  background: var(--card-bg);
 }
 
 .pagination-info {
-  font-size: 13px;
   color: var(--text-secondary);
+  font-size: 13px;
 }
 
 .pagination-controls {
   display: flex;
-  align-items: center;
   gap: 8px;
+}
+
+@keyframes table-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }
