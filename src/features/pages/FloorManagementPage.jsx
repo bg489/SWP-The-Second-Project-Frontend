@@ -1,167 +1,340 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchFloorsRequest,
+  createFloorRequest,
+  updateFloorRequest,
+  deleteFloorRequest
+} from "../floors/floorSlice";
 import Button from "../../components/Button/Button";
+import Table from "../../components/Table/Table";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import Select from "../../components/Form/Select";
-import Table from "../../components/Table/Table";
-import { floors as mockFloors, getStatusLabel, getStatusTone } from "../../services/mockParkingData";
-import { Edit, Layers, Plus, Save, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X, Layers, AlertCircle } from "lucide-react";
 
 const FloorManagementPage = () => {
-  const [floors, setFloors] = useState(mockFloors);
-  const [editingId, setEditingId] = useState(null);
-  const [draft, setDraft] = useState({
-    name: "",
-    floorType: "MOTORBIKE",
-    capacity: 100,
-    slotsCount: 0,
-    status: "ACTIVE",
-    note: "",
-  });
+  const dispatch = useDispatch();
+  const { floors, loading, error } = useSelector((state) => state.floors);
 
-  const resetDraft = () => {
-    setEditingId(null);
-    setDraft({ name: "", floorType: "MOTORBIKE", capacity: 100, slotsCount: 0, status: "ACTIVE", note: "" });
+  // Form states
+  const [showForm, setShowForm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentFloorId, setCurrentFloorId] = useState(null);
+  const [name, setName] = useState("");
+  const [type, setType] = useState("Xe máy");
+  const [capacity, setCapacity] = useState("");
+  const [slotsCount, setSlotsCount] = useState("");
+  const [status, setStatus] = useState("Đang hoạt động");
+  const [formError, setFormError] = useState({});
+
+  useEffect(() => {
+    dispatch(fetchFloorsRequest());
+  }, [dispatch]);
+
+  const handleEditClick = (floor) => {
+    setIsEditing(true);
+    setCurrentFloorId(floor.id);
+    setName(floor.name);
+    setType(floor.type);
+    setCapacity(floor.capacity.toString());
+    setSlotsCount(floor.slotsCount.toString());
+    setStatus(floor.status);
+    setFormError({});
+    setShowForm(true);
   };
 
-  const handleEdit = (floor) => {
-    setEditingId(floor.id);
-    setDraft(floor);
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    if (!draft.name.trim()) return;
-    const normalized = {
-      ...draft,
-      capacity: draft.floorType === "MOTORBIKE" ? Number(draft.capacity) : 0,
-      slotsCount: draft.floorType === "CAR" ? Number(draft.slotsCount) : 0,
-      currentCount: draft.currentCount || 0,
-    };
-
-    if (editingId) {
-      setFloors((rows) => rows.map((floor) => (floor.id === editingId ? normalized : floor)));
-    } else {
-      setFloors((rows) => [
-        ...rows,
-        {
-          ...normalized,
-          id: Date.now(),
-          code: normalized.floorType === "CAR" ? "NEW-CAR" : "NEW-MB",
-          buildingId: 1,
-        },
-      ]);
+  const handleDeleteClick = (floorId) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa tầng này? Thao tác này sẽ gỡ bỏ cấu hình của tầng khỏi hệ thống.")) {
+      dispatch(deleteFloorRequest(floorId));
     }
-    resetDraft();
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const errors = {};
+    if (!name.trim()) errors.name = "Tên tầng không được trống";
+    
+    if (type === "Xe máy") {
+      if (!capacity || parseInt(capacity) <= 0) errors.capacity = "Sức chứa xe máy phải lớn hơn 0";
+    } else {
+      if (!slotsCount || parseInt(slotsCount) <= 0) errors.slotsCount = "Số slot ô tô phải lớn hơn 0";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormError(errors);
+      return;
+    }
+
+    if (isEditing) {
+      dispatch(updateFloorRequest({
+        id: currentFloorId,
+        name,
+        type,
+        capacity: type === "Xe máy" ? parseInt(capacity) : 0,
+        slotsCount: type === "Ô tô" ? parseInt(slotsCount) : 0,
+        status
+      }));
+    } else {
+      dispatch(createFloorRequest({
+        name,
+        type,
+        capacity: type === "Xe máy" ? parseInt(capacity) : 0,
+        slotsCount: type === "Ô tô" ? parseInt(slotsCount) : 0,
+        status
+      }));
+    }
+
+    handleCancel();
+  };
+
+  const handleCancel = () => {
+    setName("");
+    setType("Xe máy");
+    setCapacity("");
+    setSlotsCount("");
+    setStatus("Đang hoạt động");
+    setFormError({});
+    setShowForm(false);
+    setIsEditing(false);
   };
 
   const columns = [
-    { header: "Mã tầng", key: "code" },
-    { header: "Tên tầng", key: "name" },
-    { header: "Loại", key: "floorType", render: (row) => (row.floorType === "CAR" ? "Ô tô theo slot" : "Xe máy theo capacity") },
-    { header: "Sức chứa", key: "capacity", render: (row) => (row.floorType === "CAR" ? `${row.slotsCount} slot` : `${row.currentCount}/${row.capacity}`) },
+    { header: "Mã Tầng", key: "id", width: "100px" },
+    { header: "Tên Tầng", key: "name" },
+    { header: "Loại Phương tiện", key: "type" },
+    {
+      header: "Sức chứa / Số ô đỗ",
+      key: "capacity",
+      render: (row) => {
+        return row.type === "Xe máy"
+          ? `${row.capacity} xe máy (Sức chứa)`
+          : `${row.slotsCount} ô đỗ (Slot ô tô)`;
+      }
+    },
     {
       header: "Trạng thái",
       key: "status",
-      render: (row) => <span className={`pill ${getStatusTone(row.status)}`}>{getStatusLabel(row.status)}</span>,
+      render: (row) => {
+        let badgeColor = "var(--success)";
+        if (row.status === "Bảo trì") badgeColor = "var(--warning)";
+        if (row.status === "Tạm đóng") badgeColor = "var(--danger)";
+        if (row.status === "Không hoạt động") badgeColor = "var(--text-muted)";
+
+        return (
+          <span style={{
+            fontSize: "12px",
+            fontWeight: "700",
+            padding: "4px 8px",
+            borderRadius: "4px",
+            backgroundColor: `${badgeColor}15`,
+            color: badgeColor,
+            border: `1px solid ${badgeColor}30`
+          }}>{row.status}</span>
+        );
+      }
     },
     {
       header: "Hành động",
       key: "actions",
+      width: "140px",
       render: (row) => (
-        <div className="action-row">
-          <Button size="sm" variant="outline" icon={Edit} onClick={() => handleEdit(row)} />
-          <Button size="sm" variant="danger" icon={Trash2} onClick={() => setFloors((items) => items.filter((item) => item.id !== row.id))} />
+        <div style={{ display: "flex", gap: "6px" }}>
+          <Button variant="outline" size="sm" onClick={() => handleEditClick(row)} icon={Pencil} />
+          <Button variant="danger" size="sm" onClick={() => handleDeleteClick(row.id)} icon={Trash2} />
         </div>
-      ),
-    },
+      )
+    }
   ];
 
   return (
-    <div className="parking-page">
-      <section className="page-hero">
-        <div className="page-hero-content">
-          <div className="page-eyebrow"><Layers size={16} /> Tầng & slot</div>
-          <h1 className="page-title">Cấu hình tầng xe máy và tầng ô tô</h1>
-          <p className="page-subtitle">Parking Manager khai báo loại tầng. Xe máy dùng capacity, ô tô dùng số slot cụ thể.</p>
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      {/* Page Header */}
+      <div className="card" style={{ padding: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <h1 style={{ fontSize: "22px", fontWeight: "800" }}>Quản lý Danh sách Tầng Hầm</h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "4px" }}>
+            Quản trị và thiết lập các tầng đỗ xe của tòa nhà. Hỗ trợ cấu hình sức chứa cho xe máy và quy hoạch ô đỗ cụ thể cho xe ô tô.
+          </p>
         </div>
-        <div className="page-hero-aside">
-          <span className="page-hero-label">Tổng tầng</span>
-          <span className="page-hero-number">{floors.length}</span>
-          <span className="page-hero-label">đang mock</span>
-        </div>
-      </section>
-
-      <div className="two-column-grid">
-        <section className="card section-card">
-          <div className="section-header">
-            <div>
-              <h2 className="section-title"><Plus size={19} /> {editingId ? "Sửa tầng" : "Thêm tầng mới"}</h2>
-              <p className="section-copy">Mock form tương ứng POST/PATCH `/api/floors`.</p>
-            </div>
-          </div>
-          <form onSubmit={handleSubmit} style={{ display: "grid", gap: 14 }}>
-            <FormField label="Tên tầng" required>
-              <Input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="VD: Tầng B4 - Ô tô" />
-            </FormField>
-            <FormField label="Loại tầng">
-              <Select
-                value={draft.floorType}
-                onChange={(event) => setDraft({ ...draft, floorType: event.target.value })}
-                options={[
-                  { value: "MOTORBIKE", label: "Xe máy - quản lý capacity" },
-                  { value: "CAR", label: "Ô tô - quản lý slot" },
-                ]}
-                placeholder={null}
-              />
-            </FormField>
-            {draft.floorType === "MOTORBIKE" ? (
-              <FormField label="Sức chứa xe máy">
-                <Input type="number" value={draft.capacity} onChange={(event) => setDraft({ ...draft, capacity: event.target.value })} />
-              </FormField>
-            ) : (
-              <FormField label="Số slot ô tô">
-                <Input type="number" value={draft.slotsCount} onChange={(event) => setDraft({ ...draft, slotsCount: event.target.value })} />
-              </FormField>
-            )}
-            <FormField label="Trạng thái">
-              <Select
-                value={draft.status}
-                onChange={(event) => setDraft({ ...draft, status: event.target.value })}
-                options={[
-                  { value: "ACTIVE", label: "Đang hoạt động" },
-                  { value: "MAINTENANCE", label: "Bảo trì" },
-                  { value: "LOCKED", label: "Tạm khóa" },
-                  { value: "INACTIVE", label: "Ngưng nhận xe" },
-                ]}
-                placeholder={null}
-              />
-            </FormField>
-            <div className="action-row">
-              <Button type="submit" variant="primary" icon={Save}>{editingId ? "Lưu thay đổi" : "Thêm tầng"}</Button>
-              {editingId && <Button type="button" variant="outline" icon={X} onClick={resetDraft}>Hủy sửa</Button>}
-            </div>
-          </form>
-        </section>
-
-        <section className="card section-card">
-          <div className="section-header">
-            <div>
-              <h2 className="section-title"><Layers size={19} /> Nguyên tắc cấu hình</h2>
-              <p className="section-copy">Bám file nghiệp vụ MVP.</p>
-            </div>
-          </div>
-          <div className="data-list">
-            <div className="soft-panel"><strong>Xe máy</strong><p className="section-copy">Nhập tổng capacity, không tạo hàng trăm slot chi tiết.</p></div>
-            <div className="soft-panel"><strong>Ô tô</strong><p className="section-copy">Tạo danh sách slot như C-01 đến C-50, có trạng thái vận hành.</p></div>
-            <div className="soft-panel"><strong>Bãi đầy</strong><p className="section-copy">Capacity/slot khả dụng bằng 0 thì không tạo phiên mới.</p></div>
-          </div>
-        </section>
+        {!showForm && (
+          <Button variant="primary" onClick={() => setShowForm(true)} icon={Plus}>
+            Thêm tầng mới
+          </Button>
+        )}
       </div>
 
-      <section className="card section-card">
-        <Table columns={columns} data={floors} />
-      </section>
+      {/* System Error Display (e.g. deletion block) */}
+      {error && (
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          padding: "16px 20px",
+          backgroundColor: "rgba(239, 68, 68, 0.1)",
+          border: "1px solid var(--danger)",
+          borderRadius: "8px",
+          color: "var(--danger)",
+          fontSize: "14px",
+          fontWeight: "600"
+        }}>
+          <AlertCircle size={20} style={{ flexShrink: 0 }} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Editor Form Modal Popup */}
+      {showForm && createPortal(
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "rgba(15, 23, 42, 0.6)",
+          backdropFilter: "blur(6px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+          padding: "20px"
+        }} onClick={handleCancel}>
+          <div className="card animate-fade-in" style={{
+            maxWidth: "600px",
+            width: "100%",
+            padding: "28px",
+            borderRadius: "8px", // Clean, rounded corners 8px radius
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.05)", // Soft drop shadow
+            backgroundColor: "var(--card-bg)",
+            border: "1px solid var(--border-color)"
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px" }}>
+                <Layers size={20} style={{ color: "var(--primary)" }} /> {isEditing ? `Sửa tầng hầm ${name}` : "Thêm tầng hầm đỗ xe mới"}
+              </h3>
+              <button onClick={handleCancel} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex" }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px" }}>
+                <FormField label="Tên tầng hầm (ví dụ: Tầng B4)" error={formError.name} required>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tên tầng..." />
+                </FormField>
+
+                <FormField label="Loại phương tiện">
+                  <Select
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    options={[
+                      { value: "Xe máy", label: "Xe máy (Phân luồng sức chứa)" },
+                      { value: "Ô tô", label: "Ô tô (Phân luồng ô đỗ cụ thể)" }
+                    ]}
+                    placeholder={null}
+                  />
+                </FormField>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px" }}>
+                {/* Conditional Input Rendering based on Floor Type */}
+                {type === "Xe máy" ? (
+                  <FormField label="Sức chứa xe máy tối đa (Capacity)" error={formError.capacity} required>
+                    <Input
+                      type="number"
+                      value={capacity}
+                      onChange={(e) => setCapacity(e.target.value)}
+                      placeholder="Sức chứa xe máy..."
+                    />
+                  </FormField>
+                ) : (
+                  <FormField label="Số lượng ô đỗ ô tô (Slots Count)" error={formError.slotsCount} required>
+                    <Input
+                      type="number"
+                      value={slotsCount}
+                      onChange={(e) => setSlotsCount(e.target.value)}
+                      placeholder="Số lượng slot ô tô..."
+                    />
+                  </FormField>
+                )}
+
+                <FormField label="Trạng thái hoạt động">
+                  <Select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    options={[
+                      { value: "Đang hoạt động", label: "Đang hoạt động" },
+                      { value: "Bảo trì", label: "Đang bảo trì" },
+                      { value: "Tạm đóng", label: "Tạm đóng cửa" },
+                      { value: "Không hoạt động", label: "Không hoạt động" }
+                    ]}
+                    placeholder={null}
+                  />
+                </FormField>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                  style={{
+                    backgroundColor: "transparent",
+                    color: "var(--text-secondary)",
+                    border: "1px solid #d1d5db", // Light grey border
+                    borderRadius: "6px",
+                    padding: "10px 18px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                  icon={X}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+                    e.currentTarget.style.borderColor = "#9ca3af";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                    e.currentTarget.style.borderColor = "#d1d5db";
+                  }}
+                >
+                  Hủy bỏ
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  style={{
+                    backgroundColor: "#2563eb", // Solid distinct blue
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "6px",
+                    padding: "10px 18px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    boxShadow: "0 2px 4px rgba(37, 99, 235, 0.2)"
+                  }}
+                  icon={Check}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1d4ed8";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(37, 99, 235, 0.3)";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = "#2563eb";
+                    e.currentTarget.style.boxShadow = "0 2px 4px rgba(37, 99, 235, 0.2)";
+                  }}
+                >
+                  Lưu lại
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Floors Table */}
+      <div className="card" style={{ padding: "24px" }}>
+        <Table columns={columns} data={floors} loading={loading} />
+      </div>
     </div>
   );
 };

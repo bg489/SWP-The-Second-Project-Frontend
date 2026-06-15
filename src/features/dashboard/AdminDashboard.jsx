@@ -1,135 +1,102 @@
-import { useState } from "react";
-import Button from "../../components/Button/Button";
-import Table from "../../components/Table/Table";
+import React from "react";
+import { useSelector } from "react-redux";
 import { useMockAuth } from "../../context/MockAuthContext";
-import {
-  formatDate,
-  getStatusLabel,
-  getStatusTone,
-  getVehicleTypeLabel,
-  roleLabels,
-  users,
-  vehicles,
-} from "../../services/mockParkingData";
-import { CheckCircle, ShieldCheck, UserCheck, UserCog, X } from "lucide-react";
+import UserList from "../users/UserList";
+import Button from "../../components/Button/Button";
+import { ShieldCheck, HardDrive, RefreshCw, Cpu, Server, Users } from "lucide-react";
 
 const AdminDashboard = () => {
   const { user } = useMockAuth();
-  const [vehicleRows, setVehicleRows] = useState(vehicles);
-  const [notice, setNotice] = useState("");
+  const { users } = useSelector((state) => state.users);
 
-  const updateVehicle = (id, status) => {
-    setVehicleRows((rows) => rows.map((vehicle) => (vehicle.id === id ? { ...vehicle, status } : vehicle)));
-    setNotice(status === "APPROVED" ? "Đã duyệt xe thành công." : "Đã từ chối xe và ghi chú cho user.");
-    setTimeout(() => setNotice(""), 2400);
+  const [systemAlert, setSystemAlert] = React.useState(null);
+
+  const handleSystemAction = (actionName) => {
+    setSystemAlert(`Đang thực hiện: ${actionName}...`);
+    setTimeout(() => {
+      setSystemAlert(`Thành công: ${actionName} đã hoàn tất.`);
+      setTimeout(() => setSystemAlert(null), 3000);
+    }, 1500);
   };
 
-  const pendingVehicles = vehicleRows.filter((vehicle) => vehicle.status === "PENDING");
-
-  const userColumns = [
-    { header: "Người dùng", key: "name" },
-    { header: "Email", key: "email" },
-    { header: "Vai trò", key: "role", render: (row) => roleLabels[row.role] || row.role },
-    {
-      header: "Trạng thái",
-      key: "status",
-      render: (row) => <span className={`pill ${getStatusTone(row.status)}`}>{getStatusLabel(row.status)}</span>,
-    },
-    { header: "Ngày tạo", key: "createdAt", render: (row) => formatDate(row.createdAt) },
-  ];
-
-  const vehicleColumns = [
-    { header: "Biển số", key: "plateNumber" },
-    { header: "Chủ xe", key: "owner" },
-    { header: "Loại", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
-    { header: "Xe", key: "brand", render: (row) => `${row.brand} - ${row.color}` },
-    {
-      header: "Duyệt",
-      key: "status",
-      render: (row) => <span className={`pill ${getStatusTone(row.status)}`}>{getStatusLabel(row.status)}</span>,
-    },
-    {
-      header: "Hành động",
-      key: "actions",
-      render: (row) =>
-        row.status === "PENDING" ? (
-          <div className="action-row">
-            <Button size="sm" variant="primary" icon={CheckCircle} onClick={() => updateVehicle(row.id, "APPROVED")}>
-              Duyệt
-            </Button>
-            <Button size="sm" variant="outline" icon={X} onClick={() => updateVehicle(row.id, "REJECTED")}>
-              Từ chối
-            </Button>
-          </div>
-        ) : (
-          "Đã xử lý"
-        ),
-    },
-  ];
-
   return (
-    <div className="parking-page">
-      <section className="page-hero">
-        <div className="page-hero-content">
-          <div className="page-eyebrow"><ShieldCheck size={16} /> Admin</div>
-          <h1 className="page-title">Duyệt xe, kiểm soát tài khoản và phân quyền</h1>
-          <p className="page-subtitle">
-            Xin chào {user.name}. Admin đảm bảo xe được duyệt trước khi user mua gói tháng hoặc dùng QR hợp lệ.
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      {/* Brand Header */}
+      <div className="card" style={{ padding: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+        <div>
+          <h1 style={{ fontSize: "22px", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px" }}>
+            Hệ thống Quản trị viên <ShieldCheck style={{ color: "var(--primary)" }} />
+          </h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "4px" }}>
+            Xin chào <strong>{user.name}</strong>. Giám sát toàn cục tài nguyên máy chủ và quản lý tài khoản người dùng.
           </p>
         </div>
-        <div className="page-hero-aside">
-          <span className="page-hero-label">Xe chờ duyệt</span>
-          <span className="page-hero-number">{pendingVehicles.length}</span>
-          <span className="page-hero-label">hồ sơ</span>
-        </div>
-      </section>
-
-      {notice && <div className="card soft-panel"><strong>{notice}</strong></div>}
-
-      <div className="dashboard-grid">
-        <div className="card metric-card">
-          <div className="metric-icon"><UserCog size={22} /></div>
-          <div className="metric-label">Tài khoản</div>
-          <div className="metric-value">{users.length}</div>
-          <div className="metric-note">Bao gồm user, staff, manager, admin</div>
-        </div>
-        <div className="card metric-card">
-          <div className="metric-icon"><CarIcon /></div>
-          <div className="metric-label">Phương tiện</div>
-          <div className="metric-value">{vehicleRows.length}</div>
-          <div className="metric-note">{vehicleRows.filter((v) => v.status === "APPROVED").length} xe đã duyệt</div>
-        </div>
-        <div className="card metric-card">
-          <div className="metric-icon"><UserCheck size={22} /></div>
-          <div className="metric-label">Chờ duyệt xe</div>
-          <div className="metric-value">{pendingVehicles.length}</div>
-          <div className="metric-note">Nguồn `/api/vehicles?status=PENDING`</div>
+        
+        <div style={{ display: "flex", gap: "10px" }}>
+          <Button variant="outline" size="sm" onClick={() => handleSystemAction("Xóa cache hệ thống")} icon={RefreshCw}>
+            Dọn Cache
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => handleSystemAction("Khởi động lại Server")}>
+            Restart Nodes
+          </Button>
         </div>
       </div>
 
-      <section className="card section-card">
-        <div className="section-header">
-          <div>
-            <h2 className="section-title"><ShieldCheck size={19} /> Duyệt phương tiện</h2>
-            <p className="section-copy">Sau khi duyệt, user mới mua gói tháng hoặc dùng QR hợp lệ cho xe đó.</p>
-          </div>
+      {systemAlert && (
+        <div className="card animate-fade-in" style={{ padding: "12px 20px", borderLeft: "4px solid var(--primary)", backgroundColor: "var(--primary-light)", color: "var(--text-primary)", fontWeight: "600", fontSize: "14px" }}>
+          {systemAlert}
         </div>
-        <Table columns={vehicleColumns} data={vehicleRows} />
-      </section>
+      )}
 
-      <section className="card section-card">
-        <div className="section-header">
+      {/* Grid Stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px" }}>
+        <div className="card" style={{ padding: "20px", display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ padding: "12px", borderRadius: "12px", backgroundColor: "var(--primary-light)", color: "var(--primary)" }}>
+            <Users size={24} />
+          </div>
           <div>
-            <h2 className="section-title"><UserCog size={19} /> Tài khoản và phân quyền</h2>
-            <p className="section-copy">Role bám backend: USER, PARKING_STAFF, PARKING_MANAGER, ADMIN.</p>
+            <span style={{ fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>Tổng số người dùng</span>
+            <h3 style={{ fontSize: "22px", fontWeight: "800", marginTop: "4px" }}>{users.length} tài khoản</h3>
           </div>
         </div>
-        <Table columns={userColumns} data={users} />
-      </section>
+
+        <div className="card" style={{ padding: "20px", display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ padding: "12px", borderRadius: "12px", backgroundColor: "var(--success-light)", color: "var(--success)" }}>
+            <Cpu size={24} />
+          </div>
+          <div>
+            <span style={{ fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>Tải CPU máy chủ</span>
+            <h3 style={{ fontSize: "22px", fontWeight: "800", marginTop: "4px" }}>12.4%</h3>
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: "20px", display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ padding: "12px", borderRadius: "12px", backgroundColor: "var(--warning-light)", color: "var(--warning)" }}>
+            <HardDrive size={24} />
+          </div>
+          <div>
+            <span style={{ fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>Dung lượng ổ cứng</span>
+            <h3 style={{ fontSize: "22px", fontWeight: "800", marginTop: "4px" }}>32% / 100 GB</h3>
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: "20px", display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ padding: "12px", borderRadius: "12px", backgroundColor: "var(--primary-light)", color: "var(--primary)" }}>
+            <Server size={24} />
+          </div>
+          <div>
+            <span style={{ fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>Trạng thái Nodes</span>
+            <h3 style={{ fontSize: "22px", fontWeight: "800", marginTop: "4px", color: "var(--success)" }}>3 Đang chạy</h3>
+          </div>
+        </div>
+      </div>
+
+      {/* Nested User Management Section */}
+      <div>
+        <UserList />
+      </div>
     </div>
   );
 };
-
-const CarIcon = () => <UserCheck size={22} />;
 
 export default AdminDashboard;

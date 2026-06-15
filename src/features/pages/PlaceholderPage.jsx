@@ -1,3 +1,4 @@
+import React from "react";
 import { useMockAuth } from "../../context/MockAuthContext";
 import { Info } from "lucide-react";
 
