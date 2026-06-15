@@ -1,185 +1,135 @@
-import React, { useState } from "react";
-import { mockBuildingInfo } from "../../services/mockParkingData";
+import { useState } from "react";
 import Button from "../../components/Button/Button";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import Select from "../../components/Form/Select";
-import { Building2, Save, X, Edit, CheckCircle } from "lucide-react";
+import { buildingInfo, floors, getStatusLabel, getStatusTone } from "../../services/mockParkingData";
+import { Building2, CheckCircle, Edit, MapPin, Save, X } from "lucide-react";
 
 const BuildingManagementPage = () => {
-  const [building, setBuilding] = useState(mockBuildingInfo);
-  const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(building.name);
-  const [address, setAddress] = useState(building.address);
-  const [hours, setHours] = useState(building.hours);
-  const [desc, setDesc] = useState(building.desc);
-  const [status, setStatus] = useState(building.status);
-  const [formError, setFormError] = useState({});
-  const [successToast, setSuccessToast] = useState(false);
+  const [building, setBuilding] = useState(buildingInfo);
+  const [draft, setDraft] = useState(buildingInfo);
+  const [editing, setEditing] = useState(false);
+  const [saved, setSaved] = useState(false);
 
-  const handleSave = (e) => {
-    e.preventDefault();
-    const errors = {};
-    if (!name.trim()) errors.name = "Tên tòa nhà không được trống";
-    if (!address.trim()) errors.address = "Địa chỉ không được trống";
-    if (!hours.trim()) errors.hours = "Giờ hoạt động không được trống";
-
-    if (Object.keys(errors).length > 0) {
-      setFormError(errors);
-      return;
-    }
-
-    setBuilding({
-      name,
-      address,
-      hours,
-      desc,
-      status
-    });
-
-    setIsEditing(false);
-    setFormError({});
-    setSuccessToast(true);
-    setTimeout(() => setSuccessToast(false), 3000);
+  const handleSave = (event) => {
+    event.preventDefault();
+    setBuilding(draft);
+    setEditing(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2200);
   };
 
-  const handleCancel = () => {
-    setName(building.name);
-    setAddress(building.address);
-    setHours(building.hours);
-    setDesc(building.desc);
-    setStatus(building.status);
-    setIsEditing(false);
-    setFormError({});
-  };
+  const totalFloors = floors.length;
+  const motorbikeFloors = floors.filter((floor) => floor.floorType === "MOTORBIKE").length;
+  const carFloors = floors.filter((floor) => floor.floorType === "CAR").length;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px", position: "relative" }}>
-      {/* Toast Alert */}
-      {successToast && (
-        <div style={{
-          position: "fixed",
-          top: "90px",
-          right: "30px",
-          zIndex: 100,
-          backgroundColor: "var(--success)",
-          color: "white",
-          padding: "12px 24px",
-          borderRadius: "var(--radius-sm)",
-          boxShadow: "var(--shadow-lg)",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontWeight: "700"
-        }} className="animate-slide-in">
-          <CheckCircle size={20} /> Cập nhật thành công!
+    <div className="parking-page">
+      <section className="page-hero">
+        <div className="page-hero-content">
+          <div className="page-eyebrow"><Building2 size={16} /> Một tòa nhà MVP</div>
+          <h1 className="page-title">{building.name}</h1>
+          <p className="page-subtitle">{building.description}</p>
+        </div>
+        <div className="page-hero-aside">
+          <span className="page-hero-label">Tầng vận hành</span>
+          <span className="page-hero-number">{totalFloors}</span>
+          <span className="page-hero-label">{motorbikeFloors} xe máy, {carFloors} ô tô</span>
+        </div>
+      </section>
+
+      {saved && (
+        <div className="card soft-panel">
+          <span className="pill success"><CheckCircle size={14} /> Đã lưu mock</span>
         </div>
       )}
 
-      {/* Page Header */}
-      <div className="card" style={{ padding: "24px" }}>
-        <h1 style={{ fontSize: "22px", fontWeight: "800" }}>Thông tin Tòa nhà & Cơ sở hạ tầng</h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "4px" }}>
-          Xem và cập nhật các cấu hình thông tin cốt lõi của tòa nhà đang kết nối với hệ thống bãi đỗ xe thông minh.
-        </p>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "24px" }}>
-        {/* Detail Panel */}
-        <div className="card" style={{ padding: "28px" }}>
-          
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-            <h3 style={{ fontSize: "18px", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Building2 size={22} style={{ color: "var(--primary)" }} /> {building.name}
-            </h3>
-            
-            {!isEditing && (
-              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} icon={Edit}>
-                Chỉnh sửa
-              </Button>
-            )}
+      <div className="two-column-grid">
+        <section className="card section-card">
+          <div className="section-header">
+            <div>
+              <h2 className="section-title"><MapPin size={19} /> Thông tin tòa nhà</h2>
+              <p className="section-copy">Backend hiện có `/api/buildings`, UI đang mock cho một tòa.</p>
+            </div>
+            {!editing && <Button variant="outline" icon={Edit} onClick={() => setEditing(true)}>Chỉnh sửa</Button>}
           </div>
 
-          {!isEditing ? (
-            // Read-Only view
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px", fontSize: "14px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "150px 1fr", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
-                <span style={{ color: "var(--text-secondary)", fontWeight: "600" }}>Tên cơ sở:</span>
-                <span style={{ fontWeight: "700" }}>{building.name}</span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "150px 1fr", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
-                <span style={{ color: "var(--text-secondary)", fontWeight: "600" }}>Địa chỉ tòa nhà:</span>
-                <span>{building.address}</span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "150px 1fr", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
-                <span style={{ color: "var(--text-secondary)", fontWeight: "600" }}>Giờ mở cửa:</span>
-                <span>{building.hours}</span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "150px 1fr", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
-                <span style={{ color: "var(--text-secondary)", fontWeight: "600" }}>Trạng thái:</span>
-                <span>
-                  <span style={{
-                    fontSize: "12px",
-                    fontWeight: "700",
-                    padding: "2px 8px",
-                    borderRadius: "4px",
-                    backgroundColor: building.status === "Đang hoạt động" ? "var(--success-light)" : "var(--danger-light)",
-                    color: building.status === "Đang hoạt động" ? "var(--success)" : "var(--danger)"
-                  }}>{building.status}</span>
-                </span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "150px 1fr" }}>
-                <span style={{ color: "var(--text-secondary)", fontWeight: "600" }}>Mô tả hạ tầng:</span>
-                <span style={{ color: "var(--text-secondary)", lineHeight: "1.6" }}>{building.desc}</span>
-              </div>
+          {!editing ? (
+            <div className="data-list">
+              <div className="data-row"><span>Tên tòa</span><strong>{building.name}</strong></div>
+              <div className="data-row"><span>Địa chỉ</span><strong>{building.address}</strong></div>
+              <div className="data-row"><span>Giờ hoạt động</span><strong>{building.hours}</strong></div>
+              <div className="data-row"><span>Hotline</span><strong>{building.hotline}</strong></div>
+              <div className="data-row"><span>Quản lý</span><strong>{building.manager}</strong></div>
+              <div className="data-row"><span>Trạng thái</span><strong>{getStatusLabel(building.status)}</strong></div>
             </div>
           ) : (
-            // Edit Form view
-            <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
-                <FormField label="Tên cơ sở hạ tầng" error={formError.name} required>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} />
-                </FormField>
-                
-                <FormField label="Giờ hoạt động" error={formError.hours} required>
-                  <Input value={hours} onChange={(e) => setHours(e.target.value)} />
-                </FormField>
-              </div>
-
-              <FormField label="Địa chỉ đầy đủ" error={formError.address} required>
-                <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+            <form onSubmit={handleSave} style={{ display: "grid", gap: 14 }}>
+              <FormField label="Tên tòa nhà" required>
+                <Input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
               </FormField>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
-                <FormField label="Trạng thái hoạt động">
-                  <Select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    options={[
-                      { value: "Đang hoạt động", label: "Đang hoạt động" },
-                      { value: "Tạm dừng hoạt động", label: "Tạm dừng hoạt động" }
-                    ]}
-                  />
-                </FormField>
-              </div>
-
-              <FormField label="Ghi chú mô tả">
-                <Input value={desc} onChange={(e) => setDesc(e.target.value)} />
+              <FormField label="Địa chỉ" required>
+                <Input value={draft.address} onChange={(event) => setDraft({ ...draft, address: event.target.value })} />
               </FormField>
-
-              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                <Button type="submit" variant="primary" icon={Save}>
-                  Lưu thay đổi
-                </Button>
-                <Button type="button" variant="outline" onClick={handleCancel} icon={X}>
-                  Hủy
-                </Button>
+              <FormField label="Giờ hoạt động">
+                <Input value={draft.hours} onChange={(event) => setDraft({ ...draft, hours: event.target.value })} />
+              </FormField>
+              <FormField label="Hotline">
+                <Input value={draft.hotline} onChange={(event) => setDraft({ ...draft, hotline: event.target.value })} />
+              </FormField>
+              <FormField label="Trạng thái">
+                <Select
+                  value={draft.status}
+                  onChange={(event) => setDraft({ ...draft, status: event.target.value })}
+                  options={[
+                    { value: "ACTIVE", label: "Đang hoạt động" },
+                    { value: "MAINTENANCE", label: "Bảo trì" },
+                    { value: "LOCKED", label: "Tạm khóa" },
+                  ]}
+                  placeholder={null}
+                />
+              </FormField>
+              <div className="action-row">
+                <Button type="submit" variant="primary" icon={Save}>Lưu</Button>
+                <Button type="button" variant="outline" icon={X} onClick={() => { setDraft(building); setEditing(false); }}>Hủy</Button>
               </div>
             </form>
           )}
+        </section>
 
-        </div>
+        <section className="card section-card">
+          <div className="section-header">
+            <div>
+              <h2 className="section-title"><Building2 size={19} /> Quy tắc phạm vi</h2>
+              <p className="section-copy">Các giới hạn đã chốt trong file nghiệp vụ.</p>
+            </div>
+          </div>
+          <div className="data-list">
+            <div className="soft-panel"><strong>Không quản lý nhiều chi nhánh</strong><p className="section-copy">MVP chỉ có một tòa nhà.</p></div>
+            <div className="soft-panel"><strong>Xe máy không có slot</strong><p className="section-copy">Chỉ quản lý bằng sức chứa mỗi tầng.</p></div>
+            <div className="soft-panel"><strong>Ô tô phải gán slot</strong><p className="section-copy">Slot có trạng thái trống, đặt trước, đang dùng, bảo trì, xung đột.</p></div>
+          </div>
+        </section>
       </div>
+
+      <section className="card section-card">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title"><Building2 size={19} /> Tầng thuộc tòa nhà</h2>
+            <p className="section-copy">Tổng quan nhanh trước khi chỉnh chi tiết ở màn Tầng & slot.</p>
+          </div>
+        </div>
+        <div className="dashboard-grid">
+          {floors.map((floor) => (
+            <div className="soft-panel" key={floor.id}>
+              <strong>{floor.name}</strong>
+              <p className="section-copy">{floor.floorType === "CAR" ? `${floor.slotsCount} slot ô tô` : `${floor.currentCount}/${floor.capacity} xe máy`}</p>
+              <span className={`pill ${getStatusTone(floor.status)}`}>{getStatusLabel(floor.status)}</span>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 };
