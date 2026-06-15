@@ -1,13 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import createSagaMiddleware from "redux-saga";
-import userReducer from "../features/users/userSlice";
+
 import rootSaga from "./rootSaga";
+import authReducer from "../features/backend/auth/authSlice";
 
 const sagaMiddleware = createSagaMiddleware();
 
 export const store = configureStore({
     reducer: {
-        users: userReducer,
+        auth: authReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

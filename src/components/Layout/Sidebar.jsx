@@ -17,6 +17,8 @@ import {
   User,
 } from "lucide-react";
 import "./Layout.css";
+import { useDispatch } from "react-redux";
+import { logout as logoutAction } from "../../features/backend/auth/authSlice";
 
 const menus = {
   USER: [
@@ -44,13 +46,15 @@ const menus = {
 };
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
-  const { role, user, logout } = useMockAuth();
+  const { role, user, logout: mockLogout } = useMockAuth();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const menuItems = menus[role] || [];
 
   const handleLogout = () => {
-    logout();
-    navigate("/login");
+    dispatch(logoutAction());
+    mockLogout();
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -92,9 +96,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       </nav>
 
       <div className="sidebar-footer">
-        <button className="logout-btn" onClick={handleLogout}>
+        <button className="logout-btn" variant="outline" onClick={handleLogout}>
           <LogOut size={18} />
-          <span>Đăng xuất mock</span>
+          <span>Đăng xuất</span>
         </button>
       </div>
     </aside>
