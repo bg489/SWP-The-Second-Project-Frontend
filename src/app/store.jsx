@@ -5,6 +5,9 @@ import rootSaga from "./rootSaga";
 import authReducer from "../features/backend/auth/authSlice";
 import adminUserReducer from "../features/backend/adminUsers/adminUserSlice";
 import buildingChangeReducer from "../features/backend/buildingChange/buildingChangeSlice";
+import buildingReducer from "../features/backend/buildings/buildingSlice";
+import floorReducer from "../features/backend/floors/floorSlice";
+import slotReducer from "../features/backend/slots/slotSlice";
 
 const sagaMiddleware = createSagaMiddleware();
 
@@ -13,6 +16,9 @@ export const store = configureStore({
         auth: authReducer,
         adminUsers: adminUserReducer,
         buildingChange: buildingChangeReducer,
+        buildings: buildingReducer,
+        floors: floorReducer,
+        slots: slotReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

@@ -234,6 +234,10 @@
   gap: 10px;
 }
 
+.mg-pagination {
+  margin-top: 10px;
+}
+
 .soft-panel {
   padding: 16px;
   border: 1px solid var(--border-color);
@@ -459,4 +463,143 @@
   .login-panel-wrap {
     padding: 26px 18px;
   }
+}
+
+.car-slot-manager-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.car-slot-map-card,
+.car-slot-form-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+  padding: 18px;
+}
+
+.car-slot-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+.car-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 12px;
+}
+
+.car-slot-card {
+  min-height: 68px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-soft);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 4px;
+  transition: transform var(--transition-fast), border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.car-slot-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.car-slot-card.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(237, 153, 81, 0.22);
+}
+
+.car-slot-card.available {
+  background: rgba(22, 163, 74, 0.1);
+  border-color: rgba(22, 163, 74, 0.35);
+}
+
+.car-slot-card.reserved {
+  background: rgba(234, 179, 8, 0.12);
+  border-color: rgba(234, 179, 8, 0.38);
+}
+
+.car-slot-card.occupied {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.car-slot-card.maintenance,
+.car-slot-card.locked,
+.car-slot-card.conflict {
+  background: rgba(100, 116, 139, 0.14);
+  border-color: rgba(100, 116, 139, 0.38);
+}
+
+.car-slot-code {
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.car-slot-status,
+.car-slot-size {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.car-slot-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.legend-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-right: -6px;
+}
+
+.legend-dot.available {
+  background: #16a34a;
+}
+
+.legend-dot.reserved {
+  background: #eab308;
+}
+
+.legend-dot.occupied {
+  background: #ef4444;
+}
+
+.legend-dot.maintenance {
+  background: #64748b;
+}
+
+@media (max-width: 980px) {
+  .car-slot-manager-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.filter-grid .form-field {
+  margin: 0;
 }
