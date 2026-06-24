@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { ArrowDownLeft, Car, Layers, QrCode, ShieldCheck } from "lucide-react";
+import { ArrowDownLeft, Camera, Car, Layers, QrCode, ShieldCheck } from "lucide-react";
 
 import Button from "../../components/Button/Button";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
+import QrCameraScanner from "../../components/QrScanner/QrCameraScanner";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
 import {
@@ -36,6 +37,7 @@ const CheckInQRPage = () => {
     tempQrCardCode: "TMP-001",
     slotId: "4",
   });
+  const [scannerTarget, setScannerTarget] = useState("");
 
   useEffect(() => {
     dispatch(fetchTempQrCardsRequest({ status: "READY" }));
@@ -51,6 +53,23 @@ const CheckInQRPage = () => {
   const motorbikeFloor = useMemo(() => {
     return floors.find((floor) => floor.floorType === "MOTORBIKE" && floor.currentCount < floor.capacity);
   }, []);
+
+  const tempQrOptions = useMemo(() => {
+    const options = readyCards.map((card) => ({
+      value: card.cardCode || card.id,
+      label: `${card.cardCode || card.id} - ${card.label || "Sẵn sàng"}`,
+    }));
+    const selectedCode = form.tempQrCardCode;
+
+    if (selectedCode && !options.some((option) => option.value === selectedCode)) {
+      options.unshift({
+        value: selectedCode,
+        label: `${selectedCode} - Đang chọn`,
+      });
+    }
+
+    return options;
+  }, [form.tempQrCardCode, readyCards]);
 
   const updateForm = (field, value) => {
     dispatch(clearParkingNotice());
@@ -69,6 +88,23 @@ const CheckInQRPage = () => {
   const validateQr = () => {
     if (!form.qrCode.trim()) return;
     dispatch(validateQrPassRequest({ qrCode: form.qrCode.trim() }));
+  };
+
+  const openScanner = (target) => {
+    setScannerTarget(target);
+  };
+
+  const handleQrScan = (value) => {
+    const scannedValue = value.trim();
+
+    if (!scannedValue) return;
+
+    if (scannerTarget === "MONTHLY") {
+      updateForm("qrCode", scannedValue);
+      return;
+    }
+
+    updateForm("tempQrCardCode", scannedValue.toUpperCase());
   };
 
   const submitCheckIn = (event) => {
@@ -167,22 +203,39 @@ const CheckInQRPage = () => {
               <FormField label="Mã QR tháng">
                 <div style={{ display: "grid", gap: 10 }}>
                   <Input value={form.qrCode} onChange={(event) => updateForm("qrCode", event.target.value)} placeholder="Dán hoặc nhập mã QR" />
+                  <Button type="button" variant="secondary" icon={Camera} onClick={() => openScanner("MONTHLY")}>
+                    Quét bằng camera
+                  </Button>
                   <Button type="button" variant="outline" icon={ShieldCheck} onClick={validateQr} loading={qrPasses.validating}>
                     Kiểm tra mã QR
                   </Button>
+                  <QrCameraScanner
+                    open={scannerTarget === "MONTHLY"}
+                    title="Quét QR tháng"
+                    onClose={() => setScannerTarget("")}
+                    onScan={handleQrScan}
+                  />
                 </div>
               </FormField>
             ) : (
               <FormField label="Thẻ QR tạm">
-                <Select
-                  value={form.tempQrCardCode}
-                  onChange={(event) => updateForm("tempQrCardCode", event.target.value)}
-                  options={readyCards.map((card) => ({
-                    value: card.cardCode || card.id,
-                    label: `${card.cardCode || card.id} - ${card.label || "Sẵn sàng"}`,
-                  }))}
-                  placeholder="Chọn thẻ QR tạm"
-                />
+                <div style={{ display: "grid", gap: 10 }}>
+                  <Select
+                    value={form.tempQrCardCode}
+                    onChange={(event) => updateForm("tempQrCardCode", event.target.value)}
+                    options={tempQrOptions}
+                    placeholder="Chọn thẻ QR tạm"
+                  />
+                  <Button type="button" variant="secondary" icon={Camera} onClick={() => openScanner("TEMP")}>
+                    Quét bằng camera
+                  </Button>
+                  <QrCameraScanner
+                    open={scannerTarget === "TEMP"}
+                    title="Quét QR tạm"
+                    onClose={() => setScannerTarget("")}
+                    onScan={handleQrScan}
+                  />
+                </div>
               </FormField>
             )}
 
