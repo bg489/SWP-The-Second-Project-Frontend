@@ -151,6 +151,26 @@ const getErrorMessage = (error, fallback) =>
 
 const shouldUseSample = (error) => !error?.response;
 
+const TEMP_QR_STORAGE_KEY = "parking_temp_qr_cards";
+
+const readStoredTempQrCards = () => {
+    try {
+        const stored = localStorage.getItem(TEMP_QR_STORAGE_KEY);
+        const parsed = stored ? JSON.parse(stored) : null;
+        return Array.isArray(parsed) ? parsed : tempQrCards;
+    } catch {
+        return tempQrCards;
+    }
+};
+
+const writeStoredTempQrCards = (cards) => {
+    try {
+        localStorage.setItem(TEMP_QR_STORAGE_KEY, JSON.stringify(cards));
+    } catch {
+        // Ignore storage errors; the active page state still contains the new QR card.
+    }
+};
+
 const withId = (payload, prefix) => ({
     id: payload?.id || `${prefix}-${Date.now()}`,
     ...payload,
@@ -440,9 +460,10 @@ function* handleFetchTempQrCards(action) {
     } catch (error) {
         if (shouldUseSample(error)) {
             const status = action.payload?.status;
+            const cards = readStoredTempQrCards();
             yield put(
                 fetchTempQrCardsSuccess(
-                    status ? tempQrCards.filter((card) => card.status === status) : tempQrCards
+                    status ? cards.filter((card) => card.status === status) : cards
                 )
             );
             return;
@@ -459,18 +480,19 @@ function* handleCreateTempQrCard(action) {
         yield put(fetchTempQrCardsRequest());
     } catch (error) {
         if (shouldUseSample(error)) {
+            const card = withId(
+                {
+                    label: action.payload.cardCode || action.payload.id,
+                    status: "READY",
+                    currentSessionId: null,
+                    ...action.payload,
+                },
+                "TMP"
+            );
+            const cards = [card, ...readStoredTempQrCards().filter((item) => item.cardCode !== card.cardCode)];
+            writeStoredTempQrCards(cards);
             yield put(
-                createTempQrCardSuccess(
-                    withId(
-                        {
-                            label: action.payload.cardCode || action.payload.id,
-                            status: "READY",
-                            currentSessionId: null,
-                            ...action.payload,
-                        },
-                        "TMP"
-                    )
-                )
+                createTempQrCardSuccess(card)
             );
             return;
         }
@@ -488,6 +510,10 @@ function* handleUpdateTempQrCardStatus(action) {
         yield put(updateTempQrCardStatusSuccess(extractData(response)));
     } catch (error) {
         if (shouldUseSample(error)) {
+            const cards = readStoredTempQrCards().map((card) =>
+                String(card.id) === String(action.payload.id) ? { ...card, ...action.payload } : card
+            );
+            writeStoredTempQrCards(cards);
             yield put(updateTempQrCardStatusSuccess(action.payload));
             return;
         }
