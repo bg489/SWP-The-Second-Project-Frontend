@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AlertTriangle, ArrowUpRight, CreditCard, QrCode, ReceiptText, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, Camera, CreditCard, QrCode, ReceiptText, ShieldCheck } from "lucide-react";
 
 import Button from "../../components/Button/Button";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
+import QrCameraScanner from "../../components/QrScanner/QrCameraScanner";
 import Select from "../../components/Form/Select";
 import {
   checkOutByQrRequest,
@@ -26,6 +27,29 @@ const paymentOptions = [
   { value: "VNPAY", label: "VNPay" },
 ];
 
+const getSessionQrCodes = (session) => {
+  return [
+    session.sessionQrCode,
+    session.session_qr_code,
+    session.qrCode,
+    session.qrCardId,
+    session.tempQrCardCode,
+    session.temp_qr_card_code,
+    session.monthlyPassQrCode,
+  ]
+    .filter(Boolean)
+    .map((value) => String(value).trim());
+};
+
+const findSessionByQrCode = (sessions, qrCode) => {
+  const normalizedCode = String(qrCode || "").trim().toUpperCase();
+  if (!normalizedCode) return null;
+
+  return sessions.find((session) =>
+    getSessionQrCodes(session).some((value) => value.toUpperCase() === normalizedCode)
+  ) || null;
+};
+
 const CheckOutQRPage = () => {
   const dispatch = useDispatch();
   const { parkingSessions, violations, notice } = useSelector((state) => state.parking);
@@ -34,6 +58,7 @@ const CheckOutQRPage = () => {
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [qrCode, setQrCode] = useState("");
   const [checkoutMode, setCheckoutMode] = useState("SESSION");
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchActiveParkingSessionsRequest());
@@ -41,10 +66,14 @@ const CheckOutQRPage = () => {
   }, [dispatch]);
 
   const effectiveSessionId = selectedSessionId || parkingSessions.active[0]?.id || "";
+  const scannedSession = useMemo(() => {
+    return findSessionByQrCode(parkingSessions.active, qrCode);
+  }, [parkingSessions.active, qrCode]);
 
   const currentSession = useMemo(() => {
+    if (checkoutMode === "QR") return scannedSession;
     return parkingSessions.active.find((session) => String(session.id) === String(effectiveSessionId));
-  }, [effectiveSessionId, parkingSessions.active]);
+  }, [checkoutMode, effectiveSessionId, parkingSessions.active, scannedSession]);
 
   const checkoutTime = useMemo(() => new Date(), []);
 
@@ -80,6 +109,8 @@ const CheckOutQRPage = () => {
 
   const confirmCheckout = () => {
     if (checkoutMode === "QR") {
+      if (!qrCode.trim()) return;
+
       dispatch(
         checkOutByQrRequest({
           qrCode: qrCode.trim(),
@@ -99,6 +130,23 @@ const CheckOutQRPage = () => {
         totalAmount: feeDetails.total,
       })
     );
+  };
+
+  const openQrScanner = () => {
+    dispatch(fetchActiveParkingSessionsRequest());
+    setCheckoutMode("QR");
+    setScannerOpen(true);
+  };
+
+  const handleQrScan = (value) => {
+    const scannedValue = value.trim();
+    const foundSession = findSessionByQrCode(parkingSessions.active, scannedValue);
+
+    setQrCode(scannedValue);
+
+    if (foundSession) {
+      setSelectedSessionId(foundSession.id);
+    }
   };
 
   const receipt = parkingSessions.checkoutResult;
@@ -164,7 +212,26 @@ const CheckOutQRPage = () => {
               </FormField>
             ) : (
               <FormField label="Mã QR">
-                <Input value={qrCode} onChange={(event) => setQrCode(event.target.value)} placeholder="Nhập mã QR trên thẻ" />
+                <div style={{ display: "grid", gap: 10 }}>
+                  <Input value={qrCode} onChange={(event) => setQrCode(event.target.value)} placeholder="Nhập mã QR trên thẻ" />
+                  <Button type="button" variant="secondary" icon={Camera} onClick={openQrScanner}>
+                    Quét bằng camera
+                  </Button>
+                  <QrCameraScanner
+                    open={scannerOpen}
+                    title="Quét QR xe ra"
+                    onClose={() => setScannerOpen(false)}
+                    onScan={handleQrScan}
+                  />
+                  {qrCode && scannedSession && (
+                    <span className="pill success">Đã tìm thấy xe {scannedSession.plateNumber}</span>
+                  )}
+                  {qrCode && !scannedSession && (
+                    <p className="section-copy" style={{ color: "var(--danger)" }}>
+                      Chưa tìm thấy xe đang gửi với mã này. Hãy làm mới danh sách hoặc kiểm tra lại mã.
+                    </p>
+                  )}
+                </div>
               </FormField>
             )}
 
@@ -178,8 +245,11 @@ const CheckOutQRPage = () => {
             </FormField>
           </div>
 
-          {currentSession && checkoutMode === "SESSION" && (
+          {currentSession && (
             <div className="data-list" style={{ marginTop: 18 }}>
+              {checkoutMode === "QR" && (
+                <div className="data-row"><span>Mã QR</span><strong>{qrCode}</strong></div>
+              )}
               <div className="data-row"><span>Biển số</span><strong>{currentSession.plateNumber}</strong></div>
               <div className="data-row"><span>Loại xe</span><strong>{getVehicleTypeLabel(currentSession.vehicleType)}</strong></div>
               <div className="data-row"><span>Vị trí</span><strong>{currentSession.slotCode || "Khu xe máy"}</strong></div>
@@ -226,7 +296,9 @@ const CheckOutQRPage = () => {
               </Button>
             </div>
           ) : (
-            <p className="section-copy">Chọn lượt gửi để xem hóa đơn.</p>
+            <p className="section-copy">
+              {checkoutMode === "QR" ? "Quét QR để xem thông tin xe và hóa đơn." : "Chọn lượt gửi để xem hóa đơn."}
+            </p>
           )}
         </section>
       </div>
@@ -241,7 +313,7 @@ const CheckOutQRPage = () => {
             <span className="pill success">Đã ghi nhận</span>
           </div>
           <div className="dashboard-grid">
-            <div className="soft-panel"><span className="metric-label">Lượt gửi</span><div className="metric-value">{receipt.id || effectiveSessionId}</div></div>
+            <div className="soft-panel"><span className="metric-label">Lượt gửi</span><div className="metric-value">{receipt.id || currentSession?.id || effectiveSessionId}</div></div>
             <div className="soft-panel"><span className="metric-label">Cách thanh toán</span><div className="metric-value">{paymentOptions.find((item) => item.value === paymentMethod)?.label}</div></div>
             <div className="soft-panel"><span className="metric-label">Trạng thái</span><div className="metric-value">{receipt.status === "PENDING_PAYMENT" ? "Chờ thanh toán" : "Hoàn tất"}</div></div>
             <div className="soft-panel"><span className="metric-label">Tổng thu</span><div className="metric-value">{formatCurrency(receipt.totalAmount || feeDetails?.total || 0)}</div></div>
