@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { QrCode, RefreshCcw, Save, ShieldAlert } from "lucide-react";
+import { Maximize2, QrCode, RefreshCcw, Save, ShieldAlert, X } from "lucide-react";
 
 import Button from "../../components/Button/Button";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
+import QrCodeImage from "../../components/QrCode/QrCodeImage";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
 import { useMockAuth } from "../../context/MockAuthContext";
@@ -34,9 +35,12 @@ const TempQrCardsPage = () => {
   const [form, setForm] = useState({
     cardCode: "TEMP-001",
     status: "READY",
+    note: "",
   });
 
   const [filter, setFilter] = useState("");
+  const [formError, setFormError] = useState("");
+  const [selectedCard, setSelectedCard] = useState(null);
 
   useEffect(() => {
     dispatch(fetchTempQrCardsRequest());
@@ -51,17 +55,32 @@ const TempQrCardsPage = () => {
     return tempQrCards.items.filter((card) => card.status === "READY").length;
   }, [tempQrCards.items]);
 
+  const previewCode = form.cardCode.trim().toUpperCase();
+
   const updateForm = (field, value) => {
     dispatch(clearParkingNotice());
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setFormError("");
+    setForm((prev) => ({
+      ...prev,
+      [field]: field === "cardCode" ? value.toUpperCase() : value,
+    }));
   };
 
   const createCard = (event) => {
     event.preventDefault();
+    const cardCode = previewCode;
+
+    if (!cardCode) return;
+    if (new TextEncoder().encode(cardCode).length > 32) {
+      setFormError("Mã thẻ cần ngắn hơn 32 ký tự không dấu để QR dễ quét.");
+      return;
+    }
+
     dispatch(
       createTempQrCardRequest({
-        cardCode: form.cardCode.trim().toUpperCase(),
+        cardCode,
         status: form.status,
+        note: form.note.trim() || undefined,
       })
     );
   };
@@ -72,6 +91,25 @@ const TempQrCardsPage = () => {
   };
 
   const columns = [
+    {
+      header: "Mã QR",
+      key: "qrPreview",
+      width: "94px",
+      render: (row) => {
+        const value = row.cardCode || row.id;
+
+        return (
+          <button
+            type="button"
+            className="qr-thumb-button"
+            onClick={() => setSelectedCard(row)}
+            aria-label={`Xem QR ${value}`}
+          >
+            <QrCodeImage value={value} size={66} title={`QR ${value}`} />
+          </button>
+        );
+      },
+    },
     {
       header: "Mã thẻ",
       key: "cardCode",
@@ -142,8 +180,14 @@ const TempQrCardsPage = () => {
             </div>
             <form onSubmit={createCard} style={{ display: "grid", gap: 14 }}>
               <FormField label="Mã thẻ" required>
-                <Input value={form.cardCode} onChange={(event) => updateForm("cardCode", event.target.value)} />
+                <Input
+                  value={form.cardCode}
+                  maxLength={32}
+                  onChange={(event) => updateForm("cardCode", event.target.value)}
+                  placeholder="Ví dụ: TEMP-001"
+                />
               </FormField>
+              {formError && <p style={{ color: "var(--danger)", marginTop: -6 }}>{formError}</p>}
               <FormField label="Trạng thái ban đầu">
                 <Select
                   value={form.status}
@@ -152,8 +196,27 @@ const TempQrCardsPage = () => {
                   placeholder={null}
                 />
               </FormField>
+              <FormField label="Ghi chú">
+                <Input
+                  value={form.note}
+                  onChange={(event) => updateForm("note", event.target.value)}
+                  placeholder="Ví dụ: Thẻ dự phòng cổng B"
+                />
+              </FormField>
+
+              <div className="qr-live-preview">
+                <QrCodeImage value={previewCode || "TEMP-001"} size={168} title={`QR ${previewCode || "TEMP-001"}`} />
+                <div>
+                  <span className="metric-label">Mã sẽ in lên QR </span>
+                  <strong>{previewCode || "Chưa nhập mã"}</strong>
+                  <p className="section-copy">
+                    Khi quét mã này, hệ thống sẽ nhận đúng mã thẻ để phát cho khách gửi lẻ.
+                  </p>
+                </div>
+              </div>
+
               <Button type="submit" icon={Save} loading={tempQrCards.saving}>
-                Lưu thẻ QR
+                Tạo và lưu thẻ QR
               </Button>
             </form>
           </section>
@@ -199,6 +262,47 @@ const TempQrCardsPage = () => {
 
         <Table columns={columns} data={cards} loading={tempQrCards.loading} />
       </section>
+
+      {selectedCard && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setSelectedCard(null)}
+        >
+          <div
+            className="card section-card qr-modal-card animate-fade-in"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="section-header">
+              <div>
+                <h2 className="section-title">
+                  <QrCode size={19} /> {selectedCard.cardCode || selectedCard.id}
+                </h2>
+                <p className="section-copy">Dùng mã này để in hoặc đối chiếu khi phát thẻ.</p>
+              </div>
+              <button className="theme-toggle-btn" onClick={() => setSelectedCard(null)} aria-label="Đóng QR">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="qr-large-frame">
+              <QrCodeImage
+                value={selectedCard.cardCode || selectedCard.id}
+                size={260}
+                title={`QR ${selectedCard.cardCode || selectedCard.id}`}
+              />
+            </div>
+
+            <div className="action-row" style={{ justifyContent: "center" }}>
+              <span className={`pill ${getStatusTone(selectedCard.status)}`}>
+                {getStatusLabel(selectedCard.status)}
+              </span>
+              <Button variant="outline" icon={Maximize2} onClick={() => window.print()}>
+                In QR
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
