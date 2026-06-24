@@ -1,9 +1,10 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { useMockAuth } from "../../context/MockAuthContext";
-import { roleLabels } from "../../services/mockParkingData";
+import { useDispatch } from "react-redux";
 import {
+  AlertTriangle,
   ArrowDownLeft,
   ArrowUpRight,
+  BadgeDollarSign,
   BarChart3,
   Building2,
   Car,
@@ -17,35 +18,42 @@ import {
   User,
   UserCheck,
 } from "lucide-react";
-import "./Layout.css";
-import { useDispatch } from "react-redux";
+
+import { useMockAuth } from "../../context/MockAuthContext";
+import { roleLabels } from "../../services/mockParkingData";
 import { logout as logoutAction } from "../../features/backend/auth/authSlice";
+import "./Layout.css";
 
 const menus = {
   USER: [
-    { path: "/user/dashboard", label: "Tổng quan của tôi", icon: LayoutDashboard },
+    { path: "/user/dashboard", label: "Tổng quan", icon: LayoutDashboard },
     { path: "/user/qr-pass", label: "QR & gói tháng", icon: QrCode },
     { path: "/user/profile", label: "Hồ sơ & xe", icon: User },
-    { label: "Đổi tòa nhà", path: "/user/building-change", icon: Building2 }
+    { path: "/user/building-change", label: "Đổi tòa nhà", icon: Building2 },
   ],
   PARKING_STAFF: [
     { path: "/staff/dashboard", label: "Bàn vận hành", icon: LayoutDashboard },
-    { path: "/staff/check-in", label: "Xe vào / QR tạm", icon: ArrowDownLeft },
-    { path: "/staff/check-out", label: "Xe ra / tính phí", icon: ArrowUpRight },
-    { path: "/staff/motorbike-status", label: "Capacity xe máy", icon: Layers },
-    { path: "/staff/car-slots", label: "Sơ đồ slot ô tô", icon: Car },
+    { path: "/staff/check-in", label: "Xe vào", icon: ArrowDownLeft },
+    { path: "/staff/check-out", label: "Xe ra", icon: ArrowUpRight },
+    { path: "/staff/temp-qr-cards", label: "QR tạm", icon: QrCode },
+    { path: "/staff/violations", label: "Vi phạm", icon: AlertTriangle },
+    { path: "/staff/motorbike-status", label: "Sức chứa xe máy", icon: Layers },
+    { path: "/staff/car-slots", label: "Ô đỗ ô tô", icon: Car },
   ],
   PARKING_MANAGER: [
-    { path: "/manager/dashboard", label: "Dashboard quản lý", icon: LayoutDashboard },
+    { path: "/manager/dashboard", label: "Tổng quan quản lý", icon: LayoutDashboard },
     { path: "/manager/building", label: "Tòa nhà", icon: Building2 },
-    { path: "/manager/floors", label: "Tầng & slot", icon: Layers },
+    { path: "/manager/floors", label: "Tầng & ô đỗ", icon: Layers },
+    { path: "/manager/pricing-packages", label: "Bảng giá & gói tháng", icon: BadgeDollarSign },
+    { path: "/manager/temp-qr-cards", label: "QR tạm", icon: QrCode },
     { path: "/manager/reports", label: "Báo cáo", icon: BarChart3 },
   ],
   ADMIN: [
-    { path: "/admin/dashboard", label: "Duyệt & phân quyền", icon: ShieldCheck },
-    { path: "/admin/settings", label: "Chính sách hệ thống", icon: Settings },
-    { label: "Duyệt tài khoản", path: "/admin/users", icon: UserCheck },
-    { label: "Duyệt đổi tòa nhà", path: "/admin/building-change-requests", icon: Building2 }
+    { path: "/admin/dashboard", label: "Tổng quan duyệt", icon: ShieldCheck },
+    { path: "/admin/users", label: "Duyệt tài khoản", icon: UserCheck },
+    { path: "/admin/vehicles", label: "Duyệt xe", icon: Car },
+    { path: "/admin/building-change-requests", label: "Duyệt đổi tòa nhà", icon: Building2 },
+    { path: "/admin/settings", label: "Quy tắc chung", icon: Settings },
   ],
 };
 
@@ -62,10 +70,7 @@ const Sidebar = ({ isOpen, isHidden, toggleSidebar }) => {
   };
 
   return (
-    <aside
-      className={`sidebar-container ${isOpen ? "open" : ""} ${isHidden ? "collapsed" : ""
-        }`}
-    >
+    <aside className={`sidebar-container ${isOpen ? "open" : ""} ${isHidden ? "collapsed" : ""}`}>
       <div className="sidebar-brand">
         <div className="brand-logo">
           <div className="brand-mark">
@@ -79,8 +84,8 @@ const Sidebar = ({ isOpen, isHidden, toggleSidebar }) => {
       </div>
 
       <div className="sidebar-user-badge">
-        <div className="badge-role">{roleLabels[role] || role}</div>
-        <div className="badge-desc">{user?.details || "Mock mode"}</div>
+        <div className="badge-role">{roleLabels[role] || "Người dùng"}</div>
+        <div className="badge-desc">{user?.details || "Đang sử dụng hệ thống"}</div>
       </div>
 
       <nav className="sidebar-nav">
@@ -103,7 +108,7 @@ const Sidebar = ({ isOpen, isHidden, toggleSidebar }) => {
       </nav>
 
       <div className="sidebar-footer">
-        <button className="logout-btn" variant="outline" onClick={handleLogout}>
+        <button className="logout-btn" onClick={handleLogout}>
           <LogOut size={18} />
           <span>Đăng xuất</span>
         </button>

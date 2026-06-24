@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import {
     Car,
     CheckCircle,
-    Edit2,
     Plus,
     RefreshCcw,
     Save,
@@ -25,7 +24,7 @@ import {
 const emptyForm = {
     slotCode: "",
     status: "AVAILABLE",
-    sizeLabel: "STANDARD",
+    sizeLabel: "Tiêu chuẩn",
     positionDescription: "",
     note: "",
 };
@@ -36,7 +35,14 @@ const statusLabels = {
     OCCUPIED: "Có xe",
     MAINTENANCE: "Bảo trì",
     LOCKED: "Khóa",
-    CONFLICT: "Lỗi",
+    CONFLICT: "Cần kiểm tra",
+};
+
+const getSizeLabel = (value) => {
+    const normalized = String(value || "").toUpperCase();
+    if (normalized === "STANDARD") return "Tiêu chuẩn";
+    if (normalized === "LARGE") return "Rộng";
+    return value || "-";
 };
 
 const CarSlotManagementPanel = ({ floor }) => {
@@ -71,7 +77,7 @@ const CarSlotManagementPanel = ({ floor }) => {
             id: slot.id,
             slotCode: slot.slotCode || slot.slot_code,
             status: statusLabels[slot.status] || slot.status,
-            sizeLabel: slot.sizeLabel || slot.size_label,
+            sizeLabel: getSizeLabel(slot.sizeLabel || slot.size_label),
             positionDescription:
                 slot.positionDescription || slot.position_description,
             note: slot.note,
@@ -142,7 +148,7 @@ const CarSlotManagementPanel = ({ floor }) => {
         const nextErrors = {};
 
         if (!form.slotCode.trim()) {
-            nextErrors.slotCode = "Vui lòng nhập mã slot.";
+            nextErrors.slotCode = "Vui lòng nhập mã ô đỗ.";
         }
 
         setFormErrors(nextErrors);
@@ -162,7 +168,7 @@ const CarSlotManagementPanel = ({ floor }) => {
         setForm({
             slotCode: slot.slotCode || "",
             status: slot.status || "AVAILABLE",
-            sizeLabel: slot.sizeLabel || "STANDARD",
+            sizeLabel: getSizeLabel(slot.sizeLabel) || "Tiêu chuẩn",
             positionDescription: slot.positionDescription || "",
             note: slot.note || "",
         });
@@ -197,7 +203,7 @@ const CarSlotManagementPanel = ({ floor }) => {
     };
 
     const handleDeleteSlot = (slot) => {
-        const ok = window.confirm(`Bạn chắc muốn xóa slot "${slot.slotCode}" không?`);
+        const ok = window.confirm(`Bạn chắc muốn xóa ô đỗ "${slot.slotCode}" không?`);
 
         if (!ok) return;
 
@@ -227,12 +233,11 @@ const CarSlotManagementPanel = ({ floor }) => {
             <div className="section-header">
                 <div>
                     <h2 className="section-title">
-                        <Car size={19} /> Quản lý slot ô tô - {floor.name}
+                        <Car size={19} /> Quản lý ô đỗ ô tô - {floor.name}
                     </h2>
 
                     <p className="section-copy">
-                        Bấm vào từng ô để sửa. Thêm slot sẽ tăng slotCount, xóa slot sẽ giảm
-                        slotCount.
+                        Bấm vào từng ô để sửa. Thêm hoặc xóa ô đỗ sẽ cập nhật số lượng chỗ của tầng.
                     </p>
                 </div>
 
@@ -244,7 +249,7 @@ const CarSlotManagementPanel = ({ floor }) => {
                     disabled={loading}
                     onClick={refreshSlots}
                 >
-                    Tải lại slot
+                    Tải lại ô đỗ
                 </Button>
             </div>
 
@@ -267,17 +272,17 @@ const CarSlotManagementPanel = ({ floor }) => {
             <div className="car-slot-manager-grid">
                 <div className="car-slot-map-card">
                     <div className="car-slot-map-header">
-                        <strong>Sơ đồ slot</strong>
+                        <strong>Sơ đồ ô đỗ</strong>
                         <span>
-                            Hiển thị {filteredSlots.length}/{slots.length} slot
+                            Hiển thị {filteredSlots.length}/{slots.length} ô
                         </span>
                     </div>
 
                     <div className="car-slot-grid">
-                        {loading && <p>Đang tải slot...</p>}
+                        {loading && <p>Đang tải ô đỗ...</p>}
 
                         {!loading && filteredSlots.length === 0 && (
-                            <p>Chưa có slot nào trong tầng này.</p>
+                            <p>Chưa có ô đỗ nào trong tầng này.</p>
                         )}
 
                         {!loading &&
@@ -296,7 +301,7 @@ const CarSlotManagementPanel = ({ floor }) => {
                                         {statusLabels[slot.status] || slot.status}
                                     </span>
                                     {slot.sizeLabel && (
-                                        <span className="car-slot-size">{slot.sizeLabel}</span>
+                                        <span className="car-slot-size">{getSizeLabel(slot.sizeLabel)}</span>
                                     )}
                                 </button>
                             ))}
@@ -311,10 +316,10 @@ const CarSlotManagementPanel = ({ floor }) => {
                 </div>
 
                 <div className="car-slot-form-card">
-                    <h3>{editingSlotId ? "Sửa slot" : "Thêm slot mới"}</h3>
+                    <h3>{editingSlotId ? "Sửa ô đỗ" : "Thêm ô đỗ mới"}</h3>
 
                     <form onSubmit={handleSubmit} style={{ display: "grid", gap: 14 }}>
-                        <FormField label="Mã slot" required error={formErrors.slotCode || undefined}>
+                        <FormField label="Mã ô đỗ" required error={formErrors.slotCode || undefined}>
                             <Input
                                 placeholder="Ví dụ: CAR-A21"
                                 value={form.slotCode}
@@ -335,13 +340,13 @@ const CarSlotManagementPanel = ({ floor }) => {
                                 <option value="OCCUPIED">Có xe</option>
                                 <option value="MAINTENANCE">Bảo trì</option>
                                 <option value="LOCKED">Khóa</option>
-                                <option value="CONFLICT">Lỗi</option>
+                                <option value="CONFLICT">Cần kiểm tra</option>
                             </select>
                         </FormField>
 
                         <FormField label="Kích thước">
                             <Input
-                                placeholder="STANDARD / LARGE / EV"
+                                placeholder="Tiêu chuẩn hoặc rộng"
                                 value={form.sizeLabel}
                                 onChange={(event) => updateField("sizeLabel", event.target.value)}
                                 disabled={creating || Boolean(updatingId)}
@@ -363,7 +368,7 @@ const CarSlotManagementPanel = ({ floor }) => {
                             <textarea
                                 className="form-input"
                                 rows="3"
-                                placeholder="Ghi chú thêm cho slot"
+                                placeholder="Ghi chú thêm cho ô đỗ"
                                 value={form.note}
                                 onChange={(event) => updateField("note", event.target.value)}
                                 disabled={creating || Boolean(updatingId)}
@@ -377,7 +382,7 @@ const CarSlotManagementPanel = ({ floor }) => {
                                 loading={creating || Boolean(updatingId)}
                                 disabled={creating || Boolean(updatingId)}
                             >
-                                {editingSlotId ? "Lưu slot" : "Thêm slot"}
+                                {editingSlotId ? "Lưu ô đỗ" : "Thêm ô đỗ"}
                             </Button>
 
                             {editingSlotId && (
@@ -410,9 +415,9 @@ const CarSlotManagementPanel = ({ floor }) => {
                 </div>
             </div>
             <div className="filter-grid" style={{ marginBottom: 16 }}>
-                <FormField label="Tìm kiếm slot">
+                <FormField label="Tìm kiếm ô đỗ">
                     <Input
-                        placeholder="Nhập mã slot, trạng thái, vị trí, ghi chú..."
+                        placeholder="Nhập mã ô đỗ, trạng thái, vị trí, ghi chú..."
                         value={slotFilters.searchText}
                         onChange={(event) =>
                             setSlotFilters((prev) => ({
@@ -435,8 +440,8 @@ const CarSlotManagementPanel = ({ floor }) => {
                         }
                     >
                         <option value="all">Tất cả cột</option>
-                        <option value="id">ID</option>
-                        <option value="slotCode">Mã slot</option>
+                        <option value="id">Mã</option>
+                        <option value="slotCode">Mã ô đỗ</option>
                         <option value="status">Trạng thái</option>
                         <option value="sizeLabel">Kích thước</option>
                         <option value="positionDescription">Vị trí</option>
@@ -461,13 +466,13 @@ const CarSlotManagementPanel = ({ floor }) => {
                         <option value="OCCUPIED">Có xe</option>
                         <option value="MAINTENANCE">Bảo trì</option>
                         <option value="LOCKED">Khóa</option>
-                        <option value="CONFLICT">Lỗi</option>
+                        <option value="CONFLICT">Cần kiểm tra</option>
                     </select>
                 </FormField>
 
                 <FormField label="Kích thước">
                     <Input
-                        placeholder="STANDARD / LARGE / EV..."
+                        placeholder="Tiêu chuẩn hoặc rộng"
                         value={slotFilters.sizeLabel}
                         onChange={(event) =>
                             setSlotFilters((prev) => ({

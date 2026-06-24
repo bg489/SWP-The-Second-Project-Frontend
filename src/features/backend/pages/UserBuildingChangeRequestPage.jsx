@@ -11,7 +11,7 @@ import {
 } from "../buildingChange/buildingChangeSlice";
 
 const statusLabels = {
-    PENDING: "Chờ admin duyệt",
+    PENDING: "Chờ quản trị viên duyệt",
     APPROVED: "Đã duyệt",
     REJECTED: "Đã từ chối",
     CANCELLED: "Đã hủy",
@@ -85,13 +85,13 @@ const UserBuildingChangeRequestPage = () => {
             <section className="page-hero">
                 <div>
                     <div className="page-eyebrow">
-                        <Building2 size={16} /> User request
+                        <Building2 size={16} /> Đổi tòa nhà
                     </div>
 
                     <h1 className="page-title">Yêu cầu đổi tòa nhà</h1>
 
                     <p className="page-subtitle">
-                        Gửi yêu cầu chuyển sang tòa nhà khác. Admin sẽ duyệt trước khi thay
+                        Gửi yêu cầu chuyển sang tòa nhà khác. Quản trị viên sẽ duyệt trước khi thay
                         đổi có hiệu lực.
                     </p>
                 </div>
@@ -194,11 +194,11 @@ const UserBuildingChangeRequestPage = () => {
                     <table className="custom-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Mã</th>
                                 <th>Tòa nhà muốn chuyển</th>
                                 <th>Lý do</th>
                                 <th>Trạng thái</th>
-                                <th>Admin note</th>
+                                <th>Ghi chú duyệt</th>
                             </tr>
                         </thead>
 

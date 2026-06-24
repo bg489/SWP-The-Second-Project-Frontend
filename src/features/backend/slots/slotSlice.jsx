@@ -44,7 +44,7 @@ const slotSlice = createSlice({
 
         createSlotSuccess: (state, action) => {
             state.creating = false;
-            state.mutationSuccess = "Thêm slot thành công.";
+            state.mutationSuccess = "Thêm ô đỗ thành công.";
 
             const { floorId, slot } = action.payload;
             const oldSlots = state.slotsByFloor[floorId] || [];
@@ -67,7 +67,7 @@ const slotSlice = createSlice({
 
         updateSlotSuccess: (state, action) => {
             state.updatingId = null;
-            state.mutationSuccess = "Cập nhật slot thành công.";
+            state.mutationSuccess = "Cập nhật ô đỗ thành công.";
 
             const { floorId, slot } = action.payload;
             const oldSlots = state.slotsByFloor[floorId] || [];
@@ -90,7 +90,7 @@ const slotSlice = createSlice({
 
         deleteSlotSuccess: (state, action) => {
             state.deletingId = null;
-            state.mutationSuccess = "Xóa slot thành công.";
+            state.mutationSuccess = "Xóa ô đỗ thành công.";
 
             const { floorId, id } = action.payload;
             const oldSlots = state.slotsByFloor[floorId] || [];

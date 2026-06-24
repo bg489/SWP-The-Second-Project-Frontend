@@ -76,7 +76,6 @@ const FloorManagementPage = () => {
   const [selectedCarFloorId, setSelectedCarFloorId] = useState(null);
 
   const isEditing = Boolean(editingId);
-  const isEditingCarFloor = isEditing && form.floorType === "CAR";
 
   const selectedCarFloor = useMemo(() => {
     return floors.find((floor) => Number(floor.id) === Number(selectedCarFloorId));
@@ -112,7 +111,7 @@ const FloorManagementPage = () => {
     const capacityOrSlot =
       floorType === "MOTORBIKE"
         ? `${floor.capacity || 0} xe máy`
-        : `${floor.slotCount || floor.slot_count || 0} ô ô tô`;
+        : `${floor.slotCount || floor.slot_count || 0} ô đỗ ô tô`;
 
     const values = {
       id: floor.id,
@@ -160,11 +159,12 @@ const FloorManagementPage = () => {
     1,
     Math.ceil(filteredFloors.length / PAGE_SIZE)
   );
+  const currentFloorPage = Math.min(floorPage, totalFloorPages);
 
   const paginatedFloors = useMemo(() => {
-    const startIndex = (floorPage - 1) * PAGE_SIZE;
+    const startIndex = (currentFloorPage - 1) * PAGE_SIZE;
     return filteredFloors.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [filteredFloors, floorPage]);
+  }, [currentFloorPage, filteredFloors]);
 
   const scrollToForm = () => {
     setTimeout(() => {
@@ -174,12 +174,6 @@ const FloorManagementPage = () => {
       });
     }, 80);
   };
-
-  useEffect(() => {
-    if (floorPage > totalFloorPages) {
-      setFloorPage(totalFloorPages);
-    }
-  }, [floorPage, totalFloorPages]);
 
   useEffect(() => {
     dispatch(fetchBuildingsRequest());
@@ -343,13 +337,13 @@ const FloorManagementPage = () => {
       <section className="page-hero">
         <div className="page-hero-content">
           <div className="page-eyebrow">
-            <Layers size={16} /> Manager floors
+            <Layers size={16} /> Tầng gửi xe
           </div>
 
           <h1 className="page-title">Quản lý tầng xe máy & ô tô</h1>
 
           <p className="page-subtitle">
-            Manager có thể thêm, sửa, xóa tầng xe máy và tầng ô tô theo từng tòa
+            Quản lý có thể thêm, sửa, xóa tầng xe máy và tầng ô tô theo từng tòa
             nhà.
           </p>
         </div>
@@ -388,7 +382,7 @@ const FloorManagementPage = () => {
             </h2>
 
             <p className="section-copy">
-              Tầng xe máy dùng sức chứa. Tầng ô tô dùng số lượng ô/slot.
+              Tầng xe máy dùng sức chứa. Tầng ô tô dùng từng ô đỗ cụ thể.
             </p>
           </div>
         </div>
@@ -462,11 +456,11 @@ const FloorManagementPage = () => {
                 />
               </FormField>
 
-              <FormField label="Mã slot ô tô">
+              <FormField label="Mã ô đỗ ô tô">
                 <textarea
                   className="form-input"
                   rows="4"
-                  placeholder={`Mỗi dòng là 1 mã slot, ví dụ:\nCAR-A01\nCAR-A02\nCAR-A03`}
+                  placeholder={`Mỗi dòng là 1 mã ô đỗ, ví dụ:\nCAR-A01\nCAR-A02\nCAR-A03`}
                   value={form.slotsText}
                   onChange={(event) =>
                     updateField("slotsText", event.target.value)
@@ -565,11 +559,11 @@ const FloorManagementPage = () => {
               onChange={(event) => updateFilter("searchColumn", event.target.value)}
             >
               <option value="all">Tất cả cột</option>
-              <option value="id">ID</option>
+              <option value="id">Mã</option>
               <option value="name">Tên tầng</option>
               <option value="buildingName">Tòa nhà</option>
               <option value="floorType">Loại tầng</option>
-              <option value="capacityOrSlot">Sức chứa / Slot</option>
+              <option value="capacityOrSlot">Sức chứa / Ô đỗ</option>
               <option value="status">Trạng thái</option>
               <option value="note">Ghi chú</option>
             </select>
@@ -646,7 +640,7 @@ const FloorManagementPage = () => {
             </h2>
 
             <p className="section-copy">
-              Dữ liệu lấy từ Redux Saga qua API `/api/floors`.
+              Danh sách tầng xe máy theo sức chứa và tầng ô tô theo từng ô đỗ.
             </p>
           </div>
         </div>
@@ -655,11 +649,11 @@ const FloorManagementPage = () => {
           <table className="custom-table">
             <thead>
               <tr>
-                <th>ID</th>
+                <th>Mã</th>
                 <th>Tên tầng</th>
                 <th>Tòa nhà</th>
                 <th>Loại</th>
-                <th>Sức chứa / Slot</th>
+                <th>Sức chứa / Ô đỗ</th>
                 <th>Trạng thái</th>
                 <th>Ghi chú</th>
                 <th>Thao tác</th>
@@ -741,7 +735,7 @@ const FloorManagementPage = () => {
         </div>
         <div className="pagination-bar">
           <span className="mg-pagination">
-            Trang {floorPage}/{totalFloorPages} • Hiển thị {filteredFloors.length}/{floors.length} tầng
+            Trang {currentFloorPage}/{totalFloorPages} • Hiển thị {filteredFloors.length}/{floors.length} tầng
           </span>
 
           <div className="action-row mg-pagination">
@@ -749,7 +743,7 @@ const FloorManagementPage = () => {
               type="button"
               size="sm"
               variant="outline"
-              disabled={floorPage <= 1}
+              disabled={currentFloorPage <= 1}
               onClick={() => setFloorPage((prev) => Math.max(prev - 1, 1))}
             >
               Trước
@@ -759,7 +753,7 @@ const FloorManagementPage = () => {
               type="button"
               size="sm"
               variant="outline"
-              disabled={floorPage >= totalFloorPages}
+              disabled={currentFloorPage >= totalFloorPages}
               onClick={() =>
                 setFloorPage((prev) => Math.min(prev + 1, totalFloorPages))
               }

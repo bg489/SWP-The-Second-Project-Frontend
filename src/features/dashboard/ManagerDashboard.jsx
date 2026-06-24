@@ -22,8 +22,8 @@ const ManagerDashboard = () => {
 
   const floorColumns = [
     { header: "Tầng", key: "name" },
-    { header: "Loại", key: "floorType", render: (row) => (row.floorType === "CAR" ? "Ô tô theo slot" : "Xe máy theo capacity") },
-    { header: "Capacity", key: "capacity", render: (row) => (row.floorType === "CAR" ? `${row.slotsCount} slot` : `${row.currentCount}/${row.capacity}`) },
+    { header: "Loại", key: "floorType", render: (row) => (row.floorType === "CAR" ? "Ô tô theo ô đỗ" : "Xe máy theo sức chứa") },
+    { header: "Sức chứa / Ô đỗ", key: "capacity", render: (row) => (row.floorType === "CAR" ? `${row.slotsCount} ô` : `${row.currentCount}/${row.capacity}`) },
     {
       header: "Trạng thái",
       key: "status",
@@ -35,16 +35,16 @@ const ManagerDashboard = () => {
     <div className="parking-page">
       <section className="page-hero">
         <div className="page-hero-content">
-          <div className="page-eyebrow"><Building2 size={16} /> Parking Manager</div>
+          <div className="page-eyebrow"><Building2 size={16} /> Quản lý bãi xe</div>
           <h1 className="page-title">{buildingInfo.name} đang vận hành ổn định</h1>
           <p className="page-subtitle">
-            Xin chào {user.name}. Dashboard này gom capacity, slot, doanh thu, QR và vi phạm theo đúng scope MVP một tòa nhà.
+            Xin chào {user.name}. Trang này gom sức chứa, ô đỗ, doanh thu, mã QR và vi phạm của một tòa nhà.
           </p>
         </div>
         <div className="page-hero-aside">
           <span className="page-hero-label">Doanh thu tháng</span>
           <span className="page-hero-number">{Math.round(reportSummary.revenueMonth / 1000000)}M</span>
-          <span className="page-hero-label">VND</span>
+          <span className="page-hero-label">đồng</span>
         </div>
       </section>
 
@@ -59,19 +59,19 @@ const ManagerDashboard = () => {
           <div className="metric-icon"><Layers size={22} /></div>
           <div className="metric-label">Xe máy đang gửi</div>
           <div className="metric-value">{motorbikeCount}/{motorbikeCapacity}</div>
-          <div className="metric-note">{Math.round((motorbikeCount / motorbikeCapacity) * 100)}% capacity</div>
+          <div className="metric-note">{Math.round((motorbikeCount / motorbikeCapacity) * 100)}% sức chứa</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><Car size={22} /></div>
-          <div className="metric-label">Ô tô đang chiếm slot</div>
+          <div className="metric-label">Ô tô đang dùng ô đỗ</div>
           <div className="metric-value">{occupiedCarSlots}/{carSlots.length}</div>
-          <div className="metric-note">Bao gồm slot xung đột cần xử lý riêng</div>
+          <div className="metric-note">Bao gồm ô cần kiểm tra riêng</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><AlertTriangle size={22} /></div>
           <div className="metric-label">Vi phạm trong ngày</div>
           <div className="metric-value">{violations.length}</div>
-          <div className="metric-note">Staff ghi nhận thủ công</div>
+          <div className="metric-note">Nhân viên ghi nhận tại bãi</div>
         </div>
       </div>
 
@@ -80,7 +80,7 @@ const ManagerDashboard = () => {
           <div className="section-header">
             <div>
               <h2 className="section-title"><BarChart3 size={19} /> Doanh thu 5 tháng gần nhất</h2>
-              <p className="section-copy">Mock chart nhẹ, không thêm thư viện để giữ repo gọn.</p>
+              <p className="section-copy">Tổng hợp doanh thu theo tháng để nắm xu hướng vận hành.</p>
             </div>
             <Button variant="outline" icon={Download}>Xuất báo cáo</Button>
           </div>
@@ -97,7 +97,7 @@ const ManagerDashboard = () => {
         <section className="card section-card">
           <div className="section-header">
             <div>
-              <h2 className="section-title"><QrPassIcon /> QR pass</h2>
+              <h2 className="section-title"><QrPassIcon /> Mã QR tháng</h2>
               <p className="section-copy">Theo dõi QR còn hạn, sắp hết hạn và đã hết hạn.</p>
             </div>
           </div>
@@ -114,7 +114,7 @@ const ManagerDashboard = () => {
         <div className="section-header">
           <div>
             <h2 className="section-title"><Layers size={19} /> Tầng gửi xe</h2>
-            <p className="section-copy">Parking Manager cấu hình loại tầng, capacity, slot và trạng thái vận hành.</p>
+            <p className="section-copy">Quản lý cấu hình loại tầng, sức chứa, ô đỗ và trạng thái vận hành.</p>
           </div>
         </div>
         <Table columns={floorColumns} data={floors} />

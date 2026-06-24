@@ -46,7 +46,7 @@ function* handleFetchSlotsByFloor(action) {
     } catch (error) {
         yield put(
             fetchSlotsByFloorFailure(
-                getErrorMessage(error, "Không lấy được danh sách slot.")
+                getErrorMessage(error, "Không lấy được danh sách ô đỗ.")
             )
         );
     }
@@ -75,7 +75,7 @@ function* handleCreateSlot(action) {
         yield put(fetchFloorsRequest());
     } catch (error) {
         yield put(
-            createSlotFailure(getErrorMessage(error, "Thêm slot thất bại."))
+            createSlotFailure(getErrorMessage(error, "Thêm ô đỗ thất bại."))
         );
     }
 }
@@ -96,7 +96,7 @@ function* handleUpdateSlot(action) {
         yield put(fetchSlotsByFloorRequest({ floorId }));
     } catch (error) {
         yield put(
-            updateSlotFailure(getErrorMessage(error, "Cập nhật slot thất bại."))
+            updateSlotFailure(getErrorMessage(error, "Cập nhật ô đỗ thất bại."))
         );
     }
 }
@@ -119,7 +119,7 @@ function* handleDeleteSlot(action) {
         // Cập nhật lại slotCount trong bảng floors
         yield put(fetchFloorsRequest());
     } catch (error) {
-        yield put(deleteSlotFailure(getErrorMessage(error, "Xóa slot thất bại.")));
+        yield put(deleteSlotFailure(getErrorMessage(error, "Xóa ô đỗ thất bại.")));
     }
 }
 

@@ -59,14 +59,13 @@ const AdminBuildingChangeRequestsPage = () => {
             <section className="page-hero">
                 <div>
                     <div className="page-eyebrow">
-                        <Building2 size={16} /> Admin approval
+                        <Building2 size={16} /> Duyệt đổi tòa nhà
                     </div>
 
                     <h1 className="page-title">Duyệt yêu cầu đổi tòa nhà</h1>
 
                     <p className="page-subtitle">
-                        Khi admin duyệt, backend sẽ đổi tòa nhà của user và đồng bộ tòa nhà
-                        cho xe của user đó.
+                        Khi được duyệt, cư dân và các xe đã đăng ký sẽ chuyển sang tòa nhà mới.
                     </p>
                 </div>
 
@@ -93,7 +92,7 @@ const AdminBuildingChangeRequestsPage = () => {
                     <div>
                         <h2 className="section-title">Yêu cầu đang chờ duyệt</h2>
                         <p className="section-copy">
-                            Chỉ hiển thị các request có trạng thái PENDING.
+                            Chỉ hiển thị các yêu cầu đang chờ duyệt.
                         </p>
                     </div>
                 </div>
@@ -102,8 +101,8 @@ const AdminBuildingChangeRequestsPage = () => {
                     <table className="custom-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>User</th>
+                                <th>Mã</th>
+                                <th>Cư dân</th>
                                 <th>Tòa hiện tại</th>
                                 <th>Tòa muốn chuyển</th>
                                 <th>Lý do</th>

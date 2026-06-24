@@ -20,7 +20,7 @@ const AdminDashboard = () => {
 
   const updateVehicle = (id, status) => {
     setVehicleRows((rows) => rows.map((vehicle) => (vehicle.id === id ? { ...vehicle, status } : vehicle)));
-    setNotice(status === "APPROVED" ? "Đã duyệt xe thành công." : "Đã từ chối xe và ghi chú cho user.");
+    setNotice(status === "APPROVED" ? "Đã duyệt xe thành công." : "Đã từ chối xe và ghi chú cho cư dân.");
     setTimeout(() => setNotice(""), 2400);
   };
 
@@ -29,7 +29,7 @@ const AdminDashboard = () => {
   const userColumns = [
     { header: "Người dùng", key: "name" },
     { header: "Email", key: "email" },
-    { header: "Vai trò", key: "role", render: (row) => roleLabels[row.role] || row.role },
+    { header: "Quyền sử dụng", key: "role", render: (row) => roleLabels[row.role] || row.role },
     {
       header: "Trạng thái",
       key: "status",
@@ -71,10 +71,10 @@ const AdminDashboard = () => {
     <div className="parking-page">
       <section className="page-hero">
         <div className="page-hero-content">
-          <div className="page-eyebrow"><ShieldCheck size={16} /> Admin</div>
+          <div className="page-eyebrow"><ShieldCheck size={16} /> Quản trị viên</div>
           <h1 className="page-title">Duyệt xe, kiểm soát tài khoản và phân quyền</h1>
           <p className="page-subtitle">
-            Xin chào {user.name}. Admin đảm bảo xe được duyệt trước khi user mua gói tháng hoặc dùng QR hợp lệ.
+            Xin chào {user.name}. Quản trị viên đảm bảo xe được duyệt trước khi cư dân mua gói tháng hoặc dùng QR hợp lệ.
           </p>
         </div>
         <div className="page-hero-aside">
@@ -91,7 +91,7 @@ const AdminDashboard = () => {
           <div className="metric-icon"><UserCog size={22} /></div>
           <div className="metric-label">Tài khoản</div>
           <div className="metric-value">{users.length}</div>
-          <div className="metric-note">Bao gồm user, staff, manager, admin</div>
+          <div className="metric-note">Cư dân, nhân viên, quản lý và quản trị viên</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><CarIcon /></div>
@@ -103,7 +103,7 @@ const AdminDashboard = () => {
           <div className="metric-icon"><UserCheck size={22} /></div>
           <div className="metric-label">Chờ duyệt xe</div>
           <div className="metric-value">{pendingVehicles.length}</div>
-          <div className="metric-note">Nguồn `/api/vehicles?status=PENDING`</div>
+          <div className="metric-note">Cần kiểm tra trước khi mua gói</div>
         </div>
       </div>
 
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
         <div className="section-header">
           <div>
             <h2 className="section-title"><ShieldCheck size={19} /> Duyệt phương tiện</h2>
-            <p className="section-copy">Sau khi duyệt, user mới mua gói tháng hoặc dùng QR hợp lệ cho xe đó.</p>
+            <p className="section-copy">Sau khi duyệt, cư dân mới mua gói tháng hoặc dùng QR hợp lệ cho xe đó.</p>
           </div>
         </div>
         <Table columns={vehicleColumns} data={vehicleRows} />
@@ -121,7 +121,7 @@ const AdminDashboard = () => {
         <div className="section-header">
           <div>
             <h2 className="section-title"><UserCog size={19} /> Tài khoản và phân quyền</h2>
-            <p className="section-copy">Role bám backend: USER, PARKING_STAFF, PARKING_MANAGER, ADMIN.</p>
+            <p className="section-copy">Theo dõi quyền sử dụng của từng nhóm người trong hệ thống.</p>
           </div>
         </div>
         <Table columns={userColumns} data={users} />

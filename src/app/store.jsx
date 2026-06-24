@@ -8,6 +8,7 @@ import buildingChangeReducer from "../features/backend/buildingChange/buildingCh
 import buildingReducer from "../features/backend/buildings/buildingSlice";
 import floorReducer from "../features/backend/floors/floorSlice";
 import slotReducer from "../features/backend/slots/slotSlice";
+import parkingReducer from "../features/backend/parking/parkingSlice";
 
 const sagaMiddleware = createSagaMiddleware();
 
@@ -19,6 +20,7 @@ export const store = configureStore({
         buildings: buildingReducer,
         floors: floorReducer,
         slots: slotReducer,
+        parking: parkingReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

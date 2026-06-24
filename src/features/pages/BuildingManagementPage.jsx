@@ -97,17 +97,12 @@ const BuildingManagementPage = () => {
     1,
     Math.ceil(filteredBuildings.length / PAGE_SIZE)
   );
+  const currentBuildingPage = Math.min(buildingPage, totalBuildingPages);
 
   const paginatedBuildings = useMemo(() => {
-    const startIndex = (buildingPage - 1) * PAGE_SIZE;
+    const startIndex = (currentBuildingPage - 1) * PAGE_SIZE;
     return filteredBuildings.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [filteredBuildings, buildingPage]);
-
-  useEffect(() => {
-    if (buildingPage > totalBuildingPages) {
-      setBuildingPage(totalBuildingPages);
-    }
-  }, [buildingPage, totalBuildingPages]);
+  }, [filteredBuildings, currentBuildingPage]);
 
   const scrollToForm = () => {
     setTimeout(() => {
@@ -117,12 +112,6 @@ const BuildingManagementPage = () => {
       });
     }, 80);
   };
-
-  useEffect(() => {
-    if (buildingPage > totalBuildingPages) {
-      setBuildingPage(totalBuildingPages);
-    }
-  }, [buildingPage, totalBuildingPages]);
 
   useEffect(() => {
     dispatch(fetchBuildingsRequest());
@@ -222,13 +211,13 @@ const BuildingManagementPage = () => {
       <section className="page-hero">
         <div className="page-hero-content">
           <div className="page-eyebrow">
-            <Building2 size={16} /> Manager building
+            <Building2 size={16} /> Tòa nhà
           </div>
 
           <h1 className="page-title">Quản lý tòa nhà</h1>
 
           <p className="page-subtitle">
-            Manager có thể thêm, sửa, xóa tòa nhà. Tòa nhà sẽ được dùng cho đăng
+            Quản lý có thể thêm, sửa, xóa tòa nhà. Tòa nhà sẽ được dùng cho đăng
             ký tài khoản và yêu cầu đổi tòa nhà.
           </p>
         </div>
@@ -267,8 +256,8 @@ const BuildingManagementPage = () => {
             </h2>
 
             <p className="section-copy">
-              Dữ liệu được xử lý qua Redux Saga, không gọi API trực tiếp trong
-              page.
+              Thông tin sau khi lưu sẽ dùng cho đăng ký tài khoản, tầng gửi xe
+              và yêu cầu đổi tòa nhà.
             </p>
           </div>
         </div>
@@ -327,7 +316,7 @@ const BuildingManagementPage = () => {
           <div>
             <h2 className="section-title">Tìm kiếm tòa nhà</h2>
             <p className="section-copy">
-              Tìm theo tất cả cột hoặc chọn riêng ID, tên, địa chỉ, ngày tạo.
+              Tìm theo tất cả thông tin hoặc chọn riêng mã, tên, địa chỉ, ngày tạo.
             </p>
           </div>
         </div>
@@ -335,7 +324,7 @@ const BuildingManagementPage = () => {
         <div className="filter-grid">
           <FormField label="Tìm kiếm">
             <Input
-              placeholder="Nhập tên tòa nhà, địa chỉ, ID..."
+              placeholder="Nhập tên tòa nhà, địa chỉ, mã..."
               value={buildingFilters.searchText}
               onChange={(event) => {
                 setBuildingFilters((prev) => ({
@@ -360,7 +349,7 @@ const BuildingManagementPage = () => {
               }}
             >
               <option value="all">Tất cả cột</option>
-              <option value="id">ID</option>
+              <option value="id">Mã</option>
               <option value="name">Tên tòa nhà</option>
               <option value="address">Địa chỉ</option>
               <option value="createdAt">Ngày tạo</option>
@@ -402,7 +391,7 @@ const BuildingManagementPage = () => {
           <table className="custom-table">
             <thead>
               <tr>
-                <th>ID</th>
+                <th>Mã</th>
                 <th>Tên tòa nhà</th>
                 <th>Địa chỉ</th>
                 <th>Ngày tạo</th>
@@ -476,7 +465,7 @@ const BuildingManagementPage = () => {
 
         <div className="pagination-bar">
           <span className="mg-pagination">
-            Trang {buildingPage}/{totalBuildingPages} • Hiển thị {filteredBuildings.length}/{buildings.length} tòa nhà
+            Trang {currentBuildingPage}/{totalBuildingPages} • Hiển thị {filteredBuildings.length}/{buildings.length} tòa nhà
           </span>
 
           <div className="action-row mg-pagination">
@@ -484,7 +473,7 @@ const BuildingManagementPage = () => {
               type="button"
               size="sm"
               variant="outline"
-              disabled={buildingPage <= 1}
+              disabled={currentBuildingPage <= 1}
               onClick={() => setBuildingPage((prev) => Math.max(prev - 1, 1))}
             >
               Trước
@@ -494,7 +483,7 @@ const BuildingManagementPage = () => {
               type="button"
               size="sm"
               variant="outline"
-              disabled={buildingPage >= totalBuildingPages}
+              disabled={currentBuildingPage >= totalBuildingPages}
               onClick={() =>
                 setBuildingPage((prev) => Math.min(prev + 1, totalBuildingPages))
               }

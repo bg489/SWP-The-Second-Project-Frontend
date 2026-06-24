@@ -7,25 +7,25 @@ import { ArrowRight, Building2, Car, Layers, QrCode, ShieldCheck, Sparkles, User
 const roleCards = [
   {
     key: "USER",
-    title: "Registered User",
-    desc: "Đăng ký xe, mua gói tháng, xem QR pass và theo dõi phiên gửi xe.",
+    title: "Cư dân",
+    desc: "Đăng ký xe, mua gói tháng, xem mã QR và theo dõi lượt gửi xe.",
     icon: User,
   },
   {
     key: "PARKING_STAFF",
-    title: "Parking Staff",
-    desc: "Quét QR xe vào/ra, phát QR tạm, gán slot, ghi nhận vi phạm.",
+    title: "Nhân viên bãi xe",
+    desc: "Quét QR xe vào/ra, phát QR tạm, gán ô đỗ và ghi nhận vi phạm.",
     icon: QrCode,
   },
   {
     key: "PARKING_MANAGER",
-    title: "Parking Manager",
-    desc: "Thiết lập tòa nhà, tầng, capacity, slot ô tô và xem báo cáo.",
+    title: "Quản lý bãi xe",
+    desc: "Thiết lập tòa nhà, tầng, sức chứa, ô đỗ ô tô và xem báo cáo.",
     icon: Layers,
   },
   {
     key: "ADMIN",
-    title: "Admin",
+    title: "Quản trị viên",
     desc: "Duyệt tài khoản, duyệt xe, phân quyền và quản lý chính sách hệ thống.",
     icon: ShieldCheck,
   },
@@ -50,11 +50,11 @@ const Login = () => {
       <section className="login-story">
         <div>
           <div className="page-eyebrow">
-            <Sparkles size={16} /> SU26SWP08 MVP
+            <Sparkles size={16} /> Sunrise Parking
           </div>
-          <h1 className="page-title">Parking Building Management System</h1>
+          <h1 className="page-title">Hệ thống quản lý tòa giữ xe</h1>
           <p className="page-subtitle">
-            Một tòa nhà, xe máy theo capacity, ô tô theo slot, QR digital pass và QR tạm cho khách vãng lai.
+            Một tòa nhà, xe máy theo sức chứa, ô tô theo từng ô đỗ, mã QR tháng và QR tạm cho khách vãng lai.
           </p>
         </div>
 
@@ -68,12 +68,12 @@ const Login = () => {
               <strong>{buildingInfo.address}</strong>
             </div>
             <div className="data-row">
-              <span>Capacity xe máy</span>
+              <span>Sức chứa xe máy</span>
               <strong>{motorbikeCapacity} xe</strong>
             </div>
             <div className="data-row">
-              <span>Slot ô tô</span>
-              <strong>{carSlots} slot</strong>
+              <span>Ô đỗ ô tô</span>
+              <strong>{carSlots} ô</strong>
             </div>
           </div>
         </div>
@@ -83,14 +83,14 @@ const Login = () => {
         <div className="card section-card" style={{ maxWidth: 760, width: "100%", margin: "0 auto" }}>
           <div className="section-header">
             <div>
-              <div className="page-eyebrow">Mock data mode</div>
-              <h2 className="section-title">Chọn vai trò để vào hệ thống</h2>
+              <div className="page-eyebrow">Chế độ xem nhanh</div>
+              <h2 className="section-title">Chọn nhóm người dùng để vào hệ thống</h2>
               <p className="section-copy">
-                UI này đã mô phỏng đủ module backend. Bước sau chỉ cần thay mock actions bằng Redux Saga gọi API.
+                Dùng để xem nhanh các màn hình theo từng công việc trong bãi xe.
               </p>
             </div>
             <Button variant="outline" size="sm" onClick={toggleDarkMode}>
-              {isDarkMode ? "Theme sáng" : "Theme tối"}
+              {isDarkMode ? "Giao diện sáng" : "Giao diện tối"}
             </Button>
           </div>
 
@@ -119,12 +119,12 @@ const Login = () => {
             <div className="soft-panel">
               <Car size={20} color="var(--primary)" />
               <div className="metric-value">2 loại xe</div>
-              <div className="metric-note">Xe máy theo số lượng, ô tô theo slot.</div>
+              <div className="metric-note">Xe máy theo số lượng, ô tô theo từng ô đỗ.</div>
             </div>
             <div className="soft-panel">
               <QrCode size={20} color="var(--primary)" />
-              <div className="metric-value">QR-first</div>
-              <div className="metric-note">Gói tháng và session card tạm.</div>
+              <div className="metric-value">Ra vào bằng QR</div>
+              <div className="metric-note">Gói tháng và thẻ QR tạm.</div>
             </div>
           </div>
         </div>
