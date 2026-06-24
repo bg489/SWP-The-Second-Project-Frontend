@@ -72,7 +72,7 @@ function* handleLogin(action) {
             extractLoginData(response);
 
         if (!token) {
-            throw new Error("Backend chưa trả JWT token.");
+            throw new Error("Đăng nhập chưa hoàn tất. Vui lòng thử lại.");
         }
 
         localStorage.setItem("access_token", token);
@@ -119,10 +119,12 @@ function* handleRegister(action) {
 }
 
 function* handleLogout() {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("auth_user");
-    localStorage.removeItem("auth_role");
-    localStorage.removeItem("mock_role");
+    yield call(() => {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("auth_user");
+        localStorage.removeItem("auth_role");
+        localStorage.removeItem("mock_role");
+    });
 }
 
 export default function* authSaga() {

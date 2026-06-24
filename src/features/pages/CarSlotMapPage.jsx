@@ -18,6 +18,13 @@ const slotClass = {
   CONFLICT: "conflict",
 };
 
+const getSizeLabel = (value) => {
+  const normalized = String(value || "").toUpperCase();
+  if (normalized === "STANDARD") return "Tiêu chuẩn";
+  if (normalized === "LARGE") return "Rộng";
+  return value || "-";
+};
+
 const CarSlotMapPage = () => {
   const [slots, setSlots] = useState(mockCarSlots);
   const [selectedSlot, setSelectedSlot] = useState(slots.find((slot) => slot.status === "CONFLICT") || slots[0]);
@@ -62,16 +69,16 @@ const CarSlotMapPage = () => {
     <div className="parking-page">
       <section className="page-hero">
         <div className="page-hero-content">
-          <div className="page-eyebrow"><Car size={16} /> Ô tô theo slot</div>
-          <h1 className="page-title">Bản đồ slot ô tô, reservation và xung đột vận hành</h1>
+          <div className="page-eyebrow"><Car size={16} /> Ô đỗ ô tô</div>
+          <h1 className="page-title">Sơ đồ ô đỗ ô tô và các vị trí cần kiểm tra</h1>
           <p className="page-subtitle">
-            Ô tô phải được gán slot cụ thể. Staff xác nhận slot cuối cùng và xử lý nếu xe đỗ sai vị trí.
+            Ô tô phải được gán ô đỗ cụ thể. Nhân viên xác nhận vị trí cuối cùng và xử lý nếu xe đỗ sai.
           </p>
         </div>
         <div className="page-hero-aside">
-          <span className="page-hero-label">Slot trống</span>
+          <span className="page-hero-label">Ô trống</span>
           <span className="page-hero-number">{summary.available}</span>
-          <span className="page-hero-label">trên {slots.length} slot</span>
+          <span className="page-hero-label">trên {slots.length} ô</span>
         </div>
       </section>
 
@@ -87,7 +94,7 @@ const CarSlotMapPage = () => {
           <div className="section-header">
             <div>
               <h2 className="section-title"><Car size={19} /> Sơ đồ tầng B3</h2>
-              <p className="section-copy">Click từng ô để xem chi tiết và mô phỏng đổi trạng thái.</p>
+              <p className="section-copy">Bấm từng ô để xem chi tiết và đổi trạng thái vận hành.</p>
             </div>
           </div>
           <div className="action-row" style={{ marginBottom: 16 }}>
@@ -113,8 +120,8 @@ const CarSlotMapPage = () => {
           <section className="card section-card">
             <div className="section-header">
               <div>
-                <h2 className="section-title"><Car size={19} /> Slot {selectedSlot.slotCode}</h2>
-                <p className="section-copy">{selectedSlot.sizeLabel} - {selectedSlot.note || "Không có ghi chú vận hành."}</p>
+                <h2 className="section-title"><Car size={19} /> Ô {selectedSlot.slotCode}</h2>
+                <p className="section-copy">{getSizeLabel(selectedSlot.sizeLabel)} - {selectedSlot.note || "Không có ghi chú vận hành."}</p>
               </div>
               <button className="theme-toggle-btn" onClick={() => setSelectedSlot(null)} aria-label="Đóng chi tiết">
                 <X size={18} />
@@ -124,20 +131,20 @@ const CarSlotMapPage = () => {
             <div className="data-list">
               <div className="data-row"><span>Trạng thái</span><strong>{getStatusLabel(selectedSlot.status)}</strong></div>
               <div className="data-row"><span>Biển số</span><strong>{selectedSlot.plateNumber || "-"}</strong></div>
-              <div className="data-row"><span>Check-in</span><strong>{formatDateTime(selectedSlot.checkInAt)}</strong></div>
+              <div className="data-row"><span>Giờ vào</span><strong>{formatDateTime(selectedSlot.checkInAt)}</strong></div>
             </div>
 
             {selectedSlot.status === "CONFLICT" && (
               <div className="soft-panel" style={{ marginTop: 16 }}>
-                <span className="pill danger"><ShieldAlert size={14} /> Cần staff kiểm tra</span>
-                <p className="section-copy">Có thể là đỗ sai slot, chiếm slot đã đặt hoặc không khớp QR.</p>
+                <span className="pill danger"><ShieldAlert size={14} /> Cần nhân viên kiểm tra</span>
+                <p className="section-copy">Có thể là đỗ sai ô, chiếm ô đã đặt hoặc không khớp QR.</p>
               </div>
             )}
 
             {selectedSlot.status === "MAINTENANCE" && (
               <div className="soft-panel" style={{ marginTop: 16 }}>
                 <span className="pill warning"><Wrench size={14} /> Đang bảo trì</span>
-                <p className="section-copy">Không phân slot này cho xe mới.</p>
+                <p className="section-copy">Không phân ô này cho xe mới.</p>
               </div>
             )}
 
@@ -150,13 +157,13 @@ const CarSlotMapPage = () => {
 
             <div className="action-row" style={{ marginTop: 18 }}>
               <Button variant="primary" icon={CheckCircle} disabled={selectedSlot.status !== "AVAILABLE"} onClick={() => updateSlot(selectedSlot.id, "OCCUPIED")}>
-                Gán xe vào slot
+                Gán xe vào ô
               </Button>
               <Button variant="outline" disabled={selectedSlot.status !== "OCCUPIED"} onClick={() => updateSlot(selectedSlot.id, "AVAILABLE")}>
-                Giải phóng slot
+                Giải phóng ô
               </Button>
               <Button variant="secondary" disabled={selectedSlot.status !== "OCCUPIED"} onClick={() => updateSlot(selectedSlot.id, "CONFLICT")}>
-                Báo xung đột
+                Báo cần kiểm tra
               </Button>
             </div>
           </section>

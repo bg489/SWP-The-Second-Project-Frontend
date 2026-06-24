@@ -1,9 +1,6 @@
-import { useMockAuth } from "../../context/MockAuthContext";
 import { Info } from "lucide-react";
 
 const PlaceholderPage = ({ title, description }) => {
-  const { role } = useMockAuth();
-  
   return (
     <div className="card animate-fade-in" style={{ padding: "32px", display: "flex", flexDirection: "column", gap: "20px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -13,7 +10,7 @@ const PlaceholderPage = ({ title, description }) => {
         <div>
           <h2 style={{ fontSize: "20px", fontWeight: "800" }}>{title}</h2>
           <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "2px" }}>
-            {description || `Trang chức năng giả lập dành riêng cho vai trò ${role}.`}
+            {description || "Trang này đang được chuẩn bị để sử dụng trong hệ thống."}
           </p>
         </div>
       </div>
@@ -31,10 +28,10 @@ const PlaceholderPage = ({ title, description }) => {
         gap: "12px"
       }}>
         <div style={{ fontSize: "15px", fontWeight: "700", color: "var(--text-primary)" }}>
-          Module "{title}" đang trong trạng thái chờ kết nối dữ liệu.
+          Mục "{title}" đang được hoàn thiện.
         </div>
         <p style={{ color: "var(--text-muted)", fontSize: "13px", maxWidth: "450px" }}>
-          Khung sườn giao diện (UI skeleton) của trang đã được thiết lập xong. Khi có dữ liệu API từ phía Backend, chỉ cần kết nối các endpoints tương ứng vào saga.
+          Các thao tác chính sẽ được bổ sung theo cùng phong cách với phần còn lại của hệ thống.
         </p>
       </div>
     </div>

@@ -23,16 +23,16 @@ const MotorbikeFloorStatusPage = () => {
     <div className="parking-page">
       <section className="page-hero">
         <div className="page-hero-content">
-          <div className="page-eyebrow"><Layers size={16} /> Xe máy theo capacity</div>
-          <h1 className="page-title">Không gán slot xe máy, chỉ kiểm soát số lượng còn chỗ</h1>
+          <div className="page-eyebrow"><Layers size={16} /> Sức chứa xe máy</div>
+          <h1 className="page-title">Xe máy chỉ kiểm soát số lượng còn chỗ</h1>
           <p className="page-subtitle">
-            Khi xe máy vào thì tăng `current_count`; khi xe ra thì giảm. Nếu tầng đầy, staff không nhận thêm xe mới.
+            Khi xe máy vào thì tăng số lượng đang gửi; khi xe ra thì giảm. Nếu tầng đầy, nhân viên không nhận thêm xe mới.
           </p>
         </div>
         <div className="page-hero-aside">
           <span className="page-hero-label">Tổng đang gửi</span>
           <span className="page-hero-number">{totalCount}/{totalCapacity}</span>
-          <span className="page-hero-label">{Math.round((totalCount / totalCapacity) * 100)}% capacity</span>
+          <span className="page-hero-label">{Math.round((totalCount / totalCapacity) * 100)}% sức chứa</span>
         </div>
       </section>
 
@@ -76,7 +76,7 @@ const MotorbikeFloorStatusPage = () => {
                 <Button variant="outline" icon={Minus} disabled={floor.currentCount === 0} onClick={() => updateCount(floor.id, -1)}>
                   Xe ra
                 </Button>
-                <span className="pill success"><CheckCircle size={14} /> Mock realtime</span>
+                <span className="pill success"><CheckCircle size={14} /> Đã cập nhật</span>
               </div>
             </section>
           );

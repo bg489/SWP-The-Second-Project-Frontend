@@ -20,12 +20,12 @@ const AdminSettingsPage = () => {
 
   const handleSave = (event) => {
     event.preventDefault();
-    setNotice("Đã lưu chính sách mock. Khi nối backend sẽ gọi endpoint cấu hình tương ứng.");
+    setNotice("Đã lưu quy tắc chung.");
     setTimeout(() => setNotice(""), 2400);
   };
 
   const qrColumns = [
-    { header: "QR/Card", key: "id" },
+    { header: "Thẻ QR", key: "id" },
     { header: "Tên", key: "label" },
     {
       header: "Trạng thái",
@@ -37,7 +37,7 @@ const AdminSettingsPage = () => {
 
   const paymentColumns = [
     { header: "Mã giao dịch", key: "transactionRef" },
-    { header: "Provider", key: "provider" },
+    { header: "Đơn vị xử lý", key: "provider" },
     { header: "Số tiền", key: "amount", render: (row) => formatCurrency(row.amount) },
     {
       header: "Trạng thái",
@@ -50,16 +50,16 @@ const AdminSettingsPage = () => {
     <div className="parking-page">
       <section className="page-hero">
         <div className="page-hero-content">
-          <div className="page-eyebrow"><Settings size={16} /> Admin settings</div>
-          <h1 className="page-title">Chính sách phí, QR tạm, thanh toán và role hệ thống</h1>
+          <div className="page-eyebrow"><Settings size={16} /> Quy tắc chung</div>
+          <h1 className="page-title">Quy tắc chung của hệ thống giữ xe</h1>
           <p className="page-subtitle">
-            Các vùng này tương ứng pricing constants, VNPay payment, QR/session card và phân quyền backend.
+            Theo dõi mức phí mặc định, thẻ QR tạm, thanh toán và nhóm quyền đang sử dụng.
           </p>
         </div>
         <div className="page-hero-aside">
-          <span className="page-hero-label">Role backend</span>
+          <span className="page-hero-label">Nhóm quyền</span>
           <span className="page-hero-number">4</span>
-          <span className="page-hero-label">USER/STAFF/MANAGER/ADMIN</span>
+          <span className="page-hero-label">nhóm sử dụng</span>
         </div>
       </section>
 
@@ -70,7 +70,7 @@ const AdminSettingsPage = () => {
           <div className="section-header">
             <div>
               <h2 className="section-title"><CreditCard size={19} /> Chính sách phí</h2>
-              <p className="section-copy">Mặc định theo backend constants: xe máy lượt 4.000đ, ô tô 20.000đ/giờ.</p>
+              <p className="section-copy">Mặc định: xe máy 4.000đ/lượt, ô tô 20.000đ/giờ.</p>
             </div>
           </div>
           <form onSubmit={handleSave} style={{ display: "grid", gap: 14 }}>
@@ -80,10 +80,10 @@ const AdminSettingsPage = () => {
             <FormField label="Phí ô tô theo giờ">
               <Input type="number" value={policy.carHourly} onChange={(event) => setPolicy({ ...policy, carHourly: Number(event.target.value) })} />
             </FormField>
-            <FormField label="Phí mất QR/session card">
+            <FormField label="Phí mất thẻ QR">
               <Input type="number" value={policy.lostQrFine} onChange={(event) => setPolicy({ ...policy, lostQrFine: Number(event.target.value) })} />
             </FormField>
-            <FormField label="Phí đỗ sai/chiếm slot">
+            <FormField label="Phí đỗ sai hoặc chiếm ô">
               <Input type="number" value={policy.wrongSlotFine} onChange={(event) => setPolicy({ ...policy, wrongSlotFine: Number(event.target.value) })} />
             </FormField>
             <Button type="submit" variant="primary" icon={Save}>Lưu chính sách</Button>
@@ -94,14 +94,14 @@ const AdminSettingsPage = () => {
           <div className="section-header">
             <div>
               <h2 className="section-title"><ShieldCheck size={19} /> Phân quyền</h2>
-              <p className="section-copy">Role giữ đúng tên backend để Saga/API dễ map.</p>
+              <p className="section-copy">Mỗi nhóm người dùng chỉ nhìn thấy những màn hình phù hợp với công việc của mình.</p>
             </div>
           </div>
           <div className="data-list">
-            {Object.entries(roleLabels).map(([key, label]) => (
+            {["USER", "PARKING_STAFF", "PARKING_MANAGER", "ADMIN"].map((key) => (
               <div className="data-row" key={key}>
-                <span>{key}</span>
-                <strong>{label}</strong>
+                <span>{roleLabels[key]}</span>
+                <strong>{key === "USER" ? "Đăng ký xe, mua gói, xem QR" : key === "PARKING_STAFF" ? "Vận hành cổng xe" : key === "PARKING_MANAGER" ? "Cấu hình bãi và xem báo cáo" : "Duyệt tài khoản và xe"}</strong>
               </div>
             ))}
           </div>
@@ -111,8 +111,8 @@ const AdminSettingsPage = () => {
       <section className="card section-card">
         <div className="section-header">
           <div>
-            <h2 className="section-title"><QrCode size={19} /> Kho QR/session card tạm</h2>
-            <p className="section-copy">Staff phát cho khách vãng lai, trạng thái sẽ chuyển khi tạo/kết thúc phiên.</p>
+            <h2 className="section-title"><QrCode size={19} /> Kho thẻ QR tạm</h2>
+            <p className="section-copy">Nhân viên phát cho khách vãng lai, sau khi xe ra thì thẻ có thể dùng lại.</p>
           </div>
         </div>
         <Table columns={qrColumns} data={tempQrCards} />
@@ -121,8 +121,8 @@ const AdminSettingsPage = () => {
       <section className="card section-card">
         <div className="section-header">
           <div>
-            <h2 className="section-title"><CreditCard size={19} /> Thanh toán/VNPay mock</h2>
-            <p className="section-copy">Dữ liệu map với bảng `payments`, gồm gói tháng và phiên gửi xe.</p>
+            <h2 className="section-title"><CreditCard size={19} /> Thanh toán VNPay</h2>
+            <p className="section-copy">Theo dõi thanh toán cho gói tháng và lượt gửi xe.</p>
           </div>
         </div>
         <Table columns={paymentColumns} data={payments} />

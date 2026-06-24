@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-    CheckCircle2,
     RefreshCcw,
     Search,
     ShieldCheck,
@@ -27,10 +26,10 @@ const statusOptions = [
 ];
 
 const roleOptions = [
-    { label: "User / Cư dân", value: "USER" },
-    { label: "Staff / Nhân viên bãi xe", value: "STAFF" },
-    { label: "Manager / Quản lý bãi xe", value: "MANAGER" },
-    { label: "Admin", value: "ADMIN" },
+    { label: "Cư dân", value: "USER" },
+    { label: "Nhân viên bãi xe", value: "STAFF" },
+    { label: "Quản lý bãi xe", value: "MANAGER" },
+    { label: "Quản trị viên", value: "ADMIN" },
 ];
 
 const statusLabels = {
@@ -44,7 +43,7 @@ const statusTone = {
     PENDING: "warning",
     ACTIVE: "success",
     LOCKED: "danger",
-    INACTIVE: "muted",
+    INACTIVE: "neutral",
 };
 
 const AdminUserApprovalPage = () => {
@@ -91,18 +90,16 @@ const AdminUserApprovalPage = () => {
     };
 
     useEffect(() => {
-        fetchUsers();
-    }, [dispatch, filters.status, filters.role, filters.page]);
-
-    useEffect(() => {
-        const drafts = {};
-
-        users.forEach((user) => {
-            drafts[user.id] = user.role || "USER";
-        });
-
-        setRoleDrafts(drafts);
-    }, [users]);
+        dispatch(
+            fetchAdminUsersRequest({
+                q: filters.q || undefined,
+                status: filters.status || undefined,
+                role: filters.role || undefined,
+                page: filters.page,
+                limit: filters.limit,
+            })
+        );
+    }, [dispatch, filters.q, filters.status, filters.role, filters.page, filters.limit]);
 
     const updateFilter = (field, value) => {
         dispatch(clearAdminUserNotice());
@@ -170,14 +167,13 @@ const AdminUserApprovalPage = () => {
             <section className="page-hero">
                 <div>
                     <div className="page-eyebrow">
-                        <ShieldCheck size={16} /> Admin approval
+                        <ShieldCheck size={16} /> Duyệt tài khoản
                     </div>
 
                     <h1 className="page-title">Duyệt tài khoản đăng ký</h1>
 
                     <p className="page-subtitle">
-                        User mới đăng ký sẽ ở trạng thái PENDING. Admin duyệt sang ACTIVE
-                        thì tài khoản mới đăng nhập và dùng API được.
+                        Tài khoản mới cần được quản trị viên duyệt trước khi đăng nhập và sử dụng hệ thống.
                     </p>
                 </div>
 
@@ -205,11 +201,11 @@ const AdminUserApprovalPage = () => {
                 <div className="metric-card">
                     <div className="metric-label">Chờ duyệt</div>
                     <div className="metric-value">{pendingCount}</div>
-                    <div className="metric-note">Status PENDING</div>
+                    <div className="metric-note">Cần quản trị viên kiểm tra</div>
                 </div>
 
                 <div className="metric-card">
-                    <div className="metric-label">Đã active</div>
+                    <div className="metric-label">Đã duyệt</div>
                     <div className="metric-value">{activeCount}</div>
                     <div className="metric-note">Có thể đăng nhập hệ thống</div>
                 </div>
@@ -220,7 +216,7 @@ const AdminUserApprovalPage = () => {
                     <div>
                         <h2 className="section-title">Bộ lọc tài khoản</h2>
                         <p className="section-copy">
-                            Lọc nhanh tài khoản chờ duyệt, đã duyệt, đã khóa hoặc theo role.
+                            Lọc nhanh tài khoản chờ duyệt, đã duyệt, đã khóa hoặc theo quyền sử dụng.
                         </p>
                     </div>
                 </div>
@@ -257,13 +253,13 @@ const AdminUserApprovalPage = () => {
                         </select>
                     </FormField>
 
-                    <FormField label="Role">
+                    <FormField label="Quyền sử dụng">
                         <select
                             className="form-input"
                             value={filters.role}
                             onChange={(event) => updateFilter("role", event.target.value)}
                         >
-                            <option value="">Tất cả role</option>
+                            <option value="">Tất cả quyền</option>
                             {roleOptions.map((option) => (
                                 <option key={option.value} value={option.value}>
                                     {option.label}
@@ -295,7 +291,7 @@ const AdminUserApprovalPage = () => {
                     <div>
                         <h2 className="section-title">Danh sách tài khoản</h2>
                         <p className="section-copy">
-                            Chọn role rồi bấm duyệt để chuyển user sang ACTIVE.
+                            Chọn quyền phù hợp rồi bấm duyệt để tài khoản được sử dụng hệ thống.
                         </p>
                     </div>
                 </div>
@@ -304,11 +300,11 @@ const AdminUserApprovalPage = () => {
                     <table className="custom-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Mã</th>
                                 <th>Người dùng</th>
                                 <th>Liên hệ</th>
-                                <th>Role</th>
-                                <th>Status</th>
+                                <th>Quyền sử dụng</th>
+                                <th>Trạng thái</th>
                                 <th>Ngày tạo</th>
                                 <th>Thao tác</th>
                             </tr>

@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
+import { Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
+
 import { useMockAuth } from "../../context/MockAuthContext";
 import { roleLabels } from "../../services/mockParkingData";
-import { Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
 import "./Layout.css";
 
 const Header = ({ toggleSidebar, sidebarHidden, toggleSidebarHidden }) => {
@@ -23,20 +24,20 @@ const Header = ({ toggleSidebar, sidebarHidden, toggleSidebarHidden }) => {
           type="button"
           className="sidebar-desktop-toggle-btn"
           onClick={toggleSidebarHidden}
-          aria-label={sidebarHidden ? "Hiện sidebar" : "Ẩn sidebar"}
-          title={sidebarHidden ? "Hiện sidebar" : "Ẩn sidebar"}
+          aria-label={sidebarHidden ? "Hiện thanh bên" : "Ẩn thanh bên"}
+          title={sidebarHidden ? "Hiện thanh bên" : "Ẩn thanh bên"}
         >
           {sidebarHidden ? <PanelLeftOpen size={21} /> : <PanelLeftClose size={21} />}
         </button>
         <div className="header-title">
-          <h2>Parking Building Management</h2>
-          <p>Mock UI trước khi nối Redux Saga với backend</p>
+          <h2>Sunrise Parking</h2>
+          <p>Quản lý tòa giữ xe bằng QR cho cư dân, khách và nhân viên vận hành</p>
         </div>
       </div>
 
       <div className="header-right">
         <div className="role-switcher-widget">
-          <span className="switcher-label">Role</span>
+          <span className="switcher-label">Chế độ xem</span>
           <select className="role-select-dropdown" value={role} onChange={handleRoleChange}>
             {roles.map((roleKey) => (
               <option key={roleKey} value={roleKey}>
@@ -50,7 +51,7 @@ const Header = ({ toggleSidebar, sidebarHidden, toggleSidebarHidden }) => {
           className="theme-toggle-btn"
           onClick={toggleDarkMode}
           title={isDarkMode ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
-          aria-label="Đổi theme"
+          aria-label="Đổi giao diện"
         >
           {isDarkMode ? <Sun size={19} /> : <Moon size={19} />}
         </button>

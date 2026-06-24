@@ -29,8 +29,8 @@ const StaffDashboard = () => {
 
   const queue = useMemo(
     () => [
-      { id: "IN-01", title: "Khách ô tô vãng lai", desc: "Nhập biển 51G-776.51, gán slot C-09, phát QR TMP-002.", action: "Đã gán slot" },
-      { id: "IN-02", title: "User xe máy có gói", desc: "QR-MB-59S1-22345 hợp lệ, cho vào B1 nếu còn capacity.", action: "Cho vào" },
+      { id: "IN-01", title: "Khách ô tô vãng lai", desc: "Nhập biển 51G-776.51, gán ô C-09, phát QR TMP-002.", action: "Đã gán ô" },
+      { id: "IN-02", title: "Cư dân xe máy có gói", desc: "QR-MB-59S1-22345 hợp lệ, cho vào B1 nếu còn chỗ.", action: "Cho vào" },
       { id: "OUT-01", title: "Ô tô chờ thanh toán", desc: "SESS-0990 có phí 400.000đ gồm vi phạm.", action: "Thu phí" },
     ],
     []
@@ -39,26 +39,26 @@ const StaffDashboard = () => {
   const sessionColumns = [
     { header: "Phiên", key: "id" },
     { header: "Biển số", key: "plateNumber" },
-    { header: "Loại khách", key: "customerType", render: (row) => (row.customerType === "REGISTERED_USER" ? "User đăng ký" : "Khách vãng lai") },
+    { header: "Loại khách", key: "customerType", render: (row) => (row.customerType === "REGISTERED_USER" ? "Cư dân" : "Khách vãng lai") },
     { header: "Xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
-    { header: "Vị trí", key: "slotCode", render: (row) => row.slotCode || "Capacity xe máy" },
-    { header: "Check-in", key: "checkInAt", render: (row) => formatDateTime(row.checkInAt) },
+    { header: "Vị trí", key: "slotCode", render: (row) => row.slotCode || "Khu xe máy" },
+    { header: "Giờ vào", key: "checkInAt", render: (row) => formatDateTime(row.checkInAt) },
   ];
 
   return (
     <div className="parking-page">
       <section className="page-hero">
         <div className="page-hero-content">
-          <div className="page-eyebrow"><QrCode size={16} /> Parking Staff</div>
+          <div className="page-eyebrow"><QrCode size={16} /> Nhân viên cổng</div>
           <h1 className="page-title">Bàn vận hành của {user.name}</h1>
           <p className="page-subtitle">
-            Quét QR, nhập biển số, phát QR tạm, gán slot ô tô, kiểm tra vi phạm và xác nhận xe ra/vào.
+            Quét QR, nhập biển số, phát QR tạm, gán ô đỗ ô tô, kiểm tra vi phạm và xác nhận xe ra/vào.
           </p>
         </div>
         <div className="page-hero-aside">
           <span className="page-hero-label">Đang trong bãi</span>
           <span className="page-hero-number">{activeSessions.length}</span>
-          <span className="page-hero-label">phiên mở</span>
+          <span className="page-hero-label">lượt đang gửi</span>
         </div>
       </section>
 
@@ -67,13 +67,13 @@ const StaffDashboard = () => {
           <div className="metric-icon"><Layers size={22} /></div>
           <div className="metric-label">Xe máy còn chỗ</div>
           <div className="metric-value">{motorbikeLeft}</div>
-          <div className="metric-note">Theo capacity, không gán slot</div>
+          <div className="metric-note">Theo sức chứa, không gán ô riêng</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><Car size={22} /></div>
-          <div className="metric-label">Slot ô tô trống</div>
+          <div className="metric-label">Ô đỗ ô tô trống</div>
           <div className="metric-value">{availableCarSlots}</div>
-          <div className="metric-note">Chỉ chọn slot hợp lệ</div>
+          <div className="metric-note">Chỉ chọn ô hợp lệ</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><QrCode size={22} /></div>
@@ -94,7 +94,7 @@ const StaffDashboard = () => {
           <div className="section-header">
             <div>
               <h2 className="section-title"><ArrowDownLeft size={19} /> Hàng đợi xử lý tại cổng</h2>
-              <p className="section-copy">Mock thao tác nhanh của staff trước khi gọi API check-in/check-out.</p>
+              <p className="section-copy">Các việc thường gặp trong ca trực tại cổng xe.</p>
             </div>
             <div className="action-row">
               <Button variant="primary" icon={ArrowDownLeft} onClick={() => (window.location.pathname = "/staff/check-in")}>Xe vào</Button>
@@ -121,7 +121,7 @@ const StaffDashboard = () => {
           <div className="section-header">
             <div>
               <h2 className="section-title"><ShieldCheck size={19} /> Vi phạm cần chú ý</h2>
-              <p className="section-copy">Staff ghi nhận thủ công, không dùng camera AI trong MVP.</p>
+              <p className="section-copy">Nhân viên ghi nhận thủ công khi phát hiện xe đỗ sai hoặc mất thẻ.</p>
             </div>
           </div>
           <div className="data-list">
@@ -143,7 +143,7 @@ const StaffDashboard = () => {
         <div className="section-header">
           <div>
             <h2 className="section-title"><Car size={19} /> Phiên gửi xe đang mở</h2>
-            <p className="section-copy">Nguồn mock tương ứng `/api/parking-sessions?status=ACTIVE`.</p>
+            <p className="section-copy">Danh sách xe đang ở trong bãi để đối chiếu khi xe ra vào.</p>
           </div>
         </div>
         <Table columns={sessionColumns} data={activeSessions} />

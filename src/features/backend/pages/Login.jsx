@@ -9,7 +9,6 @@ import {
     Mail,
     Moon,
     QrCode,
-    ShieldCheck,
     Sparkles,
     Sun,
 } from "lucide-react";
@@ -33,10 +32,10 @@ import {
 
 
 const demoAccounts = [
-    { label: "Admin", email: "admin@test.com" },
-    { label: "Manager", email: "manager@test.com" },
-    { label: "Staff", email: "staff@test.com" },
-    { label: "User", email: "user2@test.com" },
+    { label: "Quản trị viên", email: "admin@test.com" },
+    { label: "Quản lý", email: "manager@test.com" },
+    { label: "Nhân viên", email: "staff@test.com" },
+    { label: "Cư dân", email: "user1@test.com" },
 ];
 
 const Login = () => {
@@ -237,14 +236,14 @@ const Login = () => {
             <section className="login-story">
                 <div>
                     <div className="page-eyebrow">
-                        <Sparkles size={16} /> SU26SWP08 MVP
+                        <Sparkles size={16} /> Sunrise Parking
                     </div>
 
-                    <h1 className="page-title">Parking Building Management System</h1>
+                    <h1 className="page-title">Hệ thống quản lý tòa giữ xe</h1>
 
                     <p className="page-subtitle">
-                        Một tòa nhà, xe máy quản lý theo capacity, ô tô quản lý theo slot,
-                        QR digital pass và QR tạm cho khách vãng lai.
+                        Một tòa nhà, xe máy theo sức chứa, ô tô theo từng ô đỗ,
+                        mã QR tháng và QR tạm cho khách vãng lai.
                     </p>
                 </div>
 
@@ -260,13 +259,13 @@ const Login = () => {
                         </div>
 
                         <div className="data-row">
-                            <span>Capacity xe máy</span>
+                            <span>Sức chứa xe máy</span>
                             <strong>{motorbikeCapacity} xe</strong>
                         </div>
 
                         <div className="data-row">
-                            <span>Slot ô tô</span>
-                            <strong>{carSlots} slot</strong>
+                            <span>Ô đỗ ô tô</span>
+                            <strong>{carSlots} ô</strong>
                         </div>
                     </div>
                 </div>
@@ -276,15 +275,15 @@ const Login = () => {
                         <Car size={20} color="var(--primary)" />
                         <div className="metric-value">2 loại xe</div>
                         <div className="metric-note">
-                            Xe máy theo số lượng, ô tô theo từng slot.
+                            Xe máy theo số lượng, ô tô theo từng ô đỗ.
                         </div>
                     </div>
 
                     <div className="soft-panel">
                         <QrCode size={20} color="var(--primary)" />
-                        <div className="metric-value">QR-first</div>
+                        <div className="metric-value">Ra vào bằng QR</div>
                         <div className="metric-note">
-                            Vé tháng, check-in/out và QR tạm.
+                            Gói tháng, xe ra vào và QR tạm.
                         </div>
                     </div>
                 </div>
@@ -414,7 +413,7 @@ const Login = () => {
                             {registerSuccess && (
                                 <div className="soft-panel" style={{ borderColor: "var(--success)" }}>
                                     <strong style={{ color: "var(--success)" }}>
-                                        Đăng ký thành công. Tài khoản đang chờ admin duyệt trước khi đăng nhập.
+                                        Đăng ký thành công. Tài khoản đang chờ quản trị viên duyệt trước khi đăng nhập.
                                     </strong>
                                 </div>
                             )}
@@ -529,12 +528,11 @@ const Login = () => {
 
                             <div className="soft-panel" style={{ marginTop: 18 }}>
                                 <div className="section-title" style={{ fontSize: 15 }}>
-                                    Tài khoản test local
+                                    Tài khoản dùng thử
                                 </div>
 
                                 <p className="section-copy">
-                                    Dùng khi đã chạy seed backend. Mật khẩu mặc định:{" "}
-                                    <strong>123456</strong>
+                                    Mật khẩu mặc định: <strong>123456</strong>
                                 </p>
 
                                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -558,22 +556,22 @@ const Login = () => {
 
                             <div className="data-list" style={{ marginTop: 18 }}>
                                 <div className="data-row">
-                                    <span>Admin</span>
+                                    <span>Quản trị viên</span>
                                     <strong>{roleLabels.ADMIN}</strong>
                                 </div>
 
                                 <div className="data-row">
-                                    <span>Manager</span>
+                                    <span>Quản lý</span>
                                     <strong>{roleLabels.PARKING_MANAGER}</strong>
                                 </div>
 
                                 <div className="data-row">
-                                    <span>Staff</span>
+                                    <span>Nhân viên</span>
                                     <strong>{roleLabels.PARKING_STAFF}</strong>
                                 </div>
 
                                 <div className="data-row">
-                                    <span>User</span>
+                                    <span>Cư dân</span>
                                     <strong>{roleLabels.USER}</strong>
                                 </div>
                             </div>

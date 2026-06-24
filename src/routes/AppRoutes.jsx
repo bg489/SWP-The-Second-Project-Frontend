@@ -22,6 +22,10 @@ import FloorManagementPage from "../features/pages/FloorManagementPage";
 import ReportsPage from "../features/pages/ReportsPage";
 import UserProfilePage from "../features/pages/UserProfilePage";
 import AdminSettingsPage from "../features/pages/AdminSettingsPage";
+import ManagerPricingPackagesPage from "../features/pages/ManagerPricingPackagesPage";
+import TempQrCardsPage from "../features/pages/TempQrCardsPage";
+import StaffViolationsPage from "../features/pages/StaffViolationsPage";
+import AdminVehicleApprovalPage from "../features/pages/AdminVehicleApprovalPage";
 import AdminUserApprovalPage from "../features/backend/pages/AdminUserApprovalPage";
 import UserBuildingChangeRequestPage from "../features/backend/pages/UserBuildingChangeRequestPage";
 import AdminBuildingChangeRequestsPage from "../features/backend/pages/AdminBuildingChangeRequestsPage";
@@ -51,6 +55,8 @@ const AppRoutes = () => {
           <Route path="/staff/dashboard" element={<StaffDashboard />} />
           <Route path="/staff/check-in" element={<CheckInQRPage />} />
           <Route path="/staff/check-out" element={<CheckOutQRPage />} />
+          <Route path="/staff/temp-qr-cards" element={<TempQrCardsPage />} />
+          <Route path="/staff/violations" element={<StaffViolationsPage />} />
           <Route path="/staff/motorbike-status" element={<MotorbikeFloorStatusPage />} />
           <Route path="/staff/car-slots" element={<CarSlotMapPage />} />
         </Route>
@@ -59,6 +65,8 @@ const AppRoutes = () => {
           <Route path="/manager/dashboard" element={<ManagerDashboard />} />
           <Route path="/manager/building" element={<BuildingManagementPage />} />
           <Route path="/manager/floors" element={<FloorManagementPage />} />
+          <Route path="/manager/pricing-packages" element={<ManagerPricingPackagesPage />} />
+          <Route path="/manager/temp-qr-cards" element={<TempQrCardsPage />} />
           <Route path="/manager/reports" element={<ReportsPage />} />
         </Route>
 
@@ -66,6 +74,7 @@ const AppRoutes = () => {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
           <Route path="/admin/users" element={<AdminUserApprovalPage />} />
+          <Route path="/admin/vehicles" element={<AdminVehicleApprovalPage />} />
           <Route
             path="/admin/building-change-requests"
             element={<AdminBuildingChangeRequestsPage />}

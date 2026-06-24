@@ -1,109 +1,190 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AlertTriangle, ArrowUpRight, CreditCard, QrCode, ReceiptText, ShieldCheck } from "lucide-react";
+
 import Button from "../../components/Button/Button";
 import FormField from "../../components/Form/FormField";
+import Input from "../../components/Form/Input";
 import Select from "../../components/Form/Select";
+import {
+  checkOutByQrRequest,
+  checkOutRequest,
+  fetchActiveParkingSessionsRequest,
+  fetchViolationsRequest,
+} from "../backend/parking/parkingSlice";
 import {
   formatCurrency,
   formatDateTime,
   getVehicleTypeLabel,
   monthlyPasses,
-  parkingSessions,
   pricingPolicy,
-  violations,
 } from "../../services/mockParkingData";
-import { AlertTriangle, ArrowUpRight, CreditCard, QrCode, ReceiptText, ShieldCheck } from "lucide-react";
 
-const MOCK_CHECKOUT = new Date("2026-06-11T12:05:00+07:00");
+const paymentOptions = [
+  { value: "CASH", label: "Tiền mặt" },
+  { value: "CARD", label: "Thẻ ngân hàng" },
+  { value: "VNPAY", label: "VNPay" },
+];
 
 const CheckOutQRPage = () => {
-  const [selectedSessionId, setSelectedSessionId] = useState("SESS-0990");
-  const [receipt, setReceipt] = useState(null);
-  const selectableSessions = parkingSessions.filter((session) => ["ACTIVE", "PENDING_PAYMENT"].includes(session.status));
-  const currentSession = selectableSessions.find((session) => session.id === selectedSessionId);
+  const dispatch = useDispatch();
+  const { parkingSessions, violations, notice } = useSelector((state) => state.parking);
 
-  const feeDetails = (() => {
+  const [selectedSessionId, setSelectedSessionId] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("CASH");
+  const [qrCode, setQrCode] = useState("");
+  const [checkoutMode, setCheckoutMode] = useState("SESSION");
+
+  useEffect(() => {
+    dispatch(fetchActiveParkingSessionsRequest());
+    dispatch(fetchViolationsRequest());
+  }, [dispatch]);
+
+  const effectiveSessionId = selectedSessionId || parkingSessions.active[0]?.id || "";
+
+  const currentSession = useMemo(() => {
+    return parkingSessions.active.find((session) => String(session.id) === String(effectiveSessionId));
+  }, [effectiveSessionId, parkingSessions.active]);
+
+  const checkoutTime = useMemo(() => new Date(), []);
+
+  const feeDetails = useMemo(() => {
     if (!currentSession) return null;
-    const activePass = monthlyPasses.find((pass) => pass.plateNumber === currentSession.plateNumber && pass.status === "ACTIVE");
+
+    const activePass = monthlyPasses.find(
+      (pass) => pass.plateNumber === currentSession.plateNumber && pass.status === "ACTIVE"
+    );
     const checkIn = new Date(currentSession.checkInAt);
-    const hours = Math.max(1, Math.ceil((MOCK_CHECKOUT - checkIn) / (1000 * 60 * 60)));
-    const violation = violations.find((item) => item.sessionId === currentSession.id && item.status === "UNPAID");
+    const hours = Math.max(1, Math.ceil((checkoutTime - checkIn) / (1000 * 60 * 60)));
+    const sessionViolations = violations.items.filter((item) =>
+      String(item.parkingSessionId || item.sessionId) === String(currentSession.id)
+      && ["OPEN", "RESOLVED", "UNPAID"].includes(item.status)
+    );
+    const violationFee = sessionViolations.reduce((sum, item) => sum + Number(item.penaltyFee || item.fine || 0), 0);
 
-    let baseFee = 0;
-    if (!activePass) {
-      baseFee = currentSession.vehicleType === "CAR" ? hours * pricingPolicy.carHourly : pricingPolicy.motorbikeTurn;
-    }
+    const baseFee = activePass
+      ? 0
+      : currentSession.vehicleType === "CAR"
+        ? hours * pricingPolicy.carHourly
+        : pricingPolicy.motorbikeTurn;
 
-    const violationFee = violation?.fine || currentSession.violationFee || 0;
     return {
       activePass,
       hours,
       baseFee,
-      violation,
+      sessionViolations,
       violationFee,
       total: baseFee + violationFee,
     };
-  })();
+  }, [checkoutTime, currentSession, violations.items]);
 
-  const handleConfirm = () => {
+  const confirmCheckout = () => {
+    if (checkoutMode === "QR") {
+      dispatch(
+        checkOutByQrRequest({
+          qrCode: qrCode.trim(),
+          paymentMethod,
+          totalAmount: feeDetails?.total || 0,
+        })
+      );
+      return;
+    }
+
     if (!currentSession || !feeDetails) return;
-    setReceipt({
-      id: `REC-${currentSession.id.replace("SESS-", "")}`,
-      sessionId: currentSession.id,
-      plateNumber: currentSession.plateNumber,
-      total: feeDetails.total,
-      baseFee: feeDetails.baseFee,
-      violationFee: feeDetails.violationFee,
-      method: feeDetails.total > 0 ? "CASH/VNPAY" : "MONTHLY_PASS",
-    });
+
+    dispatch(
+      checkOutRequest({
+        id: currentSession.id,
+        paymentMethod,
+        totalAmount: feeDetails.total,
+      })
+    );
   };
+
+  const receipt = parkingSessions.checkoutResult;
 
   return (
     <div className="parking-page">
       <section className="page-hero">
         <div className="page-hero-content">
           <div className="page-eyebrow"><ArrowUpRight size={16} /> Xe ra bãi</div>
-          <h1 className="page-title">Quét QR, tính phí và kết thúc phiên gửi xe</h1>
+          <h1 className="page-title">Quét QR, tính phí và hoàn tất xe ra</h1>
           <p className="page-subtitle">
-            Nếu có gói tháng hợp lệ thì miễn phí thời gian; nếu có vi phạm thì cộng phí phạt vào hóa đơn.
+            Xe có gói tháng hợp lệ được miễn phí gửi xe, nhưng phí vi phạm vẫn cần thu trước khi rời bãi.
           </p>
         </div>
         <div className="page-hero-aside">
-          <span className="page-hero-label">Giờ mock</span>
-          <span className="page-hero-number">12:05</span>
-          <span className="page-hero-label">11/06/2026</span>
+          <span className="page-hero-label">Thời điểm xử lý</span>
+          <span className="page-hero-number">{checkoutTime.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span>
+          <span className="page-hero-label">{checkoutTime.toLocaleDateString("vi-VN")}</span>
         </div>
       </section>
+
+      {(notice || parkingSessions.error || violations.error) && (
+        <section className="card soft-panel">
+          {notice && <span className="pill success">{notice}</span>}
+          {parkingSessions.error && <p style={{ color: "var(--danger)" }}>{parkingSessions.error}</p>}
+          {violations.error && <p style={{ color: "var(--danger)" }}>{violations.error}</p>}
+        </section>
+      )}
 
       <div className="two-column-grid">
         <section className="card section-card">
           <div className="section-header">
             <div>
-              <h2 className="section-title"><QrCode size={19} /> Quét QR/session card</h2>
-              <p className="section-copy">Mock bằng dropdown, sau này thay bằng scanner hoặc nhập mã QR.</p>
+              <h2 className="section-title"><QrCode size={19} /> Thông tin xe ra</h2>
+              <p className="section-copy">Chọn lượt gửi đang mở hoặc nhập mã QR để tìm xe cần ra bãi.</p>
             </div>
           </div>
-          <FormField label="Chọn phiên gửi xe">
-            <Select
-              value={selectedSessionId}
-              onChange={(event) => {
-                setSelectedSessionId(event.target.value);
-                setReceipt(null);
-              }}
-              options={selectableSessions.map((session) => ({
-                value: session.id,
-                label: `${session.id} - ${session.plateNumber} (${getVehicleTypeLabel(session.vehicleType)})`,
-              }))}
-              placeholder={null}
-            />
-          </FormField>
 
-          {currentSession && feeDetails && (
+          <div style={{ display: "grid", gap: 14 }}>
+            <FormField label="Cách tìm xe">
+              <Select
+                value={checkoutMode}
+                onChange={(event) => setCheckoutMode(event.target.value)}
+                options={[
+                  { value: "SESSION", label: "Chọn từ danh sách đang gửi" },
+                  { value: "QR", label: "Nhập mã QR" },
+                ]}
+                placeholder={null}
+              />
+            </FormField>
+
+            {checkoutMode === "SESSION" ? (
+              <FormField label="Lượt gửi">
+                <Select
+                  value={effectiveSessionId}
+                  onChange={(event) => setSelectedSessionId(event.target.value)}
+                  options={parkingSessions.active.map((session) => ({
+                    value: session.id,
+                    label: `${session.plateNumber} - ${getVehicleTypeLabel(session.vehicleType)}`,
+                  }))}
+                  placeholder="Chọn xe đang gửi"
+                />
+              </FormField>
+            ) : (
+              <FormField label="Mã QR">
+                <Input value={qrCode} onChange={(event) => setQrCode(event.target.value)} placeholder="Nhập mã QR trên thẻ" />
+              </FormField>
+            )}
+
+            <FormField label="Cách thanh toán">
+              <Select
+                value={paymentMethod}
+                onChange={(event) => setPaymentMethod(event.target.value)}
+                options={paymentOptions}
+                placeholder={null}
+              />
+            </FormField>
+          </div>
+
+          {currentSession && checkoutMode === "SESSION" && (
             <div className="data-list" style={{ marginTop: 18 }}>
               <div className="data-row"><span>Biển số</span><strong>{currentSession.plateNumber}</strong></div>
               <div className="data-row"><span>Loại xe</span><strong>{getVehicleTypeLabel(currentSession.vehicleType)}</strong></div>
-              <div className="data-row"><span>Vị trí</span><strong>{currentSession.slotCode || "Capacity xe máy"}</strong></div>
+              <div className="data-row"><span>Vị trí</span><strong>{currentSession.slotCode || "Khu xe máy"}</strong></div>
               <div className="data-row"><span>Giờ vào</span><strong>{formatDateTime(currentSession.checkInAt)}</strong></div>
-              <div className="data-row"><span>Giờ ra</span><strong>{formatDateTime(MOCK_CHECKOUT)}</strong></div>
+              <div className="data-row"><span>Giờ ra</span><strong>{formatDateTime(checkoutTime)}</strong></div>
             </div>
           )}
         </section>
@@ -112,22 +193,22 @@ const CheckOutQRPage = () => {
           <div className="section-header">
             <div>
               <h2 className="section-title"><CreditCard size={19} /> Hóa đơn tạm tính</h2>
-              <p className="section-copy">Áp dụng phí xe máy lượt và ô tô theo giờ từ backend constants.</p>
+              <p className="section-copy">Tính theo lượt với xe máy, theo giờ với ô tô và cộng thêm phí vi phạm nếu có.</p>
             </div>
           </div>
 
-          {feeDetails && (
+          {feeDetails ? (
             <div className="data-list">
               {feeDetails.activePass && (
                 <div className="soft-panel">
                   <span className="pill success"><ShieldCheck size={14} /> Gói tháng hợp lệ</span>
-                  <p className="section-copy">{feeDetails.activePass.packageName}, miễn phí theo thời gian gửi.</p>
+                  <p className="section-copy">{feeDetails.activePass.packageName}, không thu thêm phí gửi xe.</p>
                 </div>
               )}
-              {feeDetails.violation && (
+              {feeDetails.sessionViolations.length > 0 && (
                 <div className="soft-panel">
                   <span className="pill danger"><AlertTriangle size={14} /> Có vi phạm</span>
-                  <p className="section-copy">{feeDetails.violation.type}: {formatCurrency(feeDetails.violationFee)}</p>
+                  <p className="section-copy">{feeDetails.sessionViolations.length} mục cần xử lý: {formatCurrency(feeDetails.violationFee)}</p>
                 </div>
               )}
               <div className="data-row"><span>Thời gian tính phí</span><strong>{feeDetails.hours} giờ</strong></div>
@@ -137,10 +218,15 @@ const CheckOutQRPage = () => {
                 <span className="metric-label">Tổng cần thu</span>
                 <strong className="metric-value">{formatCurrency(feeDetails.total)}</strong>
               </div>
-              <Button variant="primary" icon={ArrowUpRight} onClick={handleConfirm}>
+              {paymentMethod === "VNPAY" && (
+                <p className="section-copy">Thanh toán VNPay sẽ hoàn tất sau khi có xác nhận thanh toán.</p>
+              )}
+              <Button variant="primary" icon={ArrowUpRight} onClick={confirmCheckout} loading={parkingSessions.checkingOut}>
                 Xác nhận xe ra
               </Button>
             </div>
+          ) : (
+            <p className="section-copy">Chọn lượt gửi để xem hóa đơn.</p>
           )}
         </section>
       </div>
@@ -150,15 +236,15 @@ const CheckOutQRPage = () => {
           <div className="section-header">
             <div>
               <h2 className="section-title"><ReceiptText size={19} /> Biên lai hoàn tất</h2>
-              <p className="section-copy">Mock receipt để sau này map với bảng `payments`.</p>
+              <p className="section-copy">Thông tin xe ra và số tiền đã xử lý.</p>
             </div>
-            <span className="pill success">Đã kết thúc phiên</span>
+            <span className="pill success">Đã ghi nhận</span>
           </div>
           <div className="dashboard-grid">
-            <div className="soft-panel"><span className="metric-label">Receipt</span><div className="metric-value">{receipt.id}</div></div>
-            <div className="soft-panel"><span className="metric-label">Biển số</span><div className="metric-value">{receipt.plateNumber}</div></div>
-            <div className="soft-panel"><span className="metric-label">Phương thức</span><div className="metric-value">{receipt.method}</div></div>
-            <div className="soft-panel"><span className="metric-label">Tổng thu</span><div className="metric-value">{formatCurrency(receipt.total)}</div></div>
+            <div className="soft-panel"><span className="metric-label">Lượt gửi</span><div className="metric-value">{receipt.id || effectiveSessionId}</div></div>
+            <div className="soft-panel"><span className="metric-label">Cách thanh toán</span><div className="metric-value">{paymentOptions.find((item) => item.value === paymentMethod)?.label}</div></div>
+            <div className="soft-panel"><span className="metric-label">Trạng thái</span><div className="metric-value">{receipt.status === "PENDING_PAYMENT" ? "Chờ thanh toán" : "Hoàn tất"}</div></div>
+            <div className="soft-panel"><span className="metric-label">Tổng thu</span><div className="metric-value">{formatCurrency(receipt.totalAmount || feeDetails?.total || 0)}</div></div>
           </div>
         </section>
       )}

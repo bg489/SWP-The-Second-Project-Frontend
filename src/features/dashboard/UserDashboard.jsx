@@ -49,15 +49,15 @@ const UserDashboard = () => {
       <section className="page-hero">
         <div className="page-hero-content">
           <div className="page-eyebrow">
-            <ShieldCheck size={16} /> Registered User
+            <ShieldCheck size={16} /> Cư dân
           </div>
-          <h1 className="page-title">Xin chào, {user.name}. QR pass của bạn đã sẵn sàng.</h1>
+          <h1 className="page-title">Xin chào, {user.name}. Mã QR của bạn đã sẵn sàng.</h1>
           <p className="page-subtitle">
             Quản lý xe đã duyệt, mua gói tháng theo từng phương tiện và theo dõi phiên gửi xe hiện tại.
           </p>
         </div>
         <div className="page-hero-aside">
-          <span className="page-hero-label">Phiên đang mở</span>
+          <span className="page-hero-label">Lượt đang gửi</span>
           <span className="page-hero-number">{myActiveSession ? myActiveSession.slotCode || "MB" : "0"}</span>
           <span className="page-hero-label">{myActiveSession ? myActiveSession.plateNumber : "Không có xe trong bãi"}</span>
         </div>
@@ -89,7 +89,7 @@ const UserDashboard = () => {
           <div className="section-header">
             <div>
               <h2 className="section-title"><Clock size={19} /> Phiên gửi xe hiện tại</h2>
-              <p className="section-copy">Mock theo bảng `parking_sessions` để sau này gọi `/api/parking-sessions`.</p>
+              <p className="section-copy">Theo dõi xe của bạn khi đang gửi trong bãi.</p>
             </div>
             <Button variant="primary" icon={QrCode} onClick={() => navigate("/user/qr-pass")}>
               Xem QR
@@ -99,11 +99,11 @@ const UserDashboard = () => {
           {myActiveSession ? (
             <div className="soft-panel">
               <div className="data-list">
-                <div className="data-row"><span>Mã phiên</span><strong>{myActiveSession.id}</strong></div>
+                <div className="data-row"><span>Mã lượt gửi</span><strong>{myActiveSession.id}</strong></div>
                 <div className="data-row"><span>Xe</span><strong>{myActiveSession.plateNumber} - {getVehicleTypeLabel(myActiveSession.vehicleType)}</strong></div>
                 <div className="data-row"><span>Khu vực</span><strong>{myActiveSession.floorName}</strong></div>
-                <div className="data-row"><span>Vị trí</span><strong>{myActiveSession.slotCode || "Theo capacity xe máy"}</strong></div>
-                <div className="data-row"><span>Check-in</span><strong>{formatDateTime(myActiveSession.checkInAt)}</strong></div>
+                <div className="data-row"><span>Vị trí</span><strong>{myActiveSession.slotCode || "Khu xe máy"}</strong></div>
+                <div className="data-row"><span>Giờ vào</span><strong>{formatDateTime(myActiveSession.checkInAt)}</strong></div>
                 <div className="data-row"><span>Thanh toán</span><strong>{getStatusLabel(myActiveSession.paymentStatus)}</strong></div>
               </div>
             </div>
@@ -116,7 +116,7 @@ const UserDashboard = () => {
           <div className="section-header">
             <div>
               <h2 className="section-title"><Calendar size={19} /> Gói tháng có thể mua</h2>
-              <p className="section-copy">User chọn xe đã duyệt rồi thanh toán qua VNPay.</p>
+            <p className="section-copy">Cư dân chọn xe đã duyệt rồi thanh toán qua VNPay.</p>
             </div>
           </div>
           <div className="data-list">
@@ -139,7 +139,7 @@ const UserDashboard = () => {
         <div className="section-header">
           <div>
             <h2 className="section-title"><Car size={19} /> Phương tiện của tôi</h2>
-            <p className="section-copy">Tạo xe mới ở trang hồ sơ, admin duyệt trước khi QR/gói tháng hợp lệ.</p>
+            <p className="section-copy">Tạo xe mới ở trang hồ sơ, quản trị viên duyệt trước khi QR/gói tháng hợp lệ.</p>
           </div>
           <Button variant="secondary" icon={Plus} onClick={() => navigate("/user/profile")}>
             Đăng ký xe
