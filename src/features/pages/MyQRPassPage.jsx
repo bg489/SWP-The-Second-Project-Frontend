@@ -23,6 +23,23 @@ import {
   getVehicleTypeLabel,
 } from "../../services/mockParkingData";
 
+const getPaymentReturnFromUrl = () => {
+  const params = new URLSearchParams(window.location.search);
+  const paymentStatus = params.get("paymentStatus");
+
+  if (!paymentStatus) return null;
+
+  const isSuccess = paymentStatus === "SUCCESS";
+
+  return {
+    tone: isSuccess ? "success" : "warning",
+    message: isSuccess
+      ? "Thanh toán thành công. Gói tháng của bạn đang được cập nhật."
+      : "Thanh toán chưa hoàn tất. Bạn có thể gửi lại yêu cầu khi cần.",
+    transactionRef: params.get("transactionRef"),
+  };
+};
+
 const MyQRPassPage = () => {
   const dispatch = useDispatch();
   const {
@@ -34,6 +51,7 @@ const MyQRPassPage = () => {
   } = useSelector((state) => state.parking);
 
   const [selectedPass, setSelectedPass] = useState(null);
+  const [paymentReturn] = useState(getPaymentReturnFromUrl);
   const [purchaseForm, setPurchaseForm] = useState({
     packagePlanId: "",
     vehicleId: "",
@@ -46,6 +64,14 @@ const MyQRPassPage = () => {
     dispatch(fetchMyVehiclesRequest());
     dispatch(fetchMySlotRegistrationsRequest());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!paymentReturn) return;
+
+    dispatch(fetchMyQrPassesRequest());
+    dispatch(fetchMySlotRegistrationsRequest());
+    window.history.replaceState({}, "", window.location.pathname);
+  }, [dispatch, paymentReturn]);
 
   const approvedVehicles = useMemo(() => {
     return vehicles.mine.filter((vehicle) => ["APPROVED", "ACTIVE"].includes(vehicle.status));
@@ -112,9 +138,17 @@ const MyQRPassPage = () => {
         </div>
       </section>
 
-      {(notice || packagePlans.error || qrPasses.error || slotRegistrations.error) && (
+      {(notice || paymentReturn || packagePlans.error || qrPasses.error || slotRegistrations.error) && (
         <section className="card soft-panel">
           {notice && <span className="pill success">{notice}</span>}
+          {paymentReturn && (
+            <div className="data-list">
+              <span className={`pill ${paymentReturn.tone}`}>{paymentReturn.message}</span>
+              {paymentReturn.transactionRef && (
+                <p className="section-copy">Mã giao dịch: {paymentReturn.transactionRef}</p>
+              )}
+            </div>
+          )}
           {packagePlans.error && <p style={{ color: "var(--danger)" }}>{packagePlans.error}</p>}
           {qrPasses.error && <p style={{ color: "var(--danger)" }}>{qrPasses.error}</p>}
           {slotRegistrations.error && <p style={{ color: "var(--danger)" }}>{slotRegistrations.error}</p>}
