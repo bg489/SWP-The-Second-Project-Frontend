@@ -4,11 +4,14 @@ import { Calendar, CreditCard, QrCode, ShieldCheck, X } from "lucide-react";
 
 import Button from "../../components/Button/Button";
 import FormField from "../../components/Form/FormField";
+import QrCodeImage from "../../components/QrCode/QrCodeImage";
 import Select from "../../components/Form/Select";
 import {
   buyPackagePlanRequest,
   clearParkingNotice,
+  continueMonthlyPassPaymentRequest,
   createSlotRegistrationRequest,
+  fetchMyMonthlyPassesRequest,
   fetchMyQrPassesRequest,
   fetchMySlotRegistrationsRequest,
   fetchMyVehiclesRequest,
@@ -40,10 +43,22 @@ const getPaymentReturnFromUrl = () => {
   };
 };
 
+const getPassQrValue = (pass) => pass?.qrCode || pass?.code || "";
+
+const getPassPackageName = (pass) =>
+  pass?.packagePlanName || pass?.packageName || pass?.planName || "Gói tháng";
+
+const getPassStartDate = (pass) => pass?.monthlyPassStartDate || pass?.startDate || pass?.validFrom;
+
+const getPassEndDate = (pass) => pass?.monthlyPassEndDate || pass?.endDate || pass?.validTo;
+
+const showLegacyQrModal = false;
+
 const MyQRPassPage = () => {
   const dispatch = useDispatch();
   const {
     packagePlans,
+    monthlyPasses,
     qrPasses,
     slotRegistrations,
     vehicles,
@@ -60,6 +75,7 @@ const MyQRPassPage = () => {
 
   useEffect(() => {
     dispatch(fetchMyQrPassesRequest());
+    dispatch(fetchMyMonthlyPassesRequest());
     dispatch(fetchPackagePlansRequest({ status: "ACTIVE" }));
     dispatch(fetchMyVehiclesRequest());
     dispatch(fetchMySlotRegistrationsRequest());
@@ -69,6 +85,7 @@ const MyQRPassPage = () => {
     if (!paymentReturn) return;
 
     dispatch(fetchMyQrPassesRequest());
+    dispatch(fetchMyMonthlyPassesRequest());
     dispatch(fetchMySlotRegistrationsRequest());
     window.history.replaceState({}, "", window.location.pathname);
   }, [dispatch, paymentReturn]);
@@ -118,8 +135,23 @@ const MyQRPassPage = () => {
     );
   };
 
+  const continueMonthlyPayment = (pass) => {
+    dispatch(
+      continueMonthlyPassPaymentRequest({
+        id: pass.id,
+        bankCode: "NCB",
+        locale: "vn",
+      })
+    );
+  };
+
   const activePassCount = qrPasses.mine.filter((pass) => (pass.status || "ACTIVE") === "ACTIVE").length;
   const availableCarSlots = carSlots.filter((slot) => slot.status === "AVAILABLE");
+  const pendingMonthlyPasses = monthlyPasses.mine.filter((pass) =>
+    ["PENDING_PAYMENT", "CANCELLED"].includes(pass.status)
+  );
+  const hasPendingRequests =
+    pendingMonthlyPasses.length > 0 || slotRegistrations.mine.length > 0;
 
   return (
     <div className="parking-page">
@@ -138,7 +170,7 @@ const MyQRPassPage = () => {
         </div>
       </section>
 
-      {(notice || paymentReturn || packagePlans.error || qrPasses.error || slotRegistrations.error) && (
+      {(notice || paymentReturn || packagePlans.error || monthlyPasses.error || qrPasses.error || slotRegistrations.error) && (
         <section className="card soft-panel">
           {notice && <span className="pill success">{notice}</span>}
           {paymentReturn && (
@@ -150,8 +182,38 @@ const MyQRPassPage = () => {
             </div>
           )}
           {packagePlans.error && <p style={{ color: "var(--danger)" }}>{packagePlans.error}</p>}
+          {monthlyPasses.error && <p style={{ color: "var(--danger)" }}>{monthlyPasses.error}</p>}
           {qrPasses.error && <p style={{ color: "var(--danger)" }}>{qrPasses.error}</p>}
           {slotRegistrations.error && <p style={{ color: "var(--danger)" }}>{slotRegistrations.error}</p>}
+        </section>
+      )}
+
+      {selectedPass && (
+        <section className="card section-card animate-fade-in qr-follow-card">
+          <div className="section-header">
+            <div>
+              <h2 className="section-title"><QrCode size={19} /> {selectedPass.plateNumber}</h2>
+              <p className="section-copy">{getPassPackageName(selectedPass)}</p>
+            </div>
+            <button className="theme-toggle-btn" onClick={() => setSelectedPass(null)} aria-label="Đóng QR">
+              <X size={18} />
+            </button>
+          </div>
+          <div className="qr-box" style={{ width: 250, height: 250, margin: "0 auto" }}>
+            <QrCodeImage
+              value={getPassQrValue(selectedPass)}
+              size={226}
+              title={`QR ${selectedPass.plateNumber || ""}`}
+            />
+          </div>
+          <div className="data-list" style={{ marginTop: 16, textAlign: "left" }}>
+            <div className="data-row"><span>Xe đăng ký</span><strong>{selectedPass.plateNumber || selectedPass.vehiclePlateNumber}</strong></div>
+            <div className="data-row"><span>Loại xe</span><strong>{getVehicleTypeLabel(selectedPass.vehicleType)}</strong></div>
+            <div className="data-row"><span>Gói tháng</span><strong>{getPassPackageName(selectedPass)}</strong></div>
+            <div className="data-row"><span>Hiệu lực</span><strong>{formatDate(getPassStartDate(selectedPass))} - {formatDate(getPassEndDate(selectedPass))}</strong></div>
+            <div className="data-row"><span>Mã QR</span><strong>{getPassQrValue(selectedPass)}</strong></div>
+          </div>
+          <p className="section-copy" style={{ marginTop: 16 }}>Đưa mã này cho nhân viên quét khi vào hoặc ra bãi.</p>
         </section>
       )}
 
@@ -161,26 +223,50 @@ const MyQRPassPage = () => {
             <div className="section-header">
               <div>
                 <h2 className="section-title"><QrCode size={19} /> {pass.plateNumber || pass.vehiclePlateNumber}</h2>
-                <p className="section-copy">{pass.packageName || pass.planName || "Gói tháng"} - {getVehicleTypeLabel(pass.vehicleType)}</p>
+                <p className="section-copy">{getPassPackageName(pass)} - {getVehicleTypeLabel(pass.vehicleType)}</p>
               </div>
               <span className={`pill ${getStatusTone(pass.status || "ACTIVE")}`}>{getStatusLabel(pass.status || "ACTIVE")}</span>
             </div>
             <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-              <button className="qr-box" onClick={() => setSelectedPass(pass)} aria-label={`Phóng to QR ${pass.plateNumber || ""}`}>
-                <div className="mock-qr" />
+              <button
+                className="qr-box"
+                onClick={() => setSelectedPass(pass)}
+                aria-label={`Phóng to QR ${pass.plateNumber || ""}`}
+                disabled={!getPassQrValue(pass)}
+              >
+                {getPassQrValue(pass) ? (
+                  <QrCodeImage value={getPassQrValue(pass)} size={96} title={`QR ${pass.plateNumber || ""}`} />
+                ) : (
+                  <div className="qr-image-error" style={{ width: 96, height: 96 }}>Đang chờ tạo</div>
+                )}
               </button>
               <div className="data-list" style={{ flex: 1 }}>
-                <div className="data-row"><span>Hiệu lực</span><strong>{formatDate(pass.startDate)} - {formatDate(pass.endDate)}</strong></div>
+                <div className="data-row"><span>Gói tháng</span><strong>{getPassPackageName(pass)}</strong></div>
+                <div className="data-row"><span>Xe đăng ký</span><strong>{pass.plateNumber || pass.vehiclePlateNumber} - {getVehicleTypeLabel(pass.vehicleType)}</strong></div>
+                <div className="data-row"><span>Tòa nhà</span><strong>{pass.buildingName || "Tòa nhà đã đăng ký"}</strong></div>
+                <div className="data-row"><span>Hiệu lực</span><strong>{formatDate(getPassStartDate(pass))} - {formatDate(getPassEndDate(pass))}</strong></div>
                 <div className="data-row"><span>Giá trị gói</span><strong>{formatCurrency(pass.amount || pass.price || 0)}</strong></div>
-                <div className="data-row"><span>Mã QR</span><strong>{pass.qrCode || pass.code || "Đang chờ tạo"}</strong></div>
+                <div className="data-row"><span>Mã QR</span><strong>{getPassQrValue(pass) || "Đang chờ tạo"}</strong></div>
               </div>
             </div>
             <div className="action-row" style={{ marginTop: 16 }}>
-              <Button variant="primary" size="sm" icon={QrCode} onClick={() => setSelectedPass(pass)}>Phóng to QR</Button>
+              <Button variant="primary" size="sm" icon={QrCode} disabled={!getPassQrValue(pass)} onClick={() => setSelectedPass(pass)}>Phóng to QR</Button>
               <Button variant="outline" size="sm" icon={Calendar}>Gia hạn</Button>
             </div>
           </div>
         ))}
+        {qrPasses.mine.length === 0 && (
+          <section className="card section-card">
+            <div className="section-header">
+              <div>
+                <h2 className="section-title"><QrCode size={19} /> Chưa có QR gói tháng</h2>
+                <p className="section-copy">
+                  Sau khi thanh toán thành công, hệ thống sẽ tự tạo QR cho gói tháng và xe đã đăng ký.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
 
       <div className="two-column-grid">
@@ -251,6 +337,28 @@ const MyQRPassPage = () => {
             </div>
           </div>
           <div className="data-list">
+            {pendingMonthlyPasses.map((pass) => (
+              <div className="soft-panel" key={`monthly-${pass.id}`}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <strong>{pass.plateNumber || `Xe #${pass.vehicleId}`}</strong>
+                  <span className={`pill ${getStatusTone(pass.status)}`}>{getStatusLabel(pass.status)}</span>
+                </div>
+                <p className="section-copy">
+                  {getPassPackageName(pass)} - {formatCurrency(pass.amount || 0)}
+                </p>
+                {pass.status === "PENDING_PAYMENT" && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    icon={CreditCard}
+                    loading={String(monthlyPasses.payingId) === String(pass.id)}
+                    onClick={() => continueMonthlyPayment(pass)}
+                  >
+                    Tiếp tục thanh toán
+                  </Button>
+                )}
+              </div>
+            ))}
             {slotRegistrations.mine.map((registration) => (
               <div className="soft-panel" key={registration.id}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
@@ -262,7 +370,7 @@ const MyQRPassPage = () => {
                 </p>
               </div>
             ))}
-            {slotRegistrations.mine.length === 0 && <p className="section-copy">Chưa có yêu cầu nào đang xử lý.</p>}
+            {!hasPendingRequests && <p className="section-copy">Chưa có yêu cầu nào đang xử lý.</p>}
           </div>
         </section>
       </div>
@@ -285,32 +393,34 @@ const MyQRPassPage = () => {
         </div>
       </section>
 
-      {selectedPass && (
+      {showLegacyQrModal && selectedPass && (
         <div
+          className="qr-modal-overlay"
           onClick={() => setSelectedPass(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 1000,
-            display: "grid",
-            placeItems: "center",
-            padding: 20,
-            background: "rgba(37, 21, 38, 0.72)",
-            backdropFilter: "blur(8px)",
-          }}
         >
-          <div className="card section-card animate-fade-in" onClick={(event) => event.stopPropagation()} style={{ width: "min(420px, 100%)", textAlign: "center" }}>
+          <div className="card section-card animate-fade-in qr-modal-card" onClick={(event) => event.stopPropagation()}>
             <div className="section-header">
               <div>
                 <h2 className="section-title"><QrCode size={19} /> {selectedPass.plateNumber}</h2>
-                <p className="section-copy">{selectedPass.packageName || "Gói tháng"}</p>
+                <p className="section-copy">{getPassPackageName(selectedPass)}</p>
               </div>
               <button className="theme-toggle-btn" onClick={() => setSelectedPass(null)} aria-label="Đóng QR">
                 <X size={18} />
               </button>
             </div>
             <div className="qr-box" style={{ width: 250, height: 250, margin: "0 auto" }}>
-              <div className="mock-qr" />
+              <QrCodeImage
+                value={getPassQrValue(selectedPass)}
+                size={226}
+                title={`QR ${selectedPass.plateNumber || ""}`}
+              />
+            </div>
+            <div className="data-list" style={{ marginTop: 16, textAlign: "left" }}>
+              <div className="data-row"><span>Xe đăng ký</span><strong>{selectedPass.plateNumber || selectedPass.vehiclePlateNumber}</strong></div>
+              <div className="data-row"><span>Loại xe</span><strong>{getVehicleTypeLabel(selectedPass.vehicleType)}</strong></div>
+              <div className="data-row"><span>Gói tháng</span><strong>{getPassPackageName(selectedPass)}</strong></div>
+              <div className="data-row"><span>Hiệu lực</span><strong>{formatDate(getPassStartDate(selectedPass))} - {formatDate(getPassEndDate(selectedPass))}</strong></div>
+              <div className="data-row"><span>Mã QR</span><strong>{getPassQrValue(selectedPass)}</strong></div>
             </div>
             <p className="section-copy" style={{ marginTop: 16 }}>Đưa mã này cho nhân viên quét khi vào hoặc ra bãi.</p>
           </div>

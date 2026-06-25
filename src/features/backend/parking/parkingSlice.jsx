@@ -105,8 +105,10 @@ const initialState = {
 
     monthlyPasses: {
         items: monthlyPasses,
+        mine: monthlyPasses.filter((pass) => pass.userId === 1),
         loading: false,
         saving: false,
+        payingId: null,
         error: null,
     },
 
@@ -396,6 +398,19 @@ const parkingSlice = createSlice({
             state.monthlyPasses.error = action.payload;
         },
 
+        fetchMyMonthlyPassesRequest: (state) => {
+            state.monthlyPasses.loading = true;
+            state.monthlyPasses.error = null;
+        },
+        fetchMyMonthlyPassesSuccess: (state, action) => {
+            state.monthlyPasses.loading = false;
+            state.monthlyPasses.mine = action.payload || [];
+        },
+        fetchMyMonthlyPassesFailure: (state, action) => {
+            state.monthlyPasses.loading = false;
+            state.monthlyPasses.error = action.payload;
+        },
+
         createMonthlyPassRequest: (state) => {
             state.monthlyPasses.saving = true;
             state.monthlyPasses.error = null;
@@ -408,6 +423,23 @@ const parkingSlice = createSlice({
         },
         createMonthlyPassFailure: (state, action) => {
             state.monthlyPasses.saving = false;
+            state.monthlyPasses.error = action.payload;
+        },
+
+        continueMonthlyPassPaymentRequest: (state, action) => {
+            state.monthlyPasses.payingId = action.payload.id;
+            state.monthlyPasses.error = null;
+            state.notice = null;
+        },
+        continueMonthlyPassPaymentSuccess: (state, action) => {
+            state.monthlyPasses.payingId = null;
+            const pass = action.payload?.monthlyPass || action.payload;
+            state.monthlyPasses.mine = upsertById(state.monthlyPasses.mine, pass);
+            state.monthlyPasses.items = upsertById(state.monthlyPasses.items, pass);
+            state.notice = "Đã mở lại yêu cầu thanh toán.";
+        },
+        continueMonthlyPassPaymentFailure: (state, action) => {
+            state.monthlyPasses.payingId = null;
             state.monthlyPasses.error = action.payload;
         },
 
@@ -689,6 +721,9 @@ export const {
     checkOutRequest,
     checkOutSuccess,
     clearParkingNotice,
+    continueMonthlyPassPaymentFailure,
+    continueMonthlyPassPaymentRequest,
+    continueMonthlyPassPaymentSuccess,
     createMonthlyPassFailure,
     createMonthlyPassRequest,
     createMonthlyPassSuccess,
@@ -719,6 +754,9 @@ export const {
     fetchMonthlyPassesFailure,
     fetchMonthlyPassesRequest,
     fetchMonthlyPassesSuccess,
+    fetchMyMonthlyPassesFailure,
+    fetchMyMonthlyPassesRequest,
+    fetchMyMonthlyPassesSuccess,
     fetchMyQrPassesFailure,
     fetchMyQrPassesRequest,
     fetchMyQrPassesSuccess,
