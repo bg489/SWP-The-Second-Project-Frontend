@@ -378,8 +378,33 @@
   backdrop-filter: blur(8px);
 }
 
+.qr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(37, 21, 38, 0.72);
+  backdrop-filter: blur(8px);
+}
+
 .qr-modal-card {
+  position: fixed;
+  top: 50dvh;
+  left: 50vw;
+  width: min(420px, calc(100vw - 40px));
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.qr-follow-card {
+  position: sticky;
+  top: calc(50dvh - 250px);
+  z-index: 80;
   width: min(420px, 100%);
+  max-height: calc(100dvh - 40px);
+  margin: 0 auto;
+  overflow-y: auto;
   text-align: center;
 }
 

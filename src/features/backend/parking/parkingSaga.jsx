@@ -26,6 +26,9 @@ import {
     checkOutFailure,
     checkOutRequest,
     checkOutSuccess,
+    continueMonthlyPassPaymentFailure,
+    continueMonthlyPassPaymentRequest,
+    continueMonthlyPassPaymentSuccess,
     createMonthlyPassFailure,
     createMonthlyPassRequest,
     createMonthlyPassSuccess,
@@ -56,6 +59,9 @@ import {
     fetchMonthlyPassesFailure,
     fetchMonthlyPassesRequest,
     fetchMonthlyPassesSuccess,
+    fetchMyMonthlyPassesFailure,
+    fetchMyMonthlyPassesRequest,
+    fetchMyMonthlyPassesSuccess,
     fetchMyQrPassesFailure,
     fetchMyQrPassesRequest,
     fetchMyQrPassesSuccess,
@@ -152,6 +158,7 @@ const getErrorMessage = (error, fallback) =>
 const shouldUseSample = (error) => !error?.response;
 
 const TEMP_QR_STORAGE_KEY = "parking_temp_qr_cards";
+const PAYMENT_RETURN_STORAGE_KEY = "parking_payment_return_path";
 
 const readStoredTempQrCards = () => {
     try {
@@ -169,6 +176,22 @@ const writeStoredTempQrCards = (cards) => {
     } catch {
         // Ignore storage errors; the active page state still contains the new QR card.
     }
+};
+
+const extractPaymentUrl = (data) =>
+    data?.payment?.paymentUrl ||
+    data?.paymentUrl ||
+    data?.registration?.paymentUrl ||
+    data?.monthlyPass?.paymentUrl;
+
+const redirectToPayment = (paymentUrl) => {
+    if (!paymentUrl || paymentUrl === "#") return;
+
+    sessionStorage.setItem(
+        PAYMENT_RETURN_STORAGE_KEY,
+        `${window.location.pathname}${window.location.search || ""}`
+    );
+    window.location.assign(paymentUrl);
 };
 
 const withId = (payload, prefix) => ({
@@ -404,7 +427,11 @@ function* handleBuyPackagePlan(action) {
     try {
         const { id, ...payload } = action.payload;
         const response = yield call([api, api.post], `/package-plans/${id}/buy`, payload);
-        yield put(buyPackagePlanSuccess(extractData(response)));
+        const data = extractData(response);
+
+        yield put(buyPackagePlanSuccess(data));
+        yield put(fetchMyMonthlyPassesRequest());
+        yield call(redirectToPayment, extractPaymentUrl(data));
     } catch (error) {
         if (shouldUseSample(error)) {
             yield put(
@@ -436,6 +463,24 @@ function* handleFetchMonthlyPasses() {
     }
 }
 
+function* handleFetchMyMonthlyPasses() {
+    try {
+        const response = yield call([api, api.get], "/monthly-passes/my");
+        yield put(fetchMyMonthlyPassesSuccess(extractList(response, ["monthlyPasses"])));
+    } catch (error) {
+        if (shouldUseSample(error)) {
+            yield put(
+                fetchMyMonthlyPassesSuccess(
+                    monthlyPasses.filter((pass) => pass.userId === 1)
+                )
+            );
+            return;
+        }
+
+        yield put(fetchMyMonthlyPassesFailure(getErrorMessage(error, "Không lấy được gói tháng của bạn.")));
+    }
+}
+
 function* handleCreateMonthlyPass(action) {
     try {
         const response = yield call([api, api.post], "/monthly-passes", action.payload);
@@ -448,6 +493,40 @@ function* handleCreateMonthlyPass(action) {
         }
 
         yield put(createMonthlyPassFailure(getErrorMessage(error, "Tạo thẻ tháng thất bại.")));
+    }
+}
+
+function* handleContinueMonthlyPassPayment(action) {
+    try {
+        const { id, ...payload } = action.payload;
+        const response = yield call(
+            [api, api.post],
+            `/monthly-passes/${id}/payment-url`,
+            payload
+        );
+        const data = extractData(response);
+
+        yield put(continueMonthlyPassPaymentSuccess(data));
+        yield call(redirectToPayment, extractPaymentUrl(data));
+    } catch (error) {
+        if (shouldUseSample(error)) {
+            yield put(
+                continueMonthlyPassPaymentSuccess({
+                    monthlyPass: {
+                        id: action.payload.id,
+                        status: "PENDING_PAYMENT",
+                        paymentUrl: "#",
+                    },
+                })
+            );
+            return;
+        }
+
+        yield put(
+            continueMonthlyPassPaymentFailure(
+                getErrorMessage(error, "Không mở lại được yêu cầu thanh toán.")
+            )
+        );
     }
 }
 
@@ -608,8 +687,10 @@ function* handleFetchMySlotRegistrations() {
 function* handleCreateSlotRegistration(action) {
     try {
         const response = yield call([api, api.post], "/slot-registrations", action.payload);
-        yield put(createSlotRegistrationSuccess(extractData(response)));
+        const data = extractData(response);
+        yield put(createSlotRegistrationSuccess(data));
         yield put(fetchMySlotRegistrationsRequest());
+        yield call(redirectToPayment, extractPaymentUrl(data));
     } catch (error) {
         if (shouldUseSample(error)) {
             yield put(
@@ -848,7 +929,12 @@ export default function* parkingSaga() {
     yield takeEvery(deactivatePackagePlanRequest.type, handleDeactivatePackagePlan);
     yield takeEvery(buyPackagePlanRequest.type, handleBuyPackagePlan);
     yield takeLatest(fetchMonthlyPassesRequest.type, handleFetchMonthlyPasses);
+    yield takeLatest(fetchMyMonthlyPassesRequest.type, handleFetchMyMonthlyPasses);
     yield takeEvery(createMonthlyPassRequest.type, handleCreateMonthlyPass);
+    yield takeEvery(
+        continueMonthlyPassPaymentRequest.type,
+        handleContinueMonthlyPassPayment
+    );
 
     yield takeLatest(fetchTempQrCardsRequest.type, handleFetchTempQrCards);
     yield takeEvery(createTempQrCardRequest.type, handleCreateTempQrCard);
