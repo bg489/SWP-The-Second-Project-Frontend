@@ -76,14 +76,27 @@ function* handleLogin(action) {
         }
 
         localStorage.setItem("access_token", token);
-        localStorage.setItem("auth_user", JSON.stringify(user));
+
+        let currentUser = user;
+
+        try {
+            const meResponse = yield call([api, api.get], "/auth/me");
+            currentUser = {
+                ...user,
+                ...(meResponse?.data?.data || meResponse?.data || {}),
+            };
+        } catch {
+            currentUser = user;
+        }
+
+        localStorage.setItem("auth_user", JSON.stringify(currentUser));
         localStorage.setItem("auth_role", backendRole);
         localStorage.setItem("mock_role", frontendRole);
 
         yield put(
             loginSuccess({
                 token,
-                user,
+                user: currentUser,
                 frontendRole,
             })
         );

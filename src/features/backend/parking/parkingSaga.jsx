@@ -713,9 +713,11 @@ function* handleCreateSlotRegistration(action) {
     }
 }
 
-function* handleFetchActiveParkingSessions() {
+function* handleFetchActiveParkingSessions(action) {
     try {
-        const response = yield call([api, api.get], "/parking-sessions/active");
+        const response = yield call([api, api.get], "/parking-sessions/active", {
+            params: action.payload,
+        });
         yield put(fetchActiveParkingSessionsSuccess(extractList(response, ["parkingSessions", "sessions"])));
     } catch (error) {
         if (shouldUseSample(error)) {
