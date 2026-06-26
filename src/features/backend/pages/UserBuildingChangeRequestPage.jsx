@@ -41,6 +41,13 @@ const UserBuildingChangeRequestPage = () => {
     const [formError, setFormError] = useState("");
 
     const currentBuildingId = user?.buildingId;
+    const currentBuilding = useMemo(() => {
+        return buildings.find((building) => Number(building.id) === Number(currentBuildingId)) || {
+            id: currentBuildingId,
+            name: user?.buildingName || "Chưa có tòa nhà",
+            address: user?.buildingAddress || "",
+        };
+    }, [buildings, currentBuildingId, user?.buildingAddress, user?.buildingName]);
 
     const availableBuildings = useMemo(() => {
         return buildings.filter(
@@ -111,10 +118,22 @@ const UserBuildingChangeRequestPage = () => {
                 <div className="section-header">
                     <div>
                         <h2 className="section-title">Thông tin hiện tại</h2>
-                        <p className="section-copy">
-                            Tòa nhà hiện tại:{" "}
-                            <strong>{user?.buildingName || "Chưa có tòa nhà"}</strong>
-                        </p>
+                        <p className="section-copy">Kiểm tra tòa nhà đang ở trước khi chọn nơi muốn chuyển đến.</p>
+                    </div>
+                </div>
+
+                <div className="data-list" style={{ marginBottom: 16 }}>
+                    <div className="data-row">
+                        <span>Tòa nhà hiện tại</span>
+                        <strong>{currentBuilding?.name || "Chưa có tòa nhà"}</strong>
+                    </div>
+                    <div className="data-row">
+                        <span>Địa chỉ</span>
+                        <strong>{currentBuilding?.address || "Chưa có địa chỉ"}</strong>
+                    </div>
+                    <div className="data-row">
+                        <span>Tài khoản</span>
+                        <strong>{user?.name || user?.email || "-"}</strong>
                     </div>
                 </div>
 

@@ -15,19 +15,25 @@ import {
   fetchTempQrCardsRequest,
   validateQrPassRequest,
 } from "../backend/parking/parkingSlice";
+import { fetchBuildingsRequest } from "../backend/buildings/buildingSlice";
+import { fetchFloorsRequest } from "../backend/floors/floorSlice";
+import { fetchSlotsByFloorRequest } from "../backend/slots/slotSlice";
 import {
-  carSlots,
-  floors,
   formatDateTime,
   getStatusLabel,
   getStatusTone,
   getVehicleTypeLabel,
-  vehicles,
 } from "../../services/mockParkingData";
+
+const slotClassName = (status) => String(status || "AVAILABLE").toLowerCase();
 
 const CheckInQRPage = () => {
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
   const { parkingSessions, qrPasses, tempQrCards, notice } = useSelector((state) => state.parking);
+  const { buildings, error: buildingsError } = useSelector((state) => state.buildings);
+  const { floors, loading: floorsLoading, error: floorsError } = useSelector((state) => state.floors);
+  const { slotsByFloor, loading: slotsLoading, error: slotsError } = useSelector((state) => state.slots);
 
   const [form, setForm] = useState({
     plateNumber: "51G-776.51",
@@ -35,24 +41,90 @@ const CheckInQRPage = () => {
     customerType: "WALK_IN_GUEST",
     qrCode: "",
     tempQrCardCode: "TMP-001",
-    slotId: "4",
+    slotId: "",
   });
+  const [selectedCarFloorId, setSelectedCarFloorId] = useState("");
   const [scannerTarget, setScannerTarget] = useState("");
+  const [formError, setFormError] = useState("");
+
+  const currentBuildingId = user?.buildingId;
+  const currentBuilding = useMemo(() => {
+    return buildings.find((building) => Number(building.id) === Number(currentBuildingId)) || {
+      id: currentBuildingId,
+      name: user?.buildingName || "Chưa có tòa nhà",
+      address: user?.buildingAddress || "",
+    };
+  }, [buildings, currentBuildingId, user?.buildingAddress, user?.buildingName]);
+
+  const buildingFloors = useMemo(() => {
+    return floors.filter((floor) => Number(floor.buildingId) === Number(currentBuildingId));
+  }, [floors, currentBuildingId]);
+
+  const motorbikeFloors = useMemo(() => {
+    return buildingFloors.filter((floor) => floor.floorType === "MOTORBIKE" && floor.status === "ACTIVE");
+  }, [buildingFloors]);
+
+  const carFloors = useMemo(() => {
+    return buildingFloors.filter((floor) => floor.floorType === "CAR" && floor.status === "ACTIVE");
+  }, [buildingFloors]);
+
+  const effectiveCarFloorId = selectedCarFloorId || (carFloors[0]?.id ? String(carFloors[0].id) : "");
 
   useEffect(() => {
+    dispatch(fetchBuildingsRequest());
     dispatch(fetchTempQrCardsRequest({ status: "READY" }));
-    dispatch(fetchActiveParkingSessionsRequest());
   }, [dispatch]);
 
+  useEffect(() => {
+    if (!currentBuildingId) return;
+
+    dispatch(fetchFloorsRequest({ buildingId: currentBuildingId, status: "ACTIVE", limit: 100 }));
+    dispatch(fetchActiveParkingSessionsRequest({ buildingId: currentBuildingId }));
+  }, [currentBuildingId, dispatch]);
+
+  useEffect(() => {
+    if (!effectiveCarFloorId) return;
+    dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
+  }, [dispatch, effectiveCarFloorId]);
+
   const readyCards = tempQrCards.items.filter((card) => card.status === "READY");
-  const availableCarSlots = carSlots.filter((slot) => slot.status === "AVAILABLE");
-  const approvedVehicle = vehicles.find(
-    (vehicle) => vehicle.plateNumber === form.plateNumber && vehicle.status === "APPROVED"
-  );
+  const currentCarSlots = useMemo(() => {
+    return effectiveCarFloorId ? slotsByFloor[effectiveCarFloorId] || [] : [];
+  }, [effectiveCarFloorId, slotsByFloor]);
+  const availableCarSlots = currentCarSlots.filter((slot) => slot.status === "AVAILABLE");
+  const formSlotStillAvailable = availableCarSlots.some((slot) => String(slot.id) === String(form.slotId));
+  const selectedCarSlotId = String((formSlotStillAvailable ? form.slotId : availableCarSlots[0]?.id) || "");
+  const selectedSlot = currentCarSlots.find((slot) => String(slot.id) === selectedCarSlotId);
 
   const motorbikeFloor = useMemo(() => {
-    return floors.find((floor) => floor.floorType === "MOTORBIKE" && floor.currentCount < floor.capacity);
-  }, []);
+    return motorbikeFloors.find((floor) => Number(floor.currentCount || 0) < Number(floor.capacity || 0));
+  }, [motorbikeFloors]);
+
+  const motorbikeCapacity = useMemo(() => {
+    return motorbikeFloors.reduce(
+      (sum, floor) => ({
+        capacity: sum.capacity + Number(floor.capacity || 0),
+        current: sum.current + Number(floor.currentCount || 0),
+      }),
+      { capacity: 0, current: 0 }
+    );
+  }, [motorbikeFloors]);
+
+  const carSummary = useMemo(() => {
+    return currentCarSlots.reduce(
+      (sum, slot) => {
+        const status = slot.status || "AVAILABLE";
+        return {
+          ...sum,
+          total: sum.total + 1,
+          available: sum.available + (status === "AVAILABLE" ? 1 : 0),
+          occupied: sum.occupied + (status === "OCCUPIED" ? 1 : 0),
+          reserved: sum.reserved + (status === "RESERVED" ? 1 : 0),
+        };
+      },
+      { total: 0, available: 0, occupied: 0, reserved: 0 }
+    );
+  }, [currentCarSlots]);
 
   const tempQrOptions = useMemo(() => {
     const options = readyCards.map((card) => ({
@@ -73,6 +145,7 @@ const CheckInQRPage = () => {
 
   const updateForm = (field, value) => {
     dispatch(clearParkingNotice());
+    setFormError("");
     setForm((prev) => {
       const next = { ...prev, [field]: value };
       if (field === "vehicleType" && value === "MOTORBIKE") {
@@ -109,11 +182,17 @@ const CheckInQRPage = () => {
 
   const submitCheckIn = (event) => {
     event.preventDefault();
+    setFormError("");
+
+    if (!currentBuildingId) {
+      setFormError("Tài khoản nhân viên chưa được gắn tòa nhà.");
+      return;
+    }
 
     const payload = {
       plateNumber: form.plateNumber.trim().toUpperCase(),
       vehicleType: form.vehicleType,
-      buildingId: 1,
+      buildingId: Number(currentBuildingId),
     };
 
     if (form.customerType === "REGISTERED_USER") {
@@ -123,7 +202,16 @@ const CheckInQRPage = () => {
     }
 
     if (form.vehicleType === "CAR") {
-      payload.slotId = Number(form.slotId || availableCarSlots[0]?.id);
+      payload.slotId = Number(form.slotId || selectedCarSlotId);
+      if (!payload.slotId) {
+        setFormError("Tòa nhà hiện tại chưa còn ô ô tô trống để nhận xe.");
+        return;
+      }
+    } else if (motorbikeFloor?.id) {
+      payload.floorId = Number(motorbikeFloor.id);
+    } else {
+      setFormError("Khu xe máy của tòa nhà hiện tại đã hết chỗ.");
+      return;
     }
 
     dispatch(checkInRequest(payload));
@@ -155,12 +243,35 @@ const CheckInQRPage = () => {
         </div>
       </section>
 
-      {(notice || parkingSessions.error || qrPasses.error || tempQrCards.error) && (
+      <section className="card soft-panel">
+        <div className="data-row">
+          <span>Tòa nhà đang nhận xe</span>
+          <strong>{currentBuilding?.name || "Chưa có tòa nhà"}</strong>
+        </div>
+        <div className="data-row">
+          <span>Địa chỉ</span>
+          <strong>{currentBuilding?.address || "Chưa có địa chỉ"}</strong>
+        </div>
+        <div className="data-row">
+          <span>Sức chứa xe máy</span>
+          <strong>{motorbikeCapacity.current}/{motorbikeCapacity.capacity}</strong>
+        </div>
+        <div className="data-row">
+          <span>Ô ô tô trống</span>
+          <strong>{carSummary.available}/{carSummary.total}</strong>
+        </div>
+      </section>
+
+      {(notice || formError || parkingSessions.error || qrPasses.error || tempQrCards.error || buildingsError || floorsError || slotsError) && (
         <section className="card soft-panel">
           {notice && <span className="pill success">{notice}</span>}
+          {formError && <p style={{ color: "var(--danger)" }}>{formError}</p>}
           {parkingSessions.error && <p style={{ color: "var(--danger)" }}>{parkingSessions.error}</p>}
           {qrPasses.error && <p style={{ color: "var(--danger)" }}>{qrPasses.error}</p>}
           {tempQrCards.error && <p style={{ color: "var(--danger)" }}>{tempQrCards.error}</p>}
+          {buildingsError && <p style={{ color: "var(--danger)" }}>{buildingsError}</p>}
+          {floorsError && <p style={{ color: "var(--danger)" }}>{floorsError}</p>}
+          {slotsError && <p style={{ color: "var(--danger)" }}>{slotsError}</p>}
         </section>
       )}
 
@@ -241,12 +352,45 @@ const CheckInQRPage = () => {
 
             {form.vehicleType === "CAR" && (
               <FormField label="Ô đỗ ô tô">
-                <Select
-                  value={form.slotId}
-                  onChange={(event) => updateForm("slotId", event.target.value)}
-                  options={availableCarSlots.map((slot) => ({ value: slot.id, label: slot.slotCode }))}
-                  placeholder="Chọn ô còn trống"
-                />
+                <div style={{ display: "grid", gap: 12 }}>
+                  {carFloors.length > 1 && (
+                    <Select
+                      value={effectiveCarFloorId}
+                      onChange={(event) => {
+                        setSelectedCarFloorId(event.target.value);
+                        updateForm("slotId", "");
+                      }}
+                      options={carFloors.map((floor) => ({ value: floor.id, label: floor.name }))}
+                      placeholder="Chọn tầng ô tô"
+                    />
+                  )}
+
+                  <div className="car-slot-grid">
+                    {currentCarSlots.map((slot) => {
+                      const isAvailable = slot.status === "AVAILABLE";
+                      const isSelected = selectedCarSlotId === String(slot.id);
+
+                      return (
+                        <button
+                          type="button"
+                          key={slot.id}
+                          className={`car-slot-card ${slotClassName(slot.status)} ${isSelected ? "selected" : ""}`}
+                          disabled={!isAvailable}
+                          onClick={() => updateForm("slotId", String(slot.id))}
+                        >
+                          <span className="car-slot-code">{slot.slotCode}</span>
+                          <span className="car-slot-status">{getStatusLabel(slot.status)}</span>
+                        </button>
+                      );
+                    })}
+
+                    {!slotsLoading && currentCarSlots.length === 0 && (
+                      <div className="soft-panel">Tầng này chưa có ô ô tô để chọn.</div>
+                    )}
+                  </div>
+
+                  {slotsLoading && <p className="section-copy">Đang tải ô ô tô...</p>}
+                </div>
               </FormField>
             )}
 
@@ -265,9 +409,9 @@ const CheckInQRPage = () => {
           </div>
           <div className="data-list">
             <div className="soft-panel">
-              <strong>Hồ sơ xe</strong>
-              <p className="section-copy">{approvedVehicle ? `${approvedVehicle.owner} - đã duyệt` : "Chưa thấy xe đã duyệt, xử lý như khách gửi lẻ."}</p>
-              <span className={`pill ${approvedVehicle ? "success" : "warning"}`}>{approvedVehicle ? "Hợp lệ" : "Cần kiểm tra"}</span>
+              <strong>Tòa nhà nhận xe</strong>
+              <p className="section-copy">{currentBuilding?.name || "Chưa có tòa nhà"}{currentBuilding?.address ? ` - ${currentBuilding.address}` : ""}</p>
+              <span className="pill success">Chỉ dùng sức chứa và ô của tòa này</span>
             </div>
             {qrPasses.validation && (
               <div className="soft-panel">
@@ -280,7 +424,9 @@ const CheckInQRPage = () => {
               <strong>{form.vehicleType === "CAR" ? "Ô đỗ ô tô" : "Khu xe máy"}</strong>
               <p className="section-copy">
                 {form.vehicleType === "CAR"
-                  ? `${availableCarSlots.length} ô còn trống để chọn.`
+                  ? selectedSlot
+                    ? `Đã chọn ${selectedSlot.slotCode}. Còn ${availableCarSlots.length} ô trống trên tầng này.`
+                    : `${availableCarSlots.length} ô còn trống để chọn.`
                   : motorbikeFloor
                     ? `${motorbikeFloor.name} còn ${motorbikeFloor.capacity - motorbikeFloor.currentCount} chỗ.`
                     : "Khu xe máy đã đầy."}
@@ -308,13 +454,16 @@ const CheckInQRPage = () => {
           </div>
         </div>
         <div className="dashboard-grid">
-          {floors.map((floor) => (
+          {buildingFloors.map((floor) => (
             <div className="soft-panel" key={floor.id}>
               <strong>{floor.name}</strong>
               <p className="section-copy">{floor.floorType === "CAR" ? `${floor.slotsCount} ô đỗ ô tô` : `${floor.currentCount}/${floor.capacity} xe máy`}</p>
               <span className={`pill ${getStatusTone(floor.status)}`}>{getStatusLabel(floor.status)}</span>
             </div>
           ))}
+          {!floorsLoading && buildingFloors.length === 0 && (
+            <div className="soft-panel">Tòa nhà hiện tại chưa có tầng đang hoạt động.</div>
+          )}
         </div>
       </section>
     </div>
