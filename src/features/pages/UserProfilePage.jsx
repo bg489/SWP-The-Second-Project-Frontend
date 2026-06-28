@@ -33,7 +33,7 @@ const UserProfilePage = () => {
         brand,
         color: "Chưa cập nhật",
         status: "PENDING",
-        buildingId: 1,
+        buildingId: user.buildingId || user.building_id || 1,
       },
       ...rows,
     ]);

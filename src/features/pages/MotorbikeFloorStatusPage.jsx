@@ -1,10 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchFloorsRequest } from "../backend/floors/floorSlice";
 import Button from "../../components/Button/Button";
-import { floors as mockFloors, getStatusLabel, getStatusTone } from "../../services/mockParkingData";
+import { getStatusLabel, getStatusTone } from "../../services/mockParkingData";
 import { AlertTriangle, CheckCircle, Layers, Minus, Plus } from "lucide-react";
 
 const MotorbikeFloorStatusPage = () => {
-  const [floors, setFloors] = useState(mockFloors.filter((floor) => floor.floorType === "MOTORBIKE"));
+  const dispatch = useDispatch();
+  const { floors: reduxFloors, loading } = useSelector((state) => state.floors);
+  const [floors, setFloors] = useState([]);
+
+  useEffect(() => {
+    dispatch(fetchFloorsRequest());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (reduxFloors && reduxFloors.length > 0) {
+      setFloors(reduxFloors.filter((floor) => floor.floorType === "MOTORBIKE"));
+    }
+  }, [reduxFloors]);
 
   const updateCount = (floorId, delta) => {
     setFloors((rows) =>
@@ -18,6 +32,7 @@ const MotorbikeFloorStatusPage = () => {
 
   const totalCapacity = floors.reduce((sum, floor) => sum + floor.capacity, 0);
   const totalCount = floors.reduce((sum, floor) => sum + floor.currentCount, 0);
+  const percentCapacity = totalCapacity > 0 ? Math.round((totalCount / totalCapacity) * 100) : 0;
 
   return (
     <div className="parking-page">
@@ -32,7 +47,7 @@ const MotorbikeFloorStatusPage = () => {
         <div className="page-hero-aside">
           <span className="page-hero-label">Tổng đang gửi</span>
           <span className="page-hero-number">{totalCount}/{totalCapacity}</span>
-          <span className="page-hero-label">{Math.round((totalCount / totalCapacity) * 100)}% capacity</span>
+          <span className="page-hero-label">{percentCapacity}% capacity</span>
         </div>
       </section>
 

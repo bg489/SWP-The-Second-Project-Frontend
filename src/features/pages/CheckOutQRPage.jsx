@@ -23,7 +23,12 @@ const CheckOutQRPage = () => {
 
   const feeDetails = (() => {
     if (!currentSession) return null;
-    const activePass = monthlyPasses.find((pass) => pass.plateNumber === currentSession.plateNumber && pass.status === "ACTIVE");
+    let activePass = monthlyPasses.find((pass) => pass.plateNumber === currentSession.plateNumber && pass.status === "ACTIVE");
+    if (!activePass && currentSession.pricingType === "MONTHLY_PASS") {
+      activePass = {
+        packageName: currentSession.vehicleType === "CAR" ? "Gói tháng ô tô B3" : "Gói tháng xe máy",
+      };
+    }
     const checkIn = new Date(currentSession.checkInAt);
     const hours = Math.max(1, Math.ceil((MOCK_CHECKOUT - checkIn) / (1000 * 60 * 60)));
     const violation = violations.find((item) => item.sessionId === currentSession.id && item.status === "UNPAID");

@@ -11,6 +11,7 @@ const mockUsersByRole = {
     email: "nguyen.an@example.com",
     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80",
     role: ROLE_KEYS.USER,
+    buildingId: 1,
     details: "Cư dân có xe đã duyệt",
   },
   PARKING_STAFF: {
