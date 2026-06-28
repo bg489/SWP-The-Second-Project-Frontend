@@ -288,6 +288,73 @@ const CheckOutQRPage = () => {
                 <span className="metric-label">Tổng cần thu</span>
                 <strong className="metric-value">{formatCurrency(feeDetails.total)}</strong>
               </div>
+              {/* Đặt đoạn mã này ngay phía dưới panel hiển thị tổng tiền cước cơ bản của xe */}
+              {currentSession && currentSession.violations && currentSession.violations.length > 0 && (
+                <div className="card section-card animate-fade-in" style={{ marginTop: "16px", borderColor: "var(--danger-light)" }}>
+                  <div className="section-header" style={{ marginBottom: "12px" }}>
+                    <div>
+                      <h3 style={{ fontSize: "15px", fontWeight: "800", color: "var(--color-red)", display: "flex", alignItems: "center", gap: "6px" }}>
+                        ⚠️ Danh sách các lỗi phạt vi phạm phát sinh
+                      </h3>
+                      <p className="section-copy">Các lỗi này được lập biên bản bởi nhân viên vận hành trong suốt thời gian gửi.</p>
+                    </div>
+                    <span className="pill danger">
+                      Cộng dồn: {formatCurrency(currentSession.violationFee || currentSession.violations.reduce((sum, v) => sum + Number(v.penaltyFee || v.fine || 0), 0))}
+                    </span>
+                  </div>
+
+                  <div className="data-list" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {currentSession.violations.map((violation, index) => (
+                      <div
+                        key={violation.id || index}
+                        className="soft-panel"
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "10px 14px",
+                          background: "rgba(239, 68, 68, 0.04)",
+                          border: "1px solid rgba(239, 68, 68, 0.12)"
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: "800", fontSize: "13.5px" }}>
+                            {index + 1}. {violation.violationType || violation.violationTypeName}
+                          </div>
+                          {violation.note && (
+                            <div className="metric-note" style={{ fontSize: "11.5px", marginTop: "2px" }}>
+                              Ghi chú biên bản: {violation.note}
+                            </div>
+                          )}
+                        </div>
+                        <strong style={{ color: "var(--color-red)", fontSize: "14px" }}>
+                          +{formatCurrency(violation.penaltyFee || violation.fine || 0)}
+                        </strong>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: "14px",
+                      paddingTop: "12px",
+                      borderTop: "1px dashed var(--border-color)",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: "14px",
+                      fontWeight: "800"
+                    }}
+                  >
+                    <span>Tổng tiền cước bãi giữ xe + Phí vi phạm:</span>
+                    <span style={{ fontSize: "16px", color: "var(--orange-strong)" }}>
+                      {formatCurrency(
+                        Number(currentSession.baseFee || 0) +
+                        Number(currentSession.violationFee || currentSession.violations.reduce((sum, v) => sum + Number(v.penaltyFee || v.fine || 0), 0))
+                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
               {paymentMethod === "VNPAY" && (
                 <p className="section-copy">Thanh toán VNPay sẽ hoàn tất sau khi có xác nhận thanh toán.</p>
               )}

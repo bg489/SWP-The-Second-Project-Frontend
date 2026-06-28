@@ -47,6 +47,7 @@ const menus = {
     { path: "/manager/pricing-packages", label: "Bảng giá & gói tháng", icon: BadgeDollarSign },
     { path: "/manager/temp-qr-cards", label: "QR tạm", icon: QrCode },
     { path: "/manager/reports", label: "Báo cáo", icon: BarChart3 },
+    { path: "/manager/violation-types", label: "Cấu hình vi phạm", icon: AlertTriangle }
   ],
   ADMIN: [
     { path: "/admin/dashboard", label: "Tổng quan duyệt", icon: ShieldCheck },
