@@ -11,6 +11,14 @@ import {
     violations,
 } from "../../../services/mockParkingData";
 import {
+    fetchViolationTypesSuccess,
+    fetchViolationTypesFailure,
+    saveViolationTypeSuccess,
+    saveViolationTypeFailure,
+    deactivateViolationTypeSuccess,
+    fetchViolationTypesRequest
+} from "./parkingSlice";
+import {
     approveVehicleFailure,
     approveVehicleRequest,
     approveVehicleSuccess,
@@ -915,8 +923,47 @@ function* handleFetchReports(action) {
         yield put(fetchReportsFailure(getErrorMessage(error, "Không lấy được báo cáo.")));
     }
 }
+function* handleFetchViolationTypes() {
+    try {
+        const response = yield call([api, api.get], "/violation-types?status=ACTIVE");
+        const data = response?.data?.data || response?.data || [];
+        yield put(fetchViolationTypesSuccess(data));
+    } catch (error) {
+        yield put(fetchViolationTypesFailure(error?.response?.data?.message || "Lỗi tải cấu hình vi phạm."));
+    }
+}
 
+function* handleSaveViolationType(action) {
+    try {
+        let response;
+        if (action.payload.id) {
+            response = yield call([api, api.put], `/violation-types/${action.payload.id}`, action.payload);
+        } else {
+            response = yield call([api, api.post], "/violation-types", action.payload);
+        }
+        const data = response?.data?.data || response?.data;
+        yield put(saveViolationTypeSuccess(data));
+        yield put(fetchViolationTypesRequest());
+    } catch (error) {
+        yield put(saveViolationTypeFailure(error?.response?.data?.message || "Lỗi lưu cấu hình vi phạm."));
+    }
+}
+
+function* handleDeactivateViolationType(action) {
+    try {
+        yield call([api, api.delete], `/violation-types/${action.payload.id}`);
+        yield put(deactivateViolationTypeSuccess(action.payload.id));
+        yield put(fetchViolationTypesRequest());
+    } catch (error) {
+        yield put(saveViolationTypeFailure(error?.response?.data?.message || "Không thể tắt mục cấu hình này."));
+    }
+}
+
+// Đăng ký watchSaga bên trong luồng root của parkingSaga
 export default function* parkingSaga() {
+    yield takeLatest(fetchViolationTypesRequest.type, handleFetchViolationTypes);
+    yield takeEvery("parking/saveViolationTypeRequest", handleSaveViolationType);
+    yield takeEvery("parking/deactivateViolationTypeRequest", handleDeactivateViolationType);
     yield takeLatest(fetchHealthRequest.type, handleHealth);
     yield takeLatest(fetchMyVehiclesRequest.type, handleFetchMyVehicles);
     yield takeLatest(fetchAllVehiclesRequest.type, handleFetchAllVehicles);

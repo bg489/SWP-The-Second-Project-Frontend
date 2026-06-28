@@ -29,6 +29,7 @@ import AdminVehicleApprovalPage from "../features/pages/AdminVehicleApprovalPage
 import AdminUserApprovalPage from "../features/backend/pages/AdminUserApprovalPage";
 import UserBuildingChangeRequestPage from "../features/backend/pages/UserBuildingChangeRequestPage";
 import AdminBuildingChangeRequestsPage from "../features/backend/pages/AdminBuildingChangeRequestsPage";
+import ManagerViolationTypesPage from "../features/pages/ManagerViolationTypesPage";
 
 const DefaultRedirect = () => {
   const { role } = useMockAuth();
@@ -68,6 +69,8 @@ const AppRoutes = () => {
           <Route path="/manager/pricing-packages" element={<ManagerPricingPackagesPage />} />
           <Route path="/manager/temp-qr-cards" element={<TempQrCardsPage />} />
           <Route path="/manager/reports" element={<ReportsPage />} />
+          <Route path="/manager/violation-types" element={<ManagerViolationTypesPage />} />
+
         </Route>
 
         <Route element={<RoleProtectedRoute allowedRoles={["ADMIN"]} />}>
@@ -83,7 +86,7 @@ const AppRoutes = () => {
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+    </Routes >
   );
 };
 

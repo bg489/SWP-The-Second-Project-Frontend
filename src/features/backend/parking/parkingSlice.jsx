@@ -75,6 +75,12 @@ const initialState = {
         error: null,
         checkedAt: null,
     },
+    violationTypes: {
+        items: [],
+        loading: false,
+        error: null,
+        saving: false
+    },
 
     vehicles: {
         all: vehicles,
@@ -151,11 +157,9 @@ const initialState = {
     },
 
     violations: {
-        items: violations,
+        items: [], // Hoặc gán bằng biến dữ liệu seed từ mockParkingData nếu cần
         loading: false,
-        saving: false,
-        updatingId: null,
-        error: null,
+        error: null
     },
 
     payments: {
@@ -169,6 +173,7 @@ const initialState = {
         loading: false,
         error: null,
     },
+
 
     notice: null,
 };
@@ -188,6 +193,48 @@ const parkingSlice = createSlice({
     name: "parking",
     initialState,
     reducers: {
+        fetchViolationTypesRequest: (state) => {
+            state.violationTypes.loading = true;
+            state.violationTypes.error = null;
+        },
+        fetchViolationTypesSuccess: (state, action) => {
+            state.violationTypes.loading = false;
+            state.violationTypes.items = action.payload || [];
+        },
+        fetchViolationTypesFailure: (state, action) => {
+            state.violationTypes.loading = false;
+            state.violationTypes.error = action.payload;
+        },
+
+        // Luồng lưu (Thêm mới/Cập nhật) cấu hình lỗi vi phạm
+        saveViolationTypeRequest: (state) => {
+            state.violationTypes.saving = true;
+        },
+        saveViolationTypeSuccess: (state, action) => {
+            state.violationTypes.saving = false;
+            const updated = action.payload;
+            const index = state.violationTypes.items.findIndex(item => item.id === updated.id);
+            if (index !== -1) {
+                state.violationTypes.items[index] = updated;
+            } else {
+                state.violationTypes.items.unshift(updated);
+            }
+        },
+        saveViolationTypeFailure: (state, action) => {
+            state.violationTypes.saving = false;
+            state.notice = action.payload;
+        },
+
+        // Luồng ngưng áp dụng cấu hình lỗi vi phạm
+        deactivateViolationTypeRequest: (state) => {
+            state.violationTypes.saving = true;
+        },
+        deactivateViolationTypeSuccess: (state, action) => {
+            state.violationTypes.saving = false;
+            state.violationTypes.items = state.violationTypes.items.filter(
+                item => item.id !== action.payload
+            );
+        },
         clearParkingNotice: (state) => {
             state.notice = null;
             state.health.error = null;
@@ -805,6 +852,14 @@ export const {
     validateQrPassFailure,
     validateQrPassRequest,
     validateQrPassSuccess,
+    fetchViolationTypesRequest,
+    fetchViolationTypesSuccess,
+    fetchViolationTypesFailure,
+    saveViolationTypeRequest,
+    saveViolationTypeSuccess,
+    saveViolationTypeFailure,
+    deactivateViolationTypeRequest,
+    deactivateViolationTypeSuccess,
 } = parkingSlice.actions;
 
 export default parkingSlice.reducer;

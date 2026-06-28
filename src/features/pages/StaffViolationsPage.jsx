@@ -1,259 +1,194 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AlertTriangle, CheckCircle2, RefreshCcw, Save } from "lucide-react";
-
+import { AlertTriangle, Save, RefreshCcw, Layers } from "lucide-react";
 import Button from "../../components/Button/Button";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
-import {
-  clearParkingNotice,
-  createViolationRequest,
-  fetchActiveParkingSessionsRequest,
-  fetchViolationsRequest,
-  updateViolationStatusRequest,
-} from "../backend/parking/parkingSlice";
-import { formatCurrency, formatDateTime, getVehicleTypeLabel } from "../../services/mockParkingData";
-
-const violationTypes = [
-  { value: "WRONG_SLOT", label: "Đậu sai ô quy định", fee: 50000 },
-  { value: "LOST_QR_CARD", label: "Mất thẻ QR tạm", fee: 100000 },
-  { value: "WRONG_FLOOR", label: "Đi sai tầng", fee: 50000 },
-  { value: "BLOCKING_EXIT", label: "Cản lối ra vào", fee: 200000 },
-];
-
-const statusLabels = {
-  OPEN: "Chờ xử lý",
-  RESOLVED: "Đã xử lý",
-  COLLECTED: "Đã thu tiền",
-  CANCELLED: "Đã hủy",
-  UNPAID: "Chưa thu tiền",
-  WARNING: "Nhắc nhở",
-};
-
-const statusTone = {
-  OPEN: "warning",
-  RESOLVED: "info",
-  COLLECTED: "success",
-  CANCELLED: "danger",
-  UNPAID: "warning",
-  WARNING: "warning",
-};
+import { formatCurrency, formatDateTime } from "../../services/mockParkingData";
 
 const StaffViolationsPage = () => {
   const dispatch = useDispatch();
-  const { parkingSessions, violations, notice } = useSelector((state) => state.parking);
 
-  const firstSession = parkingSessions.active[0]?.id || "";
-  const [form, setForm] = useState({
-    parkingSessionId: firstSession,
-    violationType: "WRONG_SLOT",
-    penaltyFee: "50000",
-    note: "",
-  });
+  // Đọc trạng thái từ Redux Core
+  const { violationTypes, parkingSessions, violations } = useSelector((state) => state.parking);
+
+  const [selectedSessionId, setSelectedSessionId] = useState("");
+  const [isCustom, setIsCustom] = useState(false);
+
+  const [violationTypeId, setViolationTypeId] = useState("");
+  const [customName, setCustomName] = useState("");
+  const [penaltyFee, setPenaltyFee] = useState("");
+  const [note, setNote] = useState("");
 
   useEffect(() => {
-    dispatch(fetchActiveParkingSessionsRequest());
-    dispatch(fetchViolationsRequest());
+    dispatch({ type: "parking/fetchViolationTypesRequest" });
+    dispatch({ type: "parking/fetchActiveParkingSessionsRequest" });
+    dispatch({ type: "parking/fetchViolationsRequest" });
   }, [dispatch]);
 
-  const effectiveParkingSessionId = form.parkingSessionId || firstSession;
+  // Đổi cấu trúc mảng danh sách xe đang trong bãi để nạp vào Select dropdown
+  const sessionOptions = useMemo(() => {
+    const activeList = parkingSessions.active || [];
+    return activeList.map(s => ({
+      value: s.id,
+      label: `${s.plateNumber} (${s.vehicleType === "CAR" ? "Ô tô" : "Xe máy"} - ${s.slotCode || "Khu máy"})`
+    }));
+  }, [parkingSessions.active]);
 
-  const selectedSession = useMemo(() => {
-    return parkingSessions.active.find((session) => String(session.id) === String(effectiveParkingSessionId));
-  }, [effectiveParkingSessionId, parkingSessions.active]);
+  // Đổi cấu trúc mảng danh mục lỗi vi phạm hệ thống
+  const typeOptions = useMemo(() => {
+    // ⚠️ Thêm dấu ?. sau biến violationTypes để phòng ngừa dữ liệu chưa kịp nạp
+    const items = violationTypes?.items || [];
+    return items.map(t => ({ value: t.id, label: t.name }));
+  }, [violationTypes?.items]);
 
-  const updateForm = (field, value) => {
-    dispatch(clearParkingNotice());
-    setForm((prev) => {
-      const next = { ...prev, [field]: value };
-
-      if (field === "violationType") {
-        const selectedType = violationTypes.find((item) => item.value === value);
-        next.penaltyFee = String(selectedType?.fee ?? 0);
+  // Luồng tự động điền giá tiền cước phạt mặc định khi Staff chọn lỗi có sẵn
+  useEffect(() => {
+    if (!isCustom && violationTypeId) {
+      const selectedType = violationTypes.items.find(t => String(t.id) === String(violationTypeId));
+      if (selectedType) {
+        setPenaltyFee(selectedType.defaultPenaltyFee || selectedType.penaltyFee || "");
       }
+    }
+  }, [violationTypeId, isCustom, violationTypes.items]);
 
-      return next;
+  // Xử lý chuyển đổi qua lại giữa chọn danh mục và tự nhập tay tùy chỉnh
+  const handleModeChange = (e) => {
+    const customChecked = e.target.checked;
+    setIsCustom(customChecked);
+    setViolationTypeId("");
+    setCustomName("");
+    setPenaltyFee("");
+  };
+
+  const handleRecordViolation = (e) => {
+    e.preventDefault();
+    if (!selectedSessionId || !penaltyFee) return;
+
+    let finalTypeName = "";
+    if (isCustom) {
+      if (!customName.trim()) return;
+      finalTypeName = customName.trim();
+    } else {
+      const selectedType = violationTypes.items.find(t => String(t.id) === String(violationTypeId));
+      finalTypeName = selectedType ? selectedType.name : "Vi phạm quy định bãi";
+    }
+
+    dispatch({
+      type: "parking/createViolationRequest",
+      payload: {
+        parkingSessionId: Number(selectedSessionId),
+        violationTypeId: isCustom ? null : Number(violationTypeId),
+        violationType: finalTypeName,
+        penaltyFee: Number(penaltyFee),
+        note: note.trim()
+      }
     });
+
+    // Đưa form về trạng thái trống sau khi lập xong biên bản
+    setViolationTypeId("");
+    setCustomName("");
+    setPenaltyFee("");
+    setNote("");
   };
-
-  const submitViolation = (event) => {
-    event.preventDefault();
-
-    dispatch(
-      createViolationRequest({
-        parkingSessionId: effectiveParkingSessionId,
-        violationType: form.violationType,
-        penaltyFee: Number(form.penaltyFee || 0),
-        note: form.note.trim(),
-        plateNumber: selectedSession?.plateNumber,
-        vehicleType: selectedSession?.vehicleType,
-      })
-    );
-  };
-
-  const refresh = () => {
-    dispatch(clearParkingNotice());
-    dispatch(fetchActiveParkingSessionsRequest());
-    dispatch(fetchViolationsRequest());
-  };
-
-  const unpaidAmount = useMemo(() => {
-    return violations.items
-      .filter((item) => ["OPEN", "RESOLVED", "UNPAID"].includes(item.status))
-      .reduce((sum, item) => sum + Number(item.penaltyFee || item.fine || 0), 0);
-  }, [violations.items]);
 
   const columns = [
-    { header: "Lượt gửi", key: "sessionId", render: (row) => row.parkingSessionId || row.sessionId },
-    { header: "Biển số", key: "plateNumber", render: (row) => <strong>{row.plateNumber || "-"}</strong> },
-    { header: "Loại xe", key: "vehicleType", render: (row) => row.vehicleType ? getVehicleTypeLabel(row.vehicleType) : "-" },
-    { header: "Nội dung", key: "type", render: (row) => row.type || row.violationType },
-    { header: "Thời điểm", key: "detectedAt", render: (row) => formatDateTime(row.detectedAt || row.createdAt) },
-    { header: "Phí", key: "fine", render: (row) => formatCurrency(row.penaltyFee || row.fine || 0) },
-    {
-      header: "Trạng thái",
-      key: "status",
-      render: (row) => (
-        <span className={`pill ${statusTone[row.status] || "neutral"}`}>
-          {statusLabels[row.status] || row.status || "Chờ xử lý"}
-        </span>
-      ),
-    },
-    {
-      header: "Cập nhật",
-      key: "actions",
-      render: (row) => (
-        <Select
-          value={row.status || "OPEN"}
-          onChange={(event) =>
-            dispatch(
-              updateViolationStatusRequest({
-                ...row,
-                id: row.id,
-                status: event.target.value,
-              })
-            )
-          }
-          options={[
-            { value: "OPEN", label: "Chờ xử lý" },
-            { value: "RESOLVED", label: "Đã xử lý" },
-            { value: "COLLECTED", label: "Đã thu tiền" },
-            { value: "CANCELLED", label: "Đã hủy" },
-          ]}
-          placeholder={null}
-          disabled={violations.updatingId === row.id}
-        />
-      ),
-    },
+    { header: "Biển số xe", key: "plateNumber", render: (row) => <strong>{row.plateNumber}</strong> },
+    { header: "Nội dung lỗi vi phạm", key: "violationType", render: (row) => row.violationType || row.violationTypeName },
+    { header: "Tiền phạt", key: "penaltyFee", render: (row) => <span className="text-danger">{formatCurrency(row.penaltyFee || row.fine || 0)}</span> },
+    { header: "Thời gian lập", key: "detectedAt", render: (row) => formatDateTime(row.detectedAt || row.createdAt) },
+    { header: "Trạng thái thu", key: "status", render: (row) => row.status === "COLLECTED" ? <span className="pill success">Đã thu</span> : <span className="pill danger">Chưa thu</span> }
   ];
 
   return (
-    <div className="parking-page">
-      <section className="page-hero">
-        <div className="page-hero-content">
-          <div className="page-eyebrow"><AlertTriangle size={16} /> Vi phạm</div>
-          <h1 className="page-title">Ghi nhận lỗi đỗ xe và phí cần thu</h1>
-          <p className="page-subtitle">
-            Phí vi phạm được cộng vào hóa đơn khi xe ra bãi. Xe có gói tháng vẫn phải thanh toán phần vi phạm.
-          </p>
-        </div>
-        <div className="page-hero-aside">
-          <span className="page-hero-label">Chưa thu</span>
-          <span className="page-hero-number">{Math.round(unpaidAmount / 1000)}K</span>
-          <span className="page-hero-label">đồng</span>
-        </div>
-      </section>
-
-      {(notice || parkingSessions.error || violations.error) && (
-        <section className="card soft-panel">
-          {notice && <span className="pill success">{notice}</span>}
-          {parkingSessions.error && <p style={{ color: "var(--danger)" }}>{parkingSessions.error}</p>}
-          {violations.error && <p style={{ color: "var(--danger)" }}>{violations.error}</p>}
-        </section>
-      )}
-
-      <div className="two-column-grid">
-        <section className="card section-card">
+    <div className="parking-page animate-fade-in">
+      <div className="dashboard-grid">
+        <section className="card section-card" style={{ gridColumn: "span 2" }}>
           <div className="section-header">
-            <div>
-              <h2 className="section-title"><Save size={19} /> Ghi vi phạm mới</h2>
-              <p className="section-copy">Chọn lượt gửi đang trong bãi, nội dung vi phạm và phí cần thu.</p>
-            </div>
+            <h2 className="section-title"><AlertTriangle size={19} color="var(--orange)" /> Ghi nhận vi phạm thời gian thực</h2>
           </div>
-
-          <form onSubmit={submitViolation} style={{ display: "grid", gap: 14 }}>
-            <FormField label="Lượt gửi" required>
+          <form onSubmit={handleRecordViolation} className="login-form">
+            <FormField label="Chọn phương tiện vi phạm đang ở trong bãi" required>
               <Select
-                value={effectiveParkingSessionId}
-                onChange={(event) => updateForm("parkingSessionId", event.target.value)}
-                options={parkingSessions.active.map((session) => ({
-                  value: session.id,
-                  label: `${session.plateNumber} - ${getVehicleTypeLabel(session.vehicleType)}`,
-                }))}
-                placeholder="Chọn xe đang gửi"
+                value={selectedSessionId}
+                onChange={(e) => setSelectedSessionId(e.target.value)}
+                options={sessionOptions}
+                placeholder="-- Chọn xe vi phạm --"
               />
             </FormField>
 
-            <FormField label="Nội dung vi phạm">
-              <Select
-                value={form.violationType}
-                onChange={(event) => updateForm("violationType", event.target.value)}
-                options={violationTypes}
-                placeholder={null}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "4px 0 12px" }}>
+              <input
+                type="checkbox"
+                id="customMode"
+                checked={isCustom}
+                onChange={handleModeChange}
+                style={{ width: "16px", height: "16px", accentColor: "var(--primary)" }}
+              />
+              <label htmlFor="customMode" style={{ fontSize: "14px", fontWeight: "700", cursor: "pointer" }}>
+                ⚠️ Bật chế độ tự nhập lỗi ngoài danh mục (Tùy chỉnh)
+              </label>
+            </div>
+
+            {isCustom ? (
+              <FormField label="Nhập tên lỗi vi phạm tùy chỉnh" required>
+                <Input
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                  placeholder="Ví dụ: Làm hỏng rào chắn ranh giới, đỗ xe chắn lối thoát hiểm công cộng..."
+                />
+              </FormField>
+            ) : (
+              <FormField label="Chọn lỗi vi phạm có sẵn hệ thống" required>
+                <Select
+                  value={violationTypeId}
+                  onChange={(e) => setViolationTypeId(e.target.value)}
+                  options={typeOptions}
+                  placeholder="-- Lựa chọn lỗi từ database --"
+                />
+              </FormField>
+            )}
+
+            <FormField label="Mức tiền phạt (VND)" required>
+              <Input
+                type="number"
+                value={penaltyFee}
+                onChange={(e) => setPenaltyFee(e.target.value)}
+                placeholder="Số tiền phạt tự động điền hoặc nhập tay..."
               />
             </FormField>
 
-            <FormField label="Số tiền cần thu">
-              <Input type="number" min="0" value={form.penaltyFee} onChange={(event) => updateForm("penaltyFee", event.target.value)} />
+            <FormField label="Ghi chú chi tiết biên bản">
+              <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Mô tả hiện trạng vị trí, tình huống bãi lúc xảy ra..." />
             </FormField>
 
-            <FormField label="Ghi chú">
-              <textarea
-                className="form-input"
-                rows="3"
-                value={form.note}
-                onChange={(event) => updateForm("note", event.target.value)}
-                placeholder="Mô tả ngắn để ca sau dễ kiểm tra"
-              />
-            </FormField>
-
-            <Button type="submit" icon={CheckCircle2} loading={violations.saving} disabled={!effectiveParkingSessionId}>
-              Ghi nhận
-            </Button>
+            <Button type="submit" variant="primary" icon={Save}>Ghi biên bản lỗi</Button>
           </form>
         </section>
 
         <section className="card section-card">
           <div className="section-header">
-            <div>
-              <h2 className="section-title"><AlertTriangle size={19} /> Xe đang chọn</h2>
-              <p className="section-copy">Thông tin giúp nhân viên đối chiếu trước khi ghi lỗi.</p>
-            </div>
+            <h2 className="section-title"><Layers size={19} /> Hướng dẫn nghiệp vụ</h2>
           </div>
-          {selectedSession ? (
-            <div className="data-list">
-              <div className="data-row"><span>Biển số</span><strong>{selectedSession.plateNumber}</strong></div>
-              <div className="data-row"><span>Loại xe</span><strong>{getVehicleTypeLabel(selectedSession.vehicleType)}</strong></div>
-              <div className="data-row"><span>Vị trí</span><strong>{selectedSession.slotCode || "Khu xe máy"}</strong></div>
-              <div className="data-row"><span>Giờ vào</span><strong>{formatDateTime(selectedSession.checkInAt)}</strong></div>
-            </div>
-          ) : (
-            <p className="section-copy">Chưa chọn lượt gửi.</p>
-          )}
+          <div className="soft-panel">
+            <p className="section-copy" style={{ lineHeight: "1.6" }}>
+              • Lỗi có sẵn từ database sẽ tự động nạp mức tiền phạt cơ sở do Quản lý (Manager) cấu hình từ trước.<br /><br />
+              • Khi phát sinh tình huống thực tế đặc thù, tích chọn ô <strong>Tùy chỉnh</strong> để tự viết mô tả lỗi và tự định biên mức thu phạt không có trong danh mục.<br /><br />
+              • Tiền phạt ở trạng thái chưa thanh toán sẽ được hệ thống gom và tính cộng dồn tự động vào hóa đơn tổng khi xe ra bãi.
+            </p>
+          </div>
         </section>
       </div>
 
       <section className="card section-card">
         <div className="section-header">
           <div>
-            <h2 className="section-title"><AlertTriangle size={19} /> Danh sách vi phạm</h2>
-            <p className="section-copy">Các khoản chưa thu sẽ được cộng vào hóa đơn khi xe ra bãi.</p>
+            <h2 className="section-title">Nhật ký biên bản vi phạm bãi xe</h2>
+            <p className="section-copy">Danh sách tất cả các ca vi phạm được ghi nhận trong bãi giữ xe.</p>
           </div>
-          <Button variant="outline" icon={RefreshCcw} loading={violations.loading || parkingSessions.loading} onClick={refresh}>
-            Làm mới
-          </Button>
+          <Button variant="outline" icon={RefreshCcw} onClick={() => dispatch({ type: "parking/fetchViolationsRequest" })} />
         </div>
         <Table columns={columns} data={violations.items} loading={violations.loading} />
       </section>
