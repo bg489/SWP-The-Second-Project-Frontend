@@ -193,6 +193,7 @@
 .header-left,
 .header-right {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 14px;
 }
@@ -226,6 +227,7 @@
   color: var(--text-primary);
   font-size: 18px;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .header-title p {
@@ -236,6 +238,7 @@
 
 .role-switcher-widget {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
@@ -250,16 +253,22 @@
   font-weight: 800;
 }
 
-.role-select-dropdown {
-  border: 0;
-  outline: none;
-  background: transparent;
+.role-display-widget {
+  cursor: default;
+}
+
+.role-display-value {
+  min-width: 0;
+  overflow: hidden;
   color: var(--text-primary);
   font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .header-user-profile {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
@@ -374,5 +383,61 @@
 
   .header-right {
     gap: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .header-container {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .header-left {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .header-title {
+    min-width: 0;
+  }
+
+  .header-title h2 {
+    font-size: clamp(20px, 7vw, 28px);
+    line-height: 1.12;
+  }
+
+  .header-right {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) 44px 44px;
+    gap: 8px;
+  }
+
+  .role-switcher-widget {
+    width: 100%;
+    justify-content: space-between;
+    padding: 8px 10px;
+  }
+
+  .role-display-value {
+    font-size: 15px;
+  }
+
+  .theme-toggle-btn,
+  .header-user-profile {
+    width: 44px;
+    height: 44px;
+  }
+
+  .header-user-profile {
+    justify-content: center;
+    padding: 4px;
+  }
+
+  .user-profile-avatar {
+    width: 32px;
+    height: 32px;
   }
 }
