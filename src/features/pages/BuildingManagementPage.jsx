@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Building2,
-  CheckCircle,
   Edit2,
   Plus,
   RefreshCcw,
@@ -11,8 +10,10 @@ import {
 } from "lucide-react";
 
 import Button from "../../components/Button/Button";
+import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
+import Table from "../../components/Table/Table";
 import {
   clearBuildingNotice,
   createBuildingRequest,
@@ -21,14 +22,30 @@ import {
   updateBuildingRequest,
 } from "../backend/buildings/buildingSlice";
 
+const normalizeText = (value) =>
+  String(value ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+const getBuildingSearchValue = (building, column) => {
+  const values = {
+    id: building.id,
+    name: building.name,
+    address: building.address,
+    createdAt: building.createdAt || building.created_at,
+  };
+
+  if (column === "all") {
+    return Object.values(values).join(" ");
+  }
+
+  return values[column] ?? "";
+};
 
 const BuildingManagementPage = () => {
   const dispatch = useDispatch();
-
   const formSectionRef = useRef(null);
-  const PAGE_SIZE = 5;
-
-  const [buildingPage, setBuildingPage] = useState(1);
 
   const [buildingFilters, setBuildingFilters] = useState({
     searchText: "",
@@ -47,39 +64,14 @@ const BuildingManagementPage = () => {
   } = useSelector((state) => state.buildings);
 
   const [editingId, setEditingId] = useState(null);
-
   const [form, setForm] = useState({
     name: "",
     address: "",
   });
-
   const [formErrors, setFormErrors] = useState({});
 
   const totalBuildings = buildings.length;
-
   const newestBuilding = useMemo(() => buildings[0] || null, [buildings]);
-
-  const normalizeText = (value) => {
-    return String(value ?? "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-  };
-
-  const getBuildingSearchValue = (building, column) => {
-    const values = {
-      id: building.id,
-      name: building.name,
-      address: building.address,
-      createdAt: building.createdAt || building.created_at,
-    };
-
-    if (column === "all") {
-      return Object.values(values).join(" ");
-    }
-
-    return values[column] ?? "";
-  };
 
   const filteredBuildings = useMemo(() => {
     const search = normalizeText(buildingFilters.searchText);
@@ -92,17 +84,6 @@ const BuildingManagementPage = () => {
       ).includes(search);
     });
   }, [buildings, buildingFilters]);
-
-  const totalBuildingPages = Math.max(
-    1,
-    Math.ceil(filteredBuildings.length / PAGE_SIZE)
-  );
-  const currentBuildingPage = Math.min(buildingPage, totalBuildingPages);
-
-  const paginatedBuildings = useMemo(() => {
-    const startIndex = (currentBuildingPage - 1) * PAGE_SIZE;
-    return filteredBuildings.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [filteredBuildings, currentBuildingPage]);
 
   const scrollToForm = () => {
     setTimeout(() => {
@@ -129,6 +110,13 @@ const BuildingManagementPage = () => {
     }));
 
     dispatch(clearBuildingNotice());
+  };
+
+  const updateFilter = (field, value) => {
+    setBuildingFilters((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   const validateForm = () => {
@@ -181,13 +169,11 @@ const BuildingManagementPage = () => {
 
   const startEdit = (building) => {
     dispatch(clearBuildingNotice());
-
     setEditingId(building.id);
     setForm({
       name: building.name || "",
       address: building.address || "",
     });
-
     scrollToForm();
   };
 
@@ -205,6 +191,54 @@ const BuildingManagementPage = () => {
     dispatch(clearBuildingNotice());
     dispatch(fetchBuildingsRequest());
   };
+
+  const columns = [
+    { header: "Mã", key: "id", render: (building) => `#${building.id}` },
+    {
+      header: "Tên tòa nhà",
+      key: "name",
+      render: (building) => <strong>{building.name}</strong>,
+    },
+    { header: "Địa chỉ", key: "address", render: (building) => building.address || "-" },
+    {
+      header: "Ngày tạo",
+      key: "createdAt",
+      render: (building) =>
+        building.createdAt || building.created_at
+          ? new Date(building.createdAt || building.created_at).toLocaleDateString("vi-VN")
+          : "-",
+    },
+    {
+      header: "Thao tác",
+      key: "actions",
+      render: (building) => (
+        <div className="action-row">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            icon={Edit2}
+            disabled={Boolean(updatingId) || Boolean(deletingId)}
+            onClick={() => startEdit(building)}
+          >
+            Sửa
+          </Button>
+
+          <Button
+            type="button"
+            size="sm"
+            variant="danger"
+            icon={Trash2}
+            loading={deletingId === building.id}
+            disabled={Boolean(deletingId)}
+            onClick={() => handleDelete(building)}
+          >
+            Xóa
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="parking-page">
@@ -231,21 +265,7 @@ const BuildingManagementPage = () => {
         </div>
       </section>
 
-      {(mutationSuccess || mutationError || error) && (
-        <section className="card soft-panel">
-          {mutationSuccess && (
-            <span className="pill success">
-              <CheckCircle size={14} /> {mutationSuccess}
-            </span>
-          )}
-
-          {mutationError && (
-            <p style={{ color: "var(--danger)" }}>{mutationError}</p>
-          )}
-
-          {error && <p style={{ color: "var(--danger)" }}>{error}</p>}
-        </section>
-      )}
+      <StatusBanner success={mutationSuccess} errors={[mutationError, error]} />
 
       <section ref={formSectionRef} className="card section-card">
         <div className="section-header">
@@ -326,13 +346,7 @@ const BuildingManagementPage = () => {
             <Input
               placeholder="Nhập tên tòa nhà, địa chỉ, mã..."
               value={buildingFilters.searchText}
-              onChange={(event) => {
-                setBuildingFilters((prev) => ({
-                  ...prev,
-                  searchText: event.target.value,
-                }));
-                setBuildingPage(1);
-              }}
+              onChange={(event) => updateFilter("searchText", event.target.value)}
             />
           </FormField>
 
@@ -340,13 +354,7 @@ const BuildingManagementPage = () => {
             <select
               className="form-input"
               value={buildingFilters.searchColumn}
-              onChange={(event) => {
-                setBuildingFilters((prev) => ({
-                  ...prev,
-                  searchColumn: event.target.value,
-                }));
-                setBuildingPage(1);
-              }}
+              onChange={(event) => updateFilter("searchColumn", event.target.value)}
             >
               <option value="all">Tất cả cột</option>
               <option value="id">Mã</option>
@@ -360,13 +368,12 @@ const BuildingManagementPage = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => {
+              onClick={() =>
                 setBuildingFilters({
                   searchText: "",
                   searchColumn: "all",
-                });
-                setBuildingPage(1);
-              }}
+                })
+              }
             >
               Xóa lọc
             </Button>
@@ -387,111 +394,12 @@ const BuildingManagementPage = () => {
           </div>
         </div>
 
-        <div className="table-wrapper">
-          <table className="custom-table">
-            <thead>
-              <tr>
-                <th>Mã</th>
-                <th>Tên tòa nhà</th>
-                <th>Địa chỉ</th>
-                <th>Ngày tạo</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan="5">Đang tải danh sách tòa nhà...</td>
-                </tr>
-              )}
-
-              {!loading && filteredBuildings.length === 0 && (
-                <tr>
-                  <td colSpan="5">Chưa có tòa nhà nào.</td>
-                </tr>
-              )}
-
-              {!loading &&
-                paginatedBuildings.map((building) => (
-                  <tr key={building.id}>
-                    <td>#{building.id}</td>
-
-                    <td>
-                      <strong>{building.name}</strong>
-                    </td>
-
-                    <td>{building.address || "-"}</td>
-
-                    <td>
-                      {building.createdAt || building.created_at
-                        ? new Date(
-                          building.createdAt || building.created_at
-                        ).toLocaleDateString("vi-VN")
-                        : "-"}
-                    </td>
-
-                    <td>
-                      <div className="action-row">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          icon={Edit2}
-                          disabled={Boolean(updatingId) || Boolean(deletingId)}
-                          onClick={() => startEdit(building)}
-                        >
-                          Sửa
-                        </Button>
-
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="danger"
-                          icon={Trash2}
-                          loading={deletingId === building.id}
-                          disabled={Boolean(deletingId)}
-                          onClick={() => handleDelete(building)}
-                        >
-                          Xóa
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="pagination-bar">
-          <span className="mg-pagination">
-            Trang {currentBuildingPage}/{totalBuildingPages} • Hiển thị {filteredBuildings.length}/{buildings.length} tòa nhà
-          </span>
-
-          <div className="action-row mg-pagination">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={currentBuildingPage <= 1}
-              onClick={() => setBuildingPage((prev) => Math.max(prev - 1, 1))}
-            >
-              Trước
-            </Button>
-
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={currentBuildingPage >= totalBuildingPages}
-              onClick={() =>
-                setBuildingPage((prev) => Math.min(prev + 1, totalBuildingPages))
-              }
-            >
-              Sau
-            </Button>
-          </div>
-        </div>
+        <Table
+          columns={columns}
+          data={filteredBuildings}
+          loading={loading}
+          emptyMessage="Chưa có tòa nhà nào."
+        />
       </section>
     </div>
   );

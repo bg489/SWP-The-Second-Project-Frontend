@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AlertTriangle, Plus, Save, Trash2, RefreshCcw, Edit2 } from "lucide-react";
+import { AlertTriangle, Save, Trash2, RefreshCcw, Edit2 } from "lucide-react";
 import Button from "../../components/Button/Button";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";

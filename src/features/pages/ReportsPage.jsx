@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AlertTriangle, BarChart3, Car, Download, FileText, Layers, QrCode, RefreshCcw, TrendingUp } from "lucide-react";
 
 import Button from "../../components/Button/Button";
+import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import Table from "../../components/Table/Table";
@@ -86,11 +87,7 @@ const ReportsPage = () => {
         </div>
       </section>
 
-      {reports.error && (
-        <section className="card soft-panel">
-          <p style={{ color: "var(--danger)" }}>{reports.error}</p>
-        </section>
-      )}
+      <StatusBanner errors={reports.error} />
 
       <section className="card section-card">
         <div className="section-header">

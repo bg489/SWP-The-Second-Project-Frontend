@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Car, CheckCircle2, RefreshCcw, Search, XCircle } from "lucide-react";
 
 import Button from "../../components/Button/Button";
+import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import Select from "../../components/Form/Select";
@@ -37,15 +38,19 @@ const AdminVehicleApprovalPage = () => {
 
   const rows = useMemo(() => {
     const search = filters.q.trim().toLowerCase();
-    if (!search) return vehicles.all;
+    const byStatus = filters.status
+      ? vehicles.all.filter((vehicle) => vehicle.status === filters.status)
+      : vehicles.all;
 
-    return vehicles.all.filter((vehicle) =>
-      [vehicle.plateNumber, vehicle.owner, vehicle.brand, vehicle.color]
+    if (!search) return byStatus;
+
+    return byStatus.filter((vehicle) =>
+      [vehicle.plateNumber, vehicle.owner, vehicle.ownerName, vehicle.brand, vehicle.color]
         .join(" ")
         .toLowerCase()
         .includes(search)
     );
-  }, [filters.q, vehicles.all]);
+  }, [filters.q, filters.status, vehicles.all]);
 
   const pendingCount = useMemo(() => {
     return vehicles.all.filter((vehicle) => vehicle.status === "PENDING").length;
@@ -111,12 +116,7 @@ const AdminVehicleApprovalPage = () => {
         </div>
       </section>
 
-      {(notice || vehicles.error) && (
-        <section className="card soft-panel">
-          {notice && <span className="pill success">{notice}</span>}
-          {vehicles.error && <p style={{ color: "var(--danger)" }}>{vehicles.error}</p>}
-        </section>
-      )}
+      <StatusBanner success={notice} errors={vehicles.error} />
 
       <section className="card section-card">
         <div className="section-header">

@@ -39,20 +39,15 @@ const StaffViolationsPage = () => {
 
   // Đổi cấu trúc mảng danh mục lỗi vi phạm hệ thống
   const typeOptions = useMemo(() => {
-    // ⚠️ Thêm dấu ?. sau biến violationTypes để phòng ngừa dữ liệu chưa kịp nạp
-    const items = violationTypes?.items || [];
+    const items = violationTypes.items || [];
     return items.map(t => ({ value: t.id, label: t.name }));
-  }, [violationTypes?.items]);
+  }, [violationTypes.items]);
 
-  // Luồng tự động điền giá tiền cước phạt mặc định khi Staff chọn lỗi có sẵn
-  useEffect(() => {
-    if (!isCustom && violationTypeId) {
-      const selectedType = violationTypes.items.find(t => String(t.id) === String(violationTypeId));
-      if (selectedType) {
-        setPenaltyFee(selectedType.defaultPenaltyFee || selectedType.penaltyFee || "");
-      }
-    }
-  }, [violationTypeId, isCustom, violationTypes.items]);
+  const handleViolationTypeChange = (value) => {
+    setViolationTypeId(value);
+    const selectedType = violationTypes.items.find(t => String(t.id) === String(value));
+    setPenaltyFee(selectedType?.defaultPenaltyFee || selectedType?.penaltyFee || "");
+  };
 
   // Xử lý chuyển đổi qua lại giữa chọn danh mục và tự nhập tay tùy chỉnh
   const handleModeChange = (e) => {
@@ -67,14 +62,11 @@ const StaffViolationsPage = () => {
     e.preventDefault();
     if (!selectedSessionId || !penaltyFee) return;
 
-    let finalTypeName = "";
-    if (isCustom) {
-      if (!customName.trim()) return;
-      finalTypeName = customName.trim();
-    } else {
-      const selectedType = violationTypes.items.find(t => String(t.id) === String(violationTypeId));
-      finalTypeName = selectedType ? selectedType.name : "Vi phạm quy định bãi";
-    }
+    if (isCustom && !customName.trim()) return;
+    const selectedType = violationTypes.items.find(t => String(t.id) === String(violationTypeId));
+    const finalTypeName = isCustom
+      ? customName.trim()
+      : selectedType?.name || "Vi phạm quy định bãi";
 
     dispatch({
       type: "parking/createViolationRequest",
@@ -144,7 +136,7 @@ const StaffViolationsPage = () => {
               <FormField label="Chọn lỗi vi phạm có sẵn hệ thống" required>
                 <Select
                   value={violationTypeId}
-                  onChange={(e) => setViolationTypeId(e.target.value)}
+                  onChange={(e) => handleViolationTypeChange(e.target.value)}
                   options={typeOptions}
                   placeholder="-- Lựa chọn lỗi từ database --"
                 />

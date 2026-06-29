@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Car, Plus, Save, User } from "lucide-react";
 
 import Button from "../../components/Button/Button";
+import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import Select from "../../components/Form/Select";
@@ -17,7 +18,9 @@ import { formatDate, getStatusLabel, getStatusTone, getVehicleTypeLabel } from "
 
 const UserProfilePage = () => {
   const dispatch = useDispatch();
-  const { user } = useMockAuth();
+  const { user: mockUser } = useMockAuth();
+  const { user: authUser } = useSelector((state) => state.auth);
+  const user = authUser || mockUser;
   const { vehicles, notice } = useSelector((state) => state.parking);
 
   const [form, setForm] = useState({
@@ -46,7 +49,7 @@ const UserProfilePage = () => {
         vehicleType: form.vehicleType,
         brand: form.brand.trim(),
         color: form.color.trim() || "Chưa cập nhật",
-        buildingId: 1,
+        buildingId: user?.buildingId || undefined,
       })
     );
 
@@ -87,12 +90,7 @@ const UserProfilePage = () => {
         </div>
       </section>
 
-      {(notice || vehicles.error) && (
-        <section className="card soft-panel">
-          {notice && <span className="pill success">{notice}</span>}
-          {vehicles.error && <p style={{ color: "var(--danger)" }}>{vehicles.error}</p>}
-        </section>
-      )}
+      <StatusBanner success={notice} errors={vehicles.error} />
 
       <div className="two-column-grid">
         <section className="card section-card">
@@ -105,6 +103,7 @@ const UserProfilePage = () => {
           <div className="data-list">
             <div className="data-row"><span>Họ tên</span><strong>{user.name}</strong></div>
             <div className="data-row"><span>Email</span><strong>{user.email}</strong></div>
+            <div className="data-row"><span>Tòa nhà</span><strong>{user.buildingName || "Chưa có tòa nhà"}</strong></div>
             <div className="data-row"><span>Ngày tham gia</span><strong>{formatDate("2026-06-01")}</strong></div>
             <div className="data-row"><span>Trạng thái</span><strong>Đang hoạt động</strong></div>
           </div>

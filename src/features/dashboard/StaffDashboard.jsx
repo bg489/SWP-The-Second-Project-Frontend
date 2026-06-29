@@ -1,40 +1,93 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Button from "../../components/Button/Button";
+import StatusBanner from "../../components/Feedback/StatusBanner";
 import Table from "../../components/Table/Table";
 import { useMockAuth } from "../../context/MockAuthContext";
 import {
-  carSlots,
-  floors,
   formatCurrency,
   formatDateTime,
   getStatusLabel,
   getStatusTone,
   getVehicleTypeLabel,
-  parkingSessions,
-  tempQrCards,
-  violations,
 } from "../../services/mockParkingData";
+import {
+  fetchActiveParkingSessionsRequest,
+  fetchTempQrCardsRequest,
+  fetchViolationsRequest,
+} from "../backend/parking/parkingSlice";
+import { fetchFloorsRequest } from "../backend/floors/floorSlice";
 import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Car, Layers, QrCode, ShieldCheck } from "lucide-react";
 
 const StaffDashboard = () => {
-  const { user } = useMockAuth();
-  const [activeSessions] = useState(parkingSessions.filter((session) => session.status === "ACTIVE"));
+  const dispatch = useDispatch();
+  const { user: mockUser } = useMockAuth();
+  const { user: authUser } = useSelector((state) => state.auth);
+  const user = authUser || mockUser;
+  const { floors, loading: floorsLoading } = useSelector((state) => state.floors);
+  const { parkingSessions, tempQrCards, violations } = useSelector((state) => state.parking);
 
-  const motorbikeLeft = floors
-    .filter((floor) => floor.floorType === "MOTORBIKE")
-    .reduce((sum, floor) => sum + floor.capacity - floor.currentCount, 0);
-  const availableCarSlots = carSlots.filter((slot) => slot.status === "AVAILABLE").length;
-  const readyQr = tempQrCards.filter((card) => card.status === "READY").length;
-  const unpaidViolations = violations.filter((violation) => violation.status === "UNPAID").length;
+  const buildingId = user?.buildingId;
 
-  const queue = useMemo(
-    () => [
-      { id: "IN-01", title: "Khách ô tô vãng lai", desc: "Nhập biển 51G-776.51, gán ô C-09, phát QR TMP-002.", action: "Đã gán ô" },
-      { id: "IN-02", title: "Cư dân xe máy có gói", desc: "QR-MB-59S1-22345 hợp lệ, cho vào B1 nếu còn chỗ.", action: "Cho vào" },
-      { id: "OUT-01", title: "Ô tô chờ thanh toán", desc: "SESS-0990 có phí 400.000đ gồm vi phạm.", action: "Thu phí" },
-    ],
-    []
+  useEffect(() => {
+    dispatch(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
+    dispatch(fetchFloorsRequest({ buildingId, status: "ACTIVE", limit: 100 }));
+    dispatch(fetchTempQrCardsRequest({ status: "READY" }));
+    dispatch(fetchViolationsRequest());
+  }, [buildingId, dispatch]);
+
+  const activeSessions = parkingSessions.active;
+  const motorbikeFloors = floors.filter((floor) => floor.floorType === "MOTORBIKE");
+  const carFloors = floors.filter((floor) => floor.floorType === "CAR");
+  const motorbikeLeft = motorbikeFloors.reduce(
+    (sum, floor) => sum + Math.max(Number(floor.capacity || 0) - Number(floor.currentCount || 0), 0),
+    0
   );
+  const availableCarSlots = carFloors.reduce((sum, floor) => {
+    const availableFromSlots = Array.isArray(floor.slots)
+      ? floor.slots.filter((slot) => slot.status === "AVAILABLE").length
+      : 0;
+    return sum + Number(floor.availableSlotCount || availableFromSlots || 0);
+  }, 0);
+  const readyQr = tempQrCards.items.filter((card) => card.status === "READY").length;
+  const openViolations = violations.items.filter((violation) =>
+    ["OPEN", "UNPAID", "RESOLVED"].includes(violation.status)
+  );
+
+  const queue = useMemo(() => {
+    const rows = [];
+    const newestSession = activeSessions[0];
+    const newestViolation = openViolations[0];
+
+    if (newestSession) {
+      rows.push({
+        id: `SESSION-${newestSession.id}`,
+        title: `Xe đang trong bãi: ${newestSession.plateNumber}`,
+        desc: `${getVehicleTypeLabel(newestSession.vehicleType)} - ${newestSession.slotCode || "Khu xe máy"}`,
+        action: "Theo dõi",
+      });
+    }
+
+    if (readyQr > 0) {
+      rows.push({
+        id: "TEMP-QR",
+        title: "QR tạm sẵn sàng",
+        desc: `${readyQr} thẻ có thể phát cho khách gửi lẻ.`,
+        action: "Có thể dùng",
+      });
+    }
+
+    if (newestViolation) {
+      rows.push({
+        id: `VIOLATION-${newestViolation.id}`,
+        title: `Vi phạm: ${newestViolation.plateNumber}`,
+        desc: newestViolation.violationType || newestViolation.type || "Cần kiểm tra",
+        action: "Cần thu",
+      });
+    }
+
+    return rows;
+  }, [activeSessions, openViolations, readyQr]);
 
   const sessionColumns = [
     { header: "Phiên", key: "id" },
@@ -50,9 +103,9 @@ const StaffDashboard = () => {
       <section className="page-hero">
         <div className="page-hero-content">
           <div className="page-eyebrow"><QrCode size={16} /> Nhân viên cổng</div>
-          <h1 className="page-title">Bàn vận hành của {user.name}</h1>
+          <h1 className="page-title">Bàn vận hành của {user?.name || "nhân viên"}</h1>
           <p className="page-subtitle">
-            Quét QR, nhập biển số, phát QR tạm, gán ô đỗ ô tô, kiểm tra vi phạm và xác nhận xe ra/vào.
+            Dữ liệu trong ca trực được lấy trực tiếp từ hệ thống: sức chứa, phiên đang gửi, QR tạm và vi phạm.
           </p>
         </div>
         <div className="page-hero-aside">
@@ -62,29 +115,31 @@ const StaffDashboard = () => {
         </div>
       </section>
 
+      <StatusBanner errors={[parkingSessions.error, tempQrCards.error, violations.error]} />
+
       <div className="dashboard-grid">
         <div className="card metric-card">
           <div className="metric-icon"><Layers size={22} /></div>
           <div className="metric-label">Xe máy còn chỗ</div>
           <div className="metric-value">{motorbikeLeft}</div>
-          <div className="metric-note">Theo sức chứa, không gán ô riêng</div>
+          <div className="metric-note">{floorsLoading ? "Đang tải sức chứa" : "Theo tòa nhà đang trực"}</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><Car size={22} /></div>
-          <div className="metric-label">Ô đỗ ô tô trống</div>
+          <div className="metric-label">Ô ô tô trống</div>
           <div className="metric-value">{availableCarSlots}</div>
-          <div className="metric-note">Chỉ chọn ô hợp lệ</div>
+          <div className="metric-note">Từ danh sách ô thật</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><QrCode size={22} /></div>
           <div className="metric-label">QR tạm sẵn sàng</div>
           <div className="metric-value">{readyQr}</div>
-          <div className="metric-note">Phát như thẻ xe vật lý</div>
+          <div className="metric-note">Phát cho khách gửi lẻ</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><AlertTriangle size={22} /></div>
-          <div className="metric-label">Vi phạm chưa thu</div>
-          <div className="metric-value">{unpaidViolations}</div>
+          <div className="metric-label">Vi phạm cần thu</div>
+          <div className="metric-value">{openViolations.length}</div>
           <div className="metric-note">Cộng vào phí khi xe ra</div>
         </div>
       </div>
@@ -93,8 +148,8 @@ const StaffDashboard = () => {
         <section className="card section-card">
           <div className="section-header">
             <div>
-              <h2 className="section-title"><ArrowDownLeft size={19} /> Hàng đợi xử lý tại cổng</h2>
-              <p className="section-copy">Các việc thường gặp trong ca trực tại cổng xe.</p>
+              <h2 className="section-title"><ArrowDownLeft size={19} /> Việc cần chú ý tại cổng</h2>
+              <p className="section-copy">Tổng hợp từ dữ liệu đang mở trong hệ thống.</p>
             </div>
             <div className="action-row">
               <Button variant="primary" icon={ArrowDownLeft} onClick={() => (window.location.pathname = "/staff/check-in")}>Xe vào</Button>
@@ -114,6 +169,7 @@ const StaffDashboard = () => {
                 </div>
               </div>
             ))}
+            {queue.length === 0 && <div className="soft-panel">Chưa có việc cần chú ý trong ca trực.</div>}
           </div>
         </section>
 
@@ -121,20 +177,21 @@ const StaffDashboard = () => {
           <div className="section-header">
             <div>
               <h2 className="section-title"><ShieldCheck size={19} /> Vi phạm cần chú ý</h2>
-              <p className="section-copy">Nhân viên ghi nhận thủ công khi phát hiện xe đỗ sai hoặc mất thẻ.</p>
+              <p className="section-copy">Các khoản còn cần xử lý khi xe ra bãi.</p>
             </div>
           </div>
           <div className="data-list">
-            {violations.slice(0, 3).map((violation) => (
+            {openViolations.slice(0, 3).map((violation) => (
               <div className="soft-panel" key={violation.id}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                   <strong>{violation.plateNumber}</strong>
                   <span className={`pill ${getStatusTone(violation.status)}`}>{getStatusLabel(violation.status)}</span>
                 </div>
-                <p className="section-copy">{violation.type}</p>
-                <strong>{formatCurrency(violation.fine)}</strong>
+                <p className="section-copy">{violation.violationType || violation.type}</p>
+                <strong>{formatCurrency(violation.penaltyFee || violation.fine || 0)}</strong>
               </div>
             ))}
+            {openViolations.length === 0 && <div className="soft-panel">Chưa có vi phạm cần thu.</div>}
           </div>
         </section>
       </div>
@@ -146,7 +203,7 @@ const StaffDashboard = () => {
             <p className="section-copy">Danh sách xe đang ở trong bãi để đối chiếu khi xe ra vào.</p>
           </div>
         </div>
-        <Table columns={sessionColumns} data={activeSessions} />
+        <Table columns={sessionColumns} data={activeSessions} loading={parkingSessions.loading} />
       </section>
     </div>
   );

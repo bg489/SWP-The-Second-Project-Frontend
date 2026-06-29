@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Button from "../../components/Button/Button";
+import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import Table from "../../components/Table/Table";
@@ -63,7 +64,7 @@ const AdminSettingsPage = () => {
         </div>
       </section>
 
-      {notice && <div className="card soft-panel"><strong>{notice}</strong></div>}
+      <StatusBanner success={notice} />
 
       <div className="two-column-grid">
         <section className="card section-card">

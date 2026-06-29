@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { ArrowDownLeft, Camera, Car, Layers, QrCode, ShieldCheck } from "lucide-react";
 
 import Button from "../../components/Button/Button";
+import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import QrCameraScanner from "../../components/QrScanner/QrCameraScanner";
@@ -262,18 +263,18 @@ const CheckInQRPage = () => {
         </div>
       </section>
 
-      {(notice || formError || parkingSessions.error || qrPasses.error || tempQrCards.error || buildingsError || floorsError || slotsError) && (
-        <section className="card soft-panel">
-          {notice && <span className="pill success">{notice}</span>}
-          {formError && <p style={{ color: "var(--danger)" }}>{formError}</p>}
-          {parkingSessions.error && <p style={{ color: "var(--danger)" }}>{parkingSessions.error}</p>}
-          {qrPasses.error && <p style={{ color: "var(--danger)" }}>{qrPasses.error}</p>}
-          {tempQrCards.error && <p style={{ color: "var(--danger)" }}>{tempQrCards.error}</p>}
-          {buildingsError && <p style={{ color: "var(--danger)" }}>{buildingsError}</p>}
-          {floorsError && <p style={{ color: "var(--danger)" }}>{floorsError}</p>}
-          {slotsError && <p style={{ color: "var(--danger)" }}>{slotsError}</p>}
-        </section>
-      )}
+      <StatusBanner
+        success={notice}
+        errors={[
+          formError,
+          parkingSessions.error,
+          qrPasses.error,
+          tempQrCards.error,
+          buildingsError,
+          floorsError,
+          slotsError,
+        ]}
+      />
 
       <div className="two-column-grid">
         <section className="card section-card">

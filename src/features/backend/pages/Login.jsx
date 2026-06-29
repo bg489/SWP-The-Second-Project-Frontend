@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import Button from "../../../components/Button/Button";
+import StatusBanner from "../../../components/Feedback/StatusBanner";
 import FormField from "../../../components/Form/FormField";
 import Input from "../../../components/Form/Input";
 import { useMockAuth } from "../../../context/MockAuthContext";
@@ -348,11 +349,7 @@ const Login = () => {
                         </Button>
                     </div>
 
-                    {error && (
-                        <div className="soft-panel" style={{ borderColor: "var(--danger)" }}>
-                            <strong style={{ color: "var(--danger)" }}>{error}</strong>
-                        </div>
-                    )}
+                    <StatusBanner errors={error} />
 
                     {mode === "login" && (
                         <>
@@ -404,19 +401,10 @@ const Login = () => {
 
                     {mode === "register" && (
                         <>
-                            {registerError && (
-                                <div className="soft-panel" style={{ borderColor: "var(--danger)" }}>
-                                    <strong style={{ color: "var(--danger)" }}>{registerError}</strong>
-                                </div>
-                            )}
-
-                            {registerSuccess && (
-                                <div className="soft-panel" style={{ borderColor: "var(--success)" }}>
-                                    <strong style={{ color: "var(--success)" }}>
-                                        Đăng ký thành công. Tài khoản đang chờ quản trị viên duyệt trước khi đăng nhập.
-                                    </strong>
-                                </div>
-                            )}
+                            <StatusBanner
+                                success={registerSuccess ? "??ng k? th?nh c?ng. T?i kho?n ?ang ch? qu?n tr? vi?n duy?t tr??c khi ??ng nh?p." : null}
+                                errors={registerError}
+                            />
 
                             <form onSubmit={handleRegisterSubmit} style={{ display: "grid", gap: 16 }}>
                                 <FormField label="Họ tên" required error={registerErrors.name}>

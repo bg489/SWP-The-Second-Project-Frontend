@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Building2, Car, ShieldAlert, Wrench, X } from "lucide-react";
 
+import StatusBanner from "../../components/Feedback/StatusBanner";
 import Select from "../../components/Form/Select";
 import { fetchBuildingsRequest } from "../backend/buildings/buildingSlice";
 import { fetchFloorsRequest } from "../backend/floors/floorSlice";
@@ -135,13 +136,7 @@ const CarSlotMapPage = () => {
         </div>
       </section>
 
-      {(buildingsError || floorsError || slotsError) && (
-        <section className="card soft-panel">
-          {buildingsError && <p style={{ color: "var(--danger)" }}>{buildingsError}</p>}
-          {floorsError && <p style={{ color: "var(--danger)" }}>{floorsError}</p>}
-          {slotsError && <p style={{ color: "var(--danger)" }}>{slotsError}</p>}
-        </section>
-      )}
+      <StatusBanner errors={[buildingsError, floorsError, slotsError]} />
 
       <div className="dashboard-grid">
         <div className="card metric-card"><div className="metric-label">Trống</div><div className="metric-value">{summary.available}</div></div>

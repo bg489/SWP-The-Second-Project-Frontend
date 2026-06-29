@@ -3,7 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { Building2, RefreshCcw, Send } from "lucide-react";
 
 import Button from "../../../components/Button/Button";
+import StatusBanner from "../../../components/Feedback/StatusBanner";
 import FormField from "../../../components/Form/FormField";
+import Table from "../../../components/Table/Table";
 import {
     fetchBuildingsRequest,
     fetchMyBuildingChangeRequestsRequest,
@@ -17,11 +19,16 @@ const statusLabels = {
     CANCELLED: "Đã hủy",
 };
 
+const statusTone = {
+    PENDING: "warning",
+    APPROVED: "success",
+    REJECTED: "danger",
+    CANCELLED: "neutral",
+};
+
 const UserBuildingChangeRequestPage = () => {
     const dispatch = useDispatch();
-
     const { user } = useSelector((state) => state.auth);
-
     const {
         buildings,
         buildingsLoading,
@@ -37,7 +44,6 @@ const UserBuildingChangeRequestPage = () => {
         requestedBuildingId: "",
         reason: "",
     });
-
     const [formError, setFormError] = useState("");
 
     const currentBuildingId = user?.buildingId;
@@ -50,9 +56,7 @@ const UserBuildingChangeRequestPage = () => {
     }, [buildings, currentBuildingId, user?.buildingAddress, user?.buildingName]);
 
     const availableBuildings = useMemo(() => {
-        return buildings.filter(
-            (building) => Number(building.id) !== Number(currentBuildingId)
-        );
+        return buildings.filter((building) => Number(building.id) !== Number(currentBuildingId));
     }, [buildings, currentBuildingId]);
 
     useEffect(() => {
@@ -87,6 +91,22 @@ const UserBuildingChangeRequestPage = () => {
         dispatch(fetchMyBuildingChangeRequestsRequest());
     };
 
+    const columns = [
+        { header: "Mã", key: "id", render: (request) => `#${request.id}` },
+        { header: "Tòa nhà muốn chuyển", key: "requestedBuildingName" },
+        { header: "Lý do", key: "reason", render: (request) => request.reason || "-" },
+        {
+            header: "Trạng thái",
+            key: "status",
+            render: (request) => (
+                <span className={`pill ${statusTone[request.status] || "neutral"}`}>
+                    {statusLabels[request.status] || request.status}
+                </span>
+            ),
+        },
+        { header: "Ghi chú duyệt", key: "adminNote", render: (request) => request.adminNote || "-" },
+    ];
+
     return (
         <div className="parking-page">
             <section className="page-hero">
@@ -94,12 +114,9 @@ const UserBuildingChangeRequestPage = () => {
                     <div className="page-eyebrow">
                         <Building2 size={16} /> Đổi tòa nhà
                     </div>
-
                     <h1 className="page-title">Yêu cầu đổi tòa nhà</h1>
-
                     <p className="page-subtitle">
-                        Gửi yêu cầu chuyển sang tòa nhà khác. Quản trị viên sẽ duyệt trước khi thay
-                        đổi có hiệu lực.
+                        Gửi yêu cầu chuyển sang tòa nhà khác. Quản trị viên sẽ duyệt trước khi thay đổi có hiệu lực.
                     </p>
                 </div>
 
@@ -137,16 +154,7 @@ const UserBuildingChangeRequestPage = () => {
                     </div>
                 </div>
 
-                {(error || buildingsError || formError || notice) && (
-                    <div className="soft-panel">
-                        {notice && <p style={{ color: "var(--success)" }}>{notice}</p>}
-                        {formError && <p style={{ color: "var(--danger)" }}>{formError}</p>}
-                        {error && <p style={{ color: "var(--danger)" }}>{error}</p>}
-                        {buildingsError && (
-                            <p style={{ color: "var(--danger)" }}>{buildingsError}</p>
-                        )}
-                    </div>
-                )}
+                <StatusBanner success={notice} errors={[formError, error, buildingsError]} />
 
                 <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
                     <FormField label="Tòa nhà muốn chuyển đến" required>
@@ -190,12 +198,7 @@ const UserBuildingChangeRequestPage = () => {
                         />
                     </FormField>
 
-                    <Button
-                        type="submit"
-                        icon={Send}
-                        loading={submitLoading}
-                        disabled={submitLoading}
-                    >
+                    <Button type="submit" icon={Send} loading={submitLoading} disabled={submitLoading}>
                         Gửi yêu cầu
                     </Button>
                 </form>
@@ -209,44 +212,12 @@ const UserBuildingChangeRequestPage = () => {
                     </div>
                 </div>
 
-                <div className="table-wrapper">
-                    <table className="custom-table">
-                        <thead>
-                            <tr>
-                                <th>Mã</th>
-                                <th>Tòa nhà muốn chuyển</th>
-                                <th>Lý do</th>
-                                <th>Trạng thái</th>
-                                <th>Ghi chú duyệt</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {myLoading && (
-                                <tr>
-                                    <td colSpan="5">Đang tải yêu cầu...</td>
-                                </tr>
-                            )}
-
-                            {!myLoading && myRequests.length === 0 && (
-                                <tr>
-                                    <td colSpan="5">Chưa có yêu cầu đổi tòa nhà.</td>
-                                </tr>
-                            )}
-
-                            {!myLoading &&
-                                myRequests.map((request) => (
-                                    <tr key={request.id}>
-                                        <td>#{request.id}</td>
-                                        <td>{request.requestedBuildingName}</td>
-                                        <td>{request.reason || "-"}</td>
-                                        <td>{statusLabels[request.status] || request.status}</td>
-                                        <td>{request.adminNote || "-"}</td>
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
-                </div>
+                <Table
+                    columns={columns}
+                    data={myRequests}
+                    loading={myLoading}
+                    emptyMessage="Chưa có yêu cầu đổi tòa nhà."
+                />
             </section>
         </div>
     );

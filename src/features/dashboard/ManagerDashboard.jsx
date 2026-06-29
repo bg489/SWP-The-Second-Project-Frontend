@@ -1,29 +1,122 @@
+import { useEffect, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Button from "../../components/Button/Button";
+import StatusBanner from "../../components/Feedback/StatusBanner";
 import Table from "../../components/Table/Table";
 import { useMockAuth } from "../../context/MockAuthContext";
 import {
-  buildingInfo,
-  carSlots,
-  floors,
   formatCurrency,
   getStatusLabel,
   getStatusTone,
-  reportSummary,
-  revenueSeries,
-  violations,
 } from "../../services/mockParkingData";
+import { fetchReportsRequest } from "../backend/parking/parkingSlice";
+import { fetchFloorsRequest } from "../backend/floors/floorSlice";
 import { AlertTriangle, BarChart3, Building2, Car, Download, Layers, TrendingUp } from "lucide-react";
 
+const sumAmounts = (rows, predicate = () => true) =>
+  rows.filter(predicate).reduce((sum, row) => sum + Number(row.totalAmount || 0), 0);
+
+const asArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.items)) return value.items;
+  if (Array.isArray(value?.rows)) return value.rows;
+  if (Array.isArray(value?.data)) return value.data;
+  if (Array.isArray(value?.byStatus)) return value.byStatus;
+  return [];
+};
+
 const ManagerDashboard = () => {
-  const { user } = useMockAuth();
-  const motorbikeCapacity = floors.filter((floor) => floor.floorType === "MOTORBIKE").reduce((sum, floor) => sum + floor.capacity, 0);
-  const motorbikeCount = floors.filter((floor) => floor.floorType === "MOTORBIKE").reduce((sum, floor) => sum + floor.currentCount, 0);
-  const occupiedCarSlots = carSlots.filter((slot) => slot.status === "OCCUPIED").length;
+  const dispatch = useDispatch();
+  const { user: mockUser } = useMockAuth();
+  const { user: authUser } = useSelector((state) => state.auth);
+  const user = authUser || mockUser;
+  const { reports } = useSelector((state) => state.parking);
+  const { floors, loading: floorsLoading } = useSelector((state) => state.floors);
+
+  const buildingId = user?.buildingId;
+
+  useEffect(() => {
+    const params = buildingId ? { buildingId } : undefined;
+    dispatch(fetchReportsRequest(params));
+    dispatch(fetchFloorsRequest({ buildingId, status: "ACTIVE", limit: 100 }));
+  }, [buildingId, dispatch]);
+
+  const data = reports.data || {};
+  const revenue = data.revenue || {};
+  const revenuePayments = asArray(revenue.payments);
+  const revenueSessions = asArray(revenue.sessions);
+  const qrPassReport = useMemo(
+    () => data.qrPasses || { byStatus: [], expiringSoon: [] },
+    [data.qrPasses]
+  );
+  const violationReport = data.violations || {};
+  const violationRows = asArray(violationReport);
+  const carSlotReport = data.carSlots || {};
+  const carSlotRows = asArray(carSlotReport);
+  const floorRows = Array.isArray(floors) ? floors : [];
+
+  const motorbikeCapacity = floorRows
+    .filter((floor) => floor.floorType === "MOTORBIKE")
+    .reduce(
+      (sum, floor) => ({
+        current: sum.current + Number(floor.currentCount || 0),
+        capacity: sum.capacity + Number(floor.capacity || 0),
+      }),
+      { current: 0, capacity: 0 }
+    );
+
+  const carSlots = carSlotRows.length > 0
+    ? carSlotRows.reduce(
+      (sum, row) => {
+        const status = row.status || "UNKNOWN";
+        return {
+          total: sum.total + Number(row.total || row.count || 0),
+          occupied: sum.occupied + (status === "OCCUPIED" ? Number(row.total || row.count || 0) : 0),
+          available: sum.available + (status === "AVAILABLE" ? Number(row.total || row.count || 0) : 0),
+        };
+      },
+      { total: 0, occupied: 0, available: 0 }
+    )
+    : {
+      total: Number(carSlotReport.total || 0),
+      occupied: Number(carSlotReport.occupied || 0),
+      available: Number(carSlotReport.available || 0),
+    };
+
+  const qrSummary = useMemo(() => {
+    const byStatus = asArray(qrPassReport.byStatus || qrPassReport);
+    const expiringSoon = asArray(qrPassReport.expiringSoon);
+
+    if (byStatus.length === 0 && !expiringSoon.length) {
+      return {
+        active: Number(qrPassReport.active || qrPassReport.activeCount || 0),
+        expired: Number(qrPassReport.expired || qrPassReport.expiredCount || 0),
+        expiring: Number(qrPassReport.expiring || qrPassReport.expiringSoon || 0),
+      };
+    }
+
+    return {
+      active: byStatus.filter((row) => row.status === "ACTIVE").reduce((sum, row) => sum + Number(row.total || 0), 0),
+      expired: byStatus.filter((row) => row.status === "EXPIRED").reduce((sum, row) => sum + Number(row.total || 0), 0),
+      expiring: expiringSoon.reduce((sum, row) => sum + Number(row.expiringSoon || 0), 0),
+    };
+  }, [qrPassReport]);
+
+  const violationCount = violationRows.length > 0
+    ? violationRows.reduce((sum, row) => sum + Number(row.total || row.count || 0), 0)
+    : Number(violationReport.total || 0);
+  const violationAmount = violationRows.length > 0
+    ? violationRows.reduce((sum, row) => sum + Number(row.penaltyTotal || row.pendingAmount || 0), 0)
+    : Number(violationReport.pendingAmount || violationReport.penaltyTotal || 0);
+  const totalRevenue = sumAmounts(revenuePayments, (row) => row.status === "SUCCESS");
+  const monthlyPassRevenue = revenueSessions
+    .filter((row) => row.pricingType === "MONTHLY_PASS")
+    .reduce((sum, row) => sum + Number(row.totalAmount || 0), 0);
 
   const floorColumns = [
     { header: "Tầng", key: "name" },
     { header: "Loại", key: "floorType", render: (row) => (row.floorType === "CAR" ? "Ô tô theo ô đỗ" : "Xe máy theo sức chứa") },
-    { header: "Sức chứa / Ô đỗ", key: "capacity", render: (row) => (row.floorType === "CAR" ? `${row.slotsCount} ô` : `${row.currentCount}/${row.capacity}`) },
+    { header: "Sức chứa / Ô đỗ", key: "capacity", render: (row) => (row.floorType === "CAR" ? `${row.slotCount || row.slotsCount || 0} ô` : `${row.currentCount}/${row.capacity}`) },
     {
       header: "Trạng thái",
       key: "status",
@@ -36,42 +129,44 @@ const ManagerDashboard = () => {
       <section className="page-hero">
         <div className="page-hero-content">
           <div className="page-eyebrow"><Building2 size={16} /> Quản lý bãi xe</div>
-          <h1 className="page-title">{buildingInfo.name} đang vận hành ổn định</h1>
+          <h1 className="page-title">{user?.buildingName || "Tòa nhà"} đang vận hành</h1>
           <p className="page-subtitle">
-            Xin chào {user.name}. Trang này gom sức chứa, ô đỗ, doanh thu, mã QR và vi phạm của một tòa nhà.
+            Trang này lấy báo cáo vận hành trực tiếp từ hệ thống: sức chứa, ô đỗ, doanh thu, mã QR và vi phạm.
           </p>
         </div>
         <div className="page-hero-aside">
-          <span className="page-hero-label">Doanh thu tháng</span>
-          <span className="page-hero-number">{Math.round(reportSummary.revenueMonth / 1000000)}M</span>
+          <span className="page-hero-label">Doanh thu ghi nhận</span>
+          <span className="page-hero-number">{Math.round(totalRevenue / 1000000)}M</span>
           <span className="page-hero-label">đồng</span>
         </div>
       </section>
 
+      <StatusBanner errors={reports.error} />
+
       <div className="dashboard-grid">
         <div className="card metric-card">
           <div className="metric-icon"><TrendingUp size={22} /></div>
-          <div className="metric-label">Doanh thu hôm nay</div>
-          <div className="metric-value">{formatCurrency(reportSummary.revenueToday)}</div>
-          <div className="metric-note">Gói tháng, gửi lượt, phí vi phạm</div>
+          <div className="metric-label">Doanh thu đã thanh toán</div>
+          <div className="metric-value">{formatCurrency(totalRevenue)}</div>
+          <div className="metric-note">Tổng các khoản thành công</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><Layers size={22} /></div>
           <div className="metric-label">Xe máy đang gửi</div>
-          <div className="metric-value">{motorbikeCount}/{motorbikeCapacity}</div>
-          <div className="metric-note">{Math.round((motorbikeCount / motorbikeCapacity) * 100)}% sức chứa</div>
+          <div className="metric-value">{motorbikeCapacity.current}/{motorbikeCapacity.capacity || 0}</div>
+          <div className="metric-note">{motorbikeCapacity.capacity ? Math.round((motorbikeCapacity.current / motorbikeCapacity.capacity) * 100) : 0}% sức chứa</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><Car size={22} /></div>
           <div className="metric-label">Ô tô đang dùng ô đỗ</div>
-          <div className="metric-value">{occupiedCarSlots}/{carSlots.length}</div>
-          <div className="metric-note">Bao gồm ô cần kiểm tra riêng</div>
+          <div className="metric-value">{carSlots.occupied}/{carSlots.total}</div>
+          <div className="metric-note">{carSlots.available} ô còn trống</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><AlertTriangle size={22} /></div>
-          <div className="metric-label">Vi phạm trong ngày</div>
-          <div className="metric-value">{violations.length}</div>
-          <div className="metric-note">Nhân viên ghi nhận tại bãi</div>
+          <div className="metric-label">Vi phạm ghi nhận</div>
+          <div className="metric-value">{violationCount}</div>
+          <div className="metric-note">{formatCurrency(violationAmount)}</div>
         </div>
       </div>
 
@@ -79,18 +174,22 @@ const ManagerDashboard = () => {
         <section className="card section-card">
           <div className="section-header">
             <div>
-              <h2 className="section-title"><BarChart3 size={19} /> Doanh thu 5 tháng gần nhất</h2>
-              <p className="section-copy">Tổng hợp doanh thu theo tháng để nắm xu hướng vận hành.</p>
+              <h2 className="section-title"><BarChart3 size={19} /> Cơ cấu doanh thu</h2>
+              <p className="section-copy">Tổng hợp theo loại phiên đã hoàn tất.</p>
             </div>
             <Button variant="outline" icon={Download}>Xuất báo cáo</Button>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${revenueSeries.length}, 1fr)`, gap: 12, alignItems: "end", minHeight: 220 }}>
-            {revenueSeries.map((item) => (
-              <div key={item.label} style={{ display: "grid", gap: 8, alignItems: "end" }}>
-                <div style={{ height: `${item.value}px`, borderRadius: "8px 8px 0 0", background: "linear-gradient(180deg, var(--pink), var(--orange))" }} />
-                <strong style={{ textAlign: "center", fontSize: 12 }}>{item.label}</strong>
+          <div style={{ display: "grid", gap: 12 }}>
+            {revenueSessions.map((item) => (
+              <div className="soft-panel" key={`${item.vehicleType}-${item.pricingType}`}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <strong>{item.vehicleType} - {item.pricingType}</strong>
+                  <span>{formatCurrency(item.totalAmount || 0)}</span>
+                </div>
+                <p className="section-copy">{item.sessionCount || 0} lượt đã hoàn tất</p>
               </div>
             ))}
+            {revenueSessions.length === 0 && <div className="soft-panel">Chưa có dữ liệu doanh thu.</div>}
           </div>
         </section>
 
@@ -102,10 +201,10 @@ const ManagerDashboard = () => {
             </div>
           </div>
           <div className="data-list">
-            <div className="data-row"><span>QR còn hiệu lực</span><strong>{reportSummary.activeQrPasses}</strong></div>
-            <div className="data-row"><span>Sắp hết hạn</span><strong>{reportSummary.expiringQrPasses}</strong></div>
-            <div className="data-row"><span>Đã hết hạn</span><strong>{reportSummary.expiredQrPasses}</strong></div>
-            <div className="data-row"><span>Doanh thu gói tháng</span><strong>{formatCurrency(reportSummary.monthlyPassRevenue)}</strong></div>
+            <div className="data-row"><span>QR còn hiệu lực</span><strong>{qrSummary.active}</strong></div>
+            <div className="data-row"><span>Sắp hết hạn</span><strong>{qrSummary.expiring}</strong></div>
+            <div className="data-row"><span>Đã hết hạn</span><strong>{qrSummary.expired}</strong></div>
+            <div className="data-row"><span>Doanh thu gói tháng</span><strong>{formatCurrency(monthlyPassRevenue)}</strong></div>
           </div>
         </section>
       </div>
@@ -114,10 +213,10 @@ const ManagerDashboard = () => {
         <div className="section-header">
           <div>
             <h2 className="section-title"><Layers size={19} /> Tầng gửi xe</h2>
-            <p className="section-copy">Quản lý cấu hình loại tầng, sức chứa, ô đỗ và trạng thái vận hành.</p>
+            <p className="section-copy">Cấu hình tầng và sức chứa đang lấy từ cơ sở dữ liệu.</p>
           </div>
         </div>
-        <Table columns={floorColumns} data={floors} />
+        <Table columns={floorColumns} data={floorRows} loading={floorsLoading} />
       </section>
     </div>
   );
