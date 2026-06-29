@@ -574,6 +574,67 @@
   padding: 42px;
 }
 
+body.dark-theme .login-shell {
+  color-scheme: dark;
+  background:
+    radial-gradient(circle at 16% 12%, rgba(255, 184, 245, 0.18), transparent 30rem),
+    radial-gradient(circle at 88% 88%, rgba(237, 153, 81, 0.16), transparent 32rem),
+    linear-gradient(135deg, #100b13 0%, #18101b 48%, #241425 100%);
+}
+
+body.dark-theme .login-story {
+  border-right: 1px solid rgba(255, 184, 245, 0.12);
+  background:
+    radial-gradient(circle at 16% 18%, rgba(255, 184, 245, 0.2), transparent 24rem),
+    radial-gradient(circle at 92% 78%, rgba(237, 153, 81, 0.18), transparent 26rem),
+    linear-gradient(145deg, rgba(19, 12, 21, 0.98), rgba(42, 24, 35, 0.94));
+  color: #fff8fb;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03);
+}
+
+body.dark-theme .login-story .page-eyebrow {
+  border: 1px solid rgba(255, 184, 245, 0.22);
+  background: rgba(255, 184, 245, 0.16);
+  color: #ffe6fb;
+}
+
+body.dark-theme .login-story .page-subtitle {
+  color: rgba(255, 248, 251, 0.78);
+}
+
+body.dark-theme .login-story .soft-panel {
+  border-color: rgba(255, 184, 245, 0.16);
+  background:
+    linear-gradient(135deg, rgba(255, 184, 245, 0.1), rgba(237, 153, 81, 0.08)),
+    rgba(20, 13, 22, 0.56);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
+}
+
+body.dark-theme .login-story .data-row {
+  border-bottom-color: rgba(255, 184, 245, 0.14);
+  color: rgba(255, 248, 251, 0.72);
+}
+
+body.dark-theme .login-story .data-row strong,
+body.dark-theme .login-story .metric-value {
+  color: #fff8fb;
+}
+
+body.dark-theme .login-story .metric-note {
+  color: rgba(255, 248, 251, 0.68);
+}
+
+body.dark-theme .login-panel-wrap {
+  background:
+    radial-gradient(circle at 34% 18%, rgba(255, 184, 245, 0.08), transparent 24rem),
+    radial-gradient(circle at 96% 72%, rgba(237, 153, 81, 0.12), transparent 28rem);
+}
+
+body.dark-theme .login-panel-wrap .section-card {
+  border-color: rgba(255, 184, 245, 0.18);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+}
+
 .role-card {
   display: flex;
   gap: 14px;
@@ -663,6 +724,8 @@
 }
 
 .car-slot-card {
+  position: relative;
+  overflow: hidden;
   min-height: 68px;
   border: 1px solid var(--border-color);
   border-radius: 14px;
@@ -690,6 +753,57 @@
 .car-slot-card.selected {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(237, 153, 81, 0.22);
+}
+
+.car-slot-card.available.selected {
+  z-index: 1;
+  border: 2px solid #0fa66b;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.45), transparent 32%),
+    linear-gradient(135deg, rgba(22, 166, 103, 0.2), rgba(255, 184, 245, 0.26), rgba(237, 153, 81, 0.24));
+  box-shadow:
+    0 0 0 4px rgba(22, 166, 103, 0.22),
+    0 12px 28px rgba(22, 166, 103, 0.22),
+    0 0 24px rgba(255, 184, 245, 0.35);
+  color: #064d35;
+  transform: translateY(-4px) scale(1.045);
+  animation: selected-slot-glow 1.35s ease-in-out infinite alternate;
+}
+
+.car-slot-card.available.selected::before {
+  content: none;
+}
+
+.car-slot-card.available.selected::after {
+  content: "Đang chọn ✓";
+  position: absolute;
+  inset: auto 0 0;
+  padding: 5px 6px 6px;
+  border-radius: 0 0 12px 12px;
+  background: #16a667;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.car-slot-card.available.selected .car-slot-code {
+  color: #063f2d;
+  font-size: 1.05rem;
+  max-width: calc(100% - 14px);
+  padding-inline: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.car-slot-card.available.selected .car-slot-status {
+  margin-bottom: 22px;
+  color: #0b7a50;
+  font-weight: 900;
 }
 
 .car-slot-card.available {
@@ -749,6 +863,21 @@
 
 .legend-dot.reserved {
   background: #eab308;
+}
+
+@keyframes selected-slot-glow {
+  from {
+    box-shadow:
+      0 0 0 4px rgba(22, 166, 103, 0.2),
+      0 12px 28px rgba(22, 166, 103, 0.2),
+      0 0 20px rgba(255, 184, 245, 0.28);
+  }
+  to {
+    box-shadow:
+      0 0 0 6px rgba(22, 166, 103, 0.28),
+      0 16px 34px rgba(22, 166, 103, 0.27),
+      0 0 30px rgba(237, 153, 81, 0.32);
+  }
 }
 
 .legend-dot.occupied {
