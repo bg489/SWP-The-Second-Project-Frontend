@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Button from "../../components/Button/Button";
+import StatusBanner from "../../components/Feedback/StatusBanner";
 import Table from "../../components/Table/Table";
 import { useMockAuth } from "../../context/MockAuthContext";
 import {
@@ -8,23 +10,32 @@ import {
   getStatusTone,
   getVehicleTypeLabel,
   roleLabels,
-  users,
-  vehicles,
 } from "../../services/mockParkingData";
+import { fetchAdminUsersRequest } from "../backend/adminUsers/adminUserSlice";
+import {
+  approveVehicleRequest,
+  fetchAllVehiclesRequest,
+  rejectVehicleRequest,
+} from "../backend/parking/parkingSlice";
 import { CheckCircle, ShieldCheck, UserCheck, UserCog, X } from "lucide-react";
 
 const AdminDashboard = () => {
-  const { user } = useMockAuth();
-  const [vehicleRows, setVehicleRows] = useState(vehicles);
-  const [notice, setNotice] = useState("");
+  const dispatch = useDispatch();
+  const { user: mockUser } = useMockAuth();
+  const { user: authUser } = useSelector((state) => state.auth);
+  const user = authUser || mockUser;
+  const { users, loading: usersLoading, error: usersError } = useSelector((state) => state.adminUsers);
+  const { vehicles, notice } = useSelector((state) => state.parking);
 
-  const updateVehicle = (id, status) => {
-    setVehicleRows((rows) => rows.map((vehicle) => (vehicle.id === id ? { ...vehicle, status } : vehicle)));
-    setNotice(status === "APPROVED" ? "Đã duyệt xe thành công." : "Đã từ chối xe và ghi chú cho cư dân.");
-    setTimeout(() => setNotice(""), 2400);
-  };
+  useEffect(() => {
+    dispatch(fetchAdminUsersRequest({ limit: 100 }));
+    dispatch(fetchAllVehiclesRequest());
+  }, [dispatch]);
 
-  const pendingVehicles = vehicleRows.filter((vehicle) => vehicle.status === "PENDING");
+  const pendingVehicles = useMemo(
+    () => vehicles.all.filter((vehicle) => vehicle.status === "PENDING"),
+    [vehicles.all]
+  );
 
   const userColumns = [
     { header: "Người dùng", key: "name" },
@@ -40,9 +51,9 @@ const AdminDashboard = () => {
 
   const vehicleColumns = [
     { header: "Biển số", key: "plateNumber" },
-    { header: "Chủ xe", key: "owner" },
+    { header: "Chủ xe", key: "ownerName", render: (row) => row.ownerName || row.owner || "-" },
     { header: "Loại", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
-    { header: "Xe", key: "brand", render: (row) => `${row.brand} - ${row.color}` },
+    { header: "Xe", key: "brand", render: (row) => `${row.brand || "-"} - ${row.color || "-"}` },
     {
       header: "Duyệt",
       key: "status",
@@ -54,10 +65,23 @@ const AdminDashboard = () => {
       render: (row) =>
         row.status === "PENDING" ? (
           <div className="action-row">
-            <Button size="sm" variant="primary" icon={CheckCircle} onClick={() => updateVehicle(row.id, "APPROVED")}>
+            <Button
+              size="sm"
+              variant="primary"
+              icon={CheckCircle}
+              loading={vehicles.updatingId === row.id}
+              disabled={vehicles.updatingId === row.id || row.status === "APPROVED"}
+              onClick={() => dispatch(approveVehicleRequest({ id: row.id, vehicle: row }))}
+            >
               Duyệt
             </Button>
-            <Button size="sm" variant="outline" icon={X} onClick={() => updateVehicle(row.id, "REJECTED")}>
+            <Button
+              size="sm"
+              variant="outline"
+              icon={X}
+              disabled={vehicles.updatingId === row.id || row.status === "REJECTED"}
+              onClick={() => dispatch(rejectVehicleRequest({ id: row.id, vehicle: row }))}
+            >
               Từ chối
             </Button>
           </div>
@@ -74,7 +98,7 @@ const AdminDashboard = () => {
           <div className="page-eyebrow"><ShieldCheck size={16} /> Quản trị viên</div>
           <h1 className="page-title">Duyệt xe, kiểm soát tài khoản và phân quyền</h1>
           <p className="page-subtitle">
-            Xin chào {user.name}. Quản trị viên đảm bảo xe được duyệt trước khi cư dân mua gói tháng hoặc dùng QR hợp lệ.
+            Xin chào {user?.name || "quản trị viên"}. Các bảng bên dưới lấy trực tiếp từ hệ thống.
           </p>
         </div>
         <div className="page-hero-aside">
@@ -84,20 +108,20 @@ const AdminDashboard = () => {
         </div>
       </section>
 
-      {notice && <div className="card soft-panel"><strong>{notice}</strong></div>}
+      <StatusBanner success={notice} errors={[vehicles.error, usersError]} />
 
       <div className="dashboard-grid">
         <div className="card metric-card">
           <div className="metric-icon"><UserCog size={22} /></div>
           <div className="metric-label">Tài khoản</div>
           <div className="metric-value">{users.length}</div>
-          <div className="metric-note">Cư dân, nhân viên, quản lý và quản trị viên</div>
+          <div className="metric-note">Đang lấy từ danh sách tài khoản</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><CarIcon /></div>
           <div className="metric-label">Phương tiện</div>
-          <div className="metric-value">{vehicleRows.length}</div>
-          <div className="metric-note">{vehicleRows.filter((v) => v.status === "APPROVED").length} xe đã duyệt</div>
+          <div className="metric-value">{vehicles.all.length}</div>
+          <div className="metric-note">{vehicles.all.filter((v) => v.status === "APPROVED").length} xe đã duyệt</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><UserCheck size={22} /></div>
@@ -114,7 +138,7 @@ const AdminDashboard = () => {
             <p className="section-copy">Sau khi duyệt, cư dân mới mua gói tháng hoặc dùng QR hợp lệ cho xe đó.</p>
           </div>
         </div>
-        <Table columns={vehicleColumns} data={vehicleRows} />
+        <Table columns={vehicleColumns} data={vehicles.all} loading={vehicles.loading} />
       </section>
 
       <section className="card section-card">
@@ -124,7 +148,7 @@ const AdminDashboard = () => {
             <p className="section-copy">Theo dõi quyền sử dụng của từng nhóm người trong hệ thống.</p>
           </div>
         </div>
-        <Table columns={userColumns} data={users} />
+        <Table columns={userColumns} data={users} loading={usersLoading} />
       </section>
     </div>
   );

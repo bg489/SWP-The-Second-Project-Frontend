@@ -1,16 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-    RefreshCcw,
-    Search,
-    ShieldCheck,
-    UserCheck,
-    UserX,
-} from "lucide-react";
+import { RefreshCcw, Search, ShieldCheck, UserCheck, UserX } from "lucide-react";
 
 import Button from "../../../components/Button/Button";
+import StatusBanner from "../../../components/Feedback/StatusBanner";
 import FormField from "../../../components/Form/FormField";
 import Input from "../../../components/Form/Input";
+import Table from "../../../components/Table/Table";
 import {
     clearAdminUserNotice,
     fetchAdminUsersRequest,
@@ -48,7 +44,6 @@ const statusTone = {
 
 const AdminUserApprovalPage = () => {
     const dispatch = useDispatch();
-
     const {
         users,
         pagination,
@@ -64,18 +59,18 @@ const AdminUserApprovalPage = () => {
         status: "PENDING",
         role: "",
         page: 1,
-        limit: 20,
+        limit: 10,
     });
-
     const [roleDrafts, setRoleDrafts] = useState({});
 
-    const pendingCount = useMemo(() => {
-        return users.filter((user) => user.status === "PENDING").length;
-    }, [users]);
-
-    const activeCount = useMemo(() => {
-        return users.filter((user) => user.status === "ACTIVE").length;
-    }, [users]);
+    const pendingCount = useMemo(
+        () => users.filter((user) => user.status === "PENDING").length,
+        [users]
+    );
+    const activeCount = useMemo(
+        () => users.filter((user) => user.status === "ACTIVE").length,
+        [users]
+    );
 
     const fetchUsers = (nextFilters = filters) => {
         dispatch(
@@ -103,7 +98,6 @@ const AdminUserApprovalPage = () => {
 
     const updateFilter = (field, value) => {
         dispatch(clearAdminUserNotice());
-
         setFilters((prev) => ({
             ...prev,
             [field]: value,
@@ -114,15 +108,19 @@ const AdminUserApprovalPage = () => {
     const handleSearch = (event) => {
         event.preventDefault();
         dispatch(clearAdminUserNotice());
-        fetchUsers({
-            ...filters,
-            page: 1,
-        });
+        setFilters((prev) => ({ ...prev, page: 1 }));
     };
 
     const handleRefresh = () => {
         dispatch(clearAdminUserNotice());
         fetchUsers();
+    };
+
+    const handlePageChange = (page) => {
+        setFilters((prev) => ({
+            ...prev,
+            page: Math.max(1, page),
+        }));
     };
 
     const handleRoleDraftChange = (userId, role) => {
@@ -162,6 +160,108 @@ const AdminUserApprovalPage = () => {
         );
     };
 
+    const columns = [
+        { header: "Mã", key: "id", render: (user) => `#${user.id}` },
+        {
+            header: "Người dùng",
+            key: "name",
+            render: (user) => (
+                <>
+                    <strong>{user.name}</strong>
+                    <br />
+                    <span className="metric-note">{user.buildingName || "Chưa gán tòa nhà"}</span>
+                </>
+            ),
+        },
+        {
+            header: "Liên hệ",
+            key: "email",
+            render: (user) => (
+                <>
+                    <span>{user.email}</span>
+                    <br />
+                    <span className="metric-note">{user.phone || "Chưa có SĐT"}</span>
+                </>
+            ),
+        },
+        {
+            header: "Quyền sử dụng",
+            key: "role",
+            render: (user) => (
+                <select
+                    className="form-input"
+                    value={roleDrafts[user.id] || user.role || "USER"}
+                    onChange={(event) => handleRoleDraftChange(user.id, event.target.value)}
+                    disabled={updatingId === user.id || user.status === "ACTIVE"}
+                >
+                    {roleOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                            {option.label}
+                        </option>
+                    ))}
+                </select>
+            ),
+        },
+        {
+            header: "Trạng thái",
+            key: "status",
+            render: (user) => (
+                <span className={`pill ${statusTone[user.status] || "neutral"}`}>
+                    {statusLabels[user.status] || user.status}
+                </span>
+            ),
+        },
+        {
+            header: "Ngày tạo",
+            key: "createdAt",
+            render: (user) => (user.createdAt ? new Date(user.createdAt).toLocaleDateString("vi-VN") : "-"),
+        },
+        {
+            header: "Thao tác",
+            key: "actions",
+            render: (user) => (
+                <div className="action-row">
+                    <Button
+                        type="button"
+                        size="sm"
+                        icon={UserCheck}
+                        loading={updatingId === user.id}
+                        disabled={updatingId === user.id || user.status === "ACTIVE"}
+                        onClick={() => approveUser(user)}
+                    >
+                        Duyệt
+                    </Button>
+
+                    {user.status !== "INACTIVE" && user.status !== "ACTIVE" && (
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            icon={UserX}
+                            disabled={updatingId === user.id}
+                            onClick={() => rejectUser(user)}
+                        >
+                            Từ chối
+                        </Button>
+                    )}
+
+                    {user.status === "ACTIVE" && (
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="danger"
+                            icon={UserX}
+                            disabled={updatingId === user.id}
+                            onClick={() => lockUser(user)}
+                        >
+                            Khóa
+                        </Button>
+                    )}
+                </div>
+            ),
+        },
+    ];
+
     return (
         <div className="parking-page">
             <section className="page-hero">
@@ -169,9 +269,7 @@ const AdminUserApprovalPage = () => {
                     <div className="page-eyebrow">
                         <ShieldCheck size={16} /> Duyệt tài khoản
                     </div>
-
                     <h1 className="page-title">Duyệt tài khoản đăng ký</h1>
-
                     <p className="page-subtitle">
                         Tài khoản mới cần được quản trị viên duyệt trước khi đăng nhập và sử dụng hệ thống.
                     </p>
@@ -197,13 +295,11 @@ const AdminUserApprovalPage = () => {
                     <div className="metric-value">{users.length}</div>
                     <div className="metric-note">Tài khoản theo bộ lọc hiện tại</div>
                 </div>
-
                 <div className="metric-card">
                     <div className="metric-label">Chờ duyệt</div>
                     <div className="metric-value">{pendingCount}</div>
                     <div className="metric-note">Cần quản trị viên kiểm tra</div>
                 </div>
-
                 <div className="metric-card">
                     <div className="metric-label">Đã duyệt</div>
                     <div className="metric-value">{activeCount}</div>
@@ -274,17 +370,7 @@ const AdminUserApprovalPage = () => {
                 </form>
             </section>
 
-            {(error || updateError || updateSuccess) && (
-                <section className="section-card card">
-                    {error && <p style={{ color: "var(--danger)" }}>{error}</p>}
-                    {updateError && (
-                        <p style={{ color: "var(--danger)" }}>{updateError}</p>
-                    )}
-                    {updateSuccess && (
-                        <p style={{ color: "var(--success)" }}>{updateSuccess}</p>
-                    )}
-                </section>
-            )}
+            <StatusBanner success={updateSuccess} errors={[error, updateError]} />
 
             <section className="section-card card">
                 <div className="section-header">
@@ -296,138 +382,22 @@ const AdminUserApprovalPage = () => {
                     </div>
                 </div>
 
-                <div className="table-wrapper">
-                    <table className="custom-table">
-                        <thead>
-                            <tr>
-                                <th>Mã</th>
-                                <th>Người dùng</th>
-                                <th>Liên hệ</th>
-                                <th>Quyền sử dụng</th>
-                                <th>Trạng thái</th>
-                                <th>Ngày tạo</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {loading && (
-                                <tr>
-                                    <td colSpan="7">Đang tải danh sách tài khoản...</td>
-                                </tr>
-                            )}
-
-                            {!loading && users.length === 0 && (
-                                <tr>
-                                    <td colSpan="7">Không có tài khoản phù hợp.</td>
-                                </tr>
-                            )}
-
-                            {!loading &&
-                                users.map((user) => (
-                                    <tr key={user.id}>
-                                        <td>#{user.id}</td>
-
-                                        <td>
-                                            <strong>{user.name}</strong>
-                                            <br />
-                                            <span className="metric-note">
-                                                {user.buildingName || "Chưa gán tòa nhà"}
-                                            </span>
-                                        </td>
-
-                                        <td>
-                                            <span>{user.email}</span>
-                                            <br />
-                                            <span className="metric-note">
-                                                {user.phone || "Chưa có SĐT"}
-                                            </span>
-                                        </td>
-
-                                        <td>
-                                            <select
-                                                className="form-input"
-                                                value={roleDrafts[user.id] || user.role || "USER"}
-                                                onChange={(event) =>
-                                                    handleRoleDraftChange(user.id, event.target.value)
-                                                }
-                                                disabled={updatingId === user.id}
-                                            >
-                                                {roleOptions.map((option) => (
-                                                    <option key={option.value} value={option.value}>
-                                                        {option.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </td>
-
-                                        <td>
-                                            <span
-                                                className={`status-pill ${statusTone[user.status] || "muted"
-                                                    }`}
-                                            >
-                                                {statusLabels[user.status] || user.status}
-                                            </span>
-                                        </td>
-
-                                        <td>
-                                            {user.createdAt
-                                                ? new Date(user.createdAt).toLocaleDateString("vi-VN")
-                                                : "-"}
-                                        </td>
-
-                                        <td>
-                                            <div className="action-row">
-                                                <Button
-                                                    type="button"
-                                                    size="sm"
-                                                    icon={UserCheck}
-                                                    loading={updatingId === user.id}
-                                                    disabled={updatingId === user.id}
-                                                    onClick={() => approveUser(user)}
-                                                >
-                                                    Duyệt
-                                                </Button>
-
-                                                {user.status !== "INACTIVE" && (
-                                                    <Button
-                                                        type="button"
-                                                        size="sm"
-                                                        variant="outline"
-                                                        icon={UserX}
-                                                        disabled={updatingId === user.id}
-                                                        onClick={() => rejectUser(user)}
-                                                    >
-                                                        Từ chối
-                                                    </Button>
-                                                )}
-
-                                                {user.status === "ACTIVE" && (
-                                                    <Button
-                                                        type="button"
-                                                        size="sm"
-                                                        variant="danger"
-                                                        icon={UserX}
-                                                        disabled={updatingId === user.id}
-                                                        onClick={() => lockUser(user)}
-                                                    >
-                                                        Khóa
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {pagination && (
-                    <div className="section-copy" style={{ marginTop: 14 }}>
-                        Trang {pagination.page}/{pagination.totalPages || 1} — Tổng{" "}
-                        {pagination.total} tài khoản
-                    </div>
-                )}
+                <Table
+                    columns={columns}
+                    data={users}
+                    loading={loading}
+                    emptyMessage="Không có tài khoản phù hợp."
+                    pagination={
+                        pagination
+                            ? {
+                                currentPage: Number(pagination.page || filters.page || 1),
+                                totalPages: Number(pagination.totalPages || 1),
+                                totalItems: Number(pagination.total || users.length),
+                                onPageChange: handlePageChange,
+                            }
+                            : null
+                    }
+                />
             </section>
         </div>
     );

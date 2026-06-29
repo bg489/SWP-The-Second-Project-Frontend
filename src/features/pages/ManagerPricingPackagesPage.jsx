@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { BadgeDollarSign, CalendarDays, CreditCard, Plus, RefreshCcw, Save, XCircle } from "lucide-react";
 
 import Button from "../../components/Button/Button";
+import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import Select from "../../components/Form/Select";
@@ -165,13 +166,7 @@ const ManagerPricingPackagesPage = () => {
         </div>
       </section>
 
-      {(notice || pricingPolicies.error || packagePlans.error) && (
-        <section className="card soft-panel">
-          {notice && <span className="pill success">{notice}</span>}
-          {pricingPolicies.error && <p style={{ color: "var(--danger)" }}>{pricingPolicies.error}</p>}
-          {packagePlans.error && <p style={{ color: "var(--danger)" }}>{packagePlans.error}</p>}
-        </section>
-      )}
+      <StatusBanner success={notice} errors={[pricingPolicies.error, packagePlans.error]} />
 
       <div className="two-column-grid">
         <section className="card section-card">

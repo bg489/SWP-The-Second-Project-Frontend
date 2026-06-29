@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Maximize2, QrCode, RefreshCcw, Save, ShieldAlert, X } from "lucide-react";
 
 import Button from "../../components/Button/Button";
+import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import QrCodeImage from "../../components/QrCode/QrCodeImage";
@@ -162,12 +163,7 @@ const TempQrCardsPage = () => {
         </div>
       </section>
 
-      {(notice || tempQrCards.error) && (
-        <section className="card soft-panel">
-          {notice && <span className="pill success">{notice}</span>}
-          {tempQrCards.error && <p style={{ color: "var(--danger)" }}>{tempQrCards.error}</p>}
-        </section>
-      )}
+      <StatusBanner success={notice} errors={tempQrCards.error} />
 
       <div className={canCreate ? "two-column-grid" : "dashboard-grid"}>
         {canCreate && (

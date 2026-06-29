@@ -58,6 +58,9 @@ import {
     fetchActiveParkingSessionsFailure,
     fetchActiveParkingSessionsRequest,
     fetchActiveParkingSessionsSuccess,
+    fetchMyActiveParkingSessionsFailure,
+    fetchMyActiveParkingSessionsRequest,
+    fetchMyActiveParkingSessionsSuccess,
     fetchAllVehiclesFailure,
     fetchAllVehiclesRequest,
     fetchAllVehiclesSuccess,
@@ -317,7 +320,7 @@ function* handleApproveVehicle(action) {
         const { id } = action.payload;
         const response = yield call([api, api.patch], `/vehicles/${id}/approve`);
         yield put(approveVehicleSuccess(extractData(response)));
-        yield put(fetchAllVehiclesRequest({ status: "PENDING" }));
+        yield put(fetchAllVehiclesRequest());
     } catch (error) {
         if (shouldUseSample(error)) {
             yield put(approveVehicleSuccess({ ...action.payload.vehicle, status: "APPROVED" }));
@@ -333,7 +336,7 @@ function* handleRejectVehicle(action) {
         const { id } = action.payload;
         const response = yield call([api, api.patch], `/vehicles/${id}/reject`);
         yield put(rejectVehicleSuccess(extractData(response)));
-        yield put(fetchAllVehiclesRequest({ status: "PENDING" }));
+        yield put(fetchAllVehiclesRequest());
     } catch (error) {
         if (shouldUseSample(error)) {
             yield put(rejectVehicleSuccess({ ...action.payload.vehicle, status: "REJECTED" }));
@@ -743,6 +746,27 @@ function* handleFetchActiveParkingSessions(action) {
     }
 }
 
+function* handleFetchMyActiveParkingSessions() {
+    try {
+        const response = yield call([api, api.get], "/parking-sessions/my-active");
+        yield put(fetchMyActiveParkingSessionsSuccess(extractList(response, ["parkingSessions", "sessions"])));
+    } catch (error) {
+        if (shouldUseSample(error)) {
+            yield put(
+                fetchMyActiveParkingSessionsSuccess(
+                    parkingSessions.filter((session) =>
+                        session.userId === 1 &&
+                        ["ACTIVE", "PENDING_PAYMENT"].includes(session.status)
+                    )
+                )
+            );
+            return;
+        }
+
+        yield put(fetchMyActiveParkingSessionsFailure(getErrorMessage(error, "Không lấy được xe đang gửi của bạn.")));
+    }
+}
+
 function* handleCheckIn(action) {
     try {
         const response = yield call([api, api.post], "/parking-sessions/check-in", action.payload);
@@ -774,8 +798,10 @@ function* handleCheckOut(action) {
     try {
         const { id, ...payload } = action.payload;
         const response = yield call([api, api.post], `/parking-sessions/${id}/check-out`, payload);
-        yield put(checkOutSuccess(extractData(response)));
+        const data = extractData(response);
+        yield put(checkOutSuccess(data));
         yield put(fetchActiveParkingSessionsRequest());
+        yield call(redirectToPayment, extractPaymentUrl(data));
     } catch (error) {
         if (shouldUseSample(error)) {
             yield put(
@@ -797,8 +823,10 @@ function* handleCheckOut(action) {
 function* handleCheckOutByQr(action) {
     try {
         const response = yield call([api, api.post], "/parking-sessions/check-out-by-qr", action.payload);
-        yield put(checkOutByQrSuccess(extractData(response)));
+        const data = extractData(response);
+        yield put(checkOutByQrSuccess(data));
         yield put(fetchActiveParkingSessionsRequest());
+        yield call(redirectToPayment, extractPaymentUrl(data));
     } catch (error) {
         if (shouldUseSample(error)) {
             yield put(
@@ -998,6 +1026,7 @@ export default function* parkingSaga() {
     yield takeEvery(createSlotRegistrationRequest.type, handleCreateSlotRegistration);
 
     yield takeLatest(fetchActiveParkingSessionsRequest.type, handleFetchActiveParkingSessions);
+    yield takeLatest(fetchMyActiveParkingSessionsRequest.type, handleFetchMyActiveParkingSessions);
     yield takeEvery(checkInRequest.type, handleCheckIn);
     yield takeEvery(checkOutRequest.type, handleCheckOut);
     yield takeEvery(checkOutByQrRequest.type, handleCheckOutByQr);

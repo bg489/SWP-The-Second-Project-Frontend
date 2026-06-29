@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Calendar, CreditCard, QrCode, ShieldCheck, X } from "lucide-react";
 
 import Button from "../../components/Button/Button";
+import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import QrCodeImage from "../../components/QrCode/QrCodeImage";
 import Select from "../../components/Form/Select";
@@ -170,24 +171,20 @@ const MyQRPassPage = () => {
         </div>
       </section>
 
-      {(notice || paymentReturn || packagePlans.error || monthlyPasses.error || qrPasses.error || slotRegistrations.error) && (
-        <section className="card soft-panel">
-          {notice && <span className="pill success">{notice}</span>}
-          {paymentReturn && (
-            <div className="data-list">
-              <span className={`pill ${paymentReturn.tone}`}>{paymentReturn.message}</span>
-              {paymentReturn.transactionRef && (
-                <p className="section-copy">Mã giao dịch: {paymentReturn.transactionRef}</p>
-              )}
-            </div>
-          )}
-          {packagePlans.error && <p style={{ color: "var(--danger)" }}>{packagePlans.error}</p>}
-          {monthlyPasses.error && <p style={{ color: "var(--danger)" }}>{monthlyPasses.error}</p>}
-          {qrPasses.error && <p style={{ color: "var(--danger)" }}>{qrPasses.error}</p>}
-          {slotRegistrations.error && <p style={{ color: "var(--danger)" }}>{slotRegistrations.error}</p>}
-        </section>
-      )}
-
+      <StatusBanner
+        success={[
+          notice,
+          paymentReturn?.tone === "success" ? paymentReturn.message : null,
+        ]}
+        warning={paymentReturn?.tone === "warning" ? paymentReturn.message : null}
+        info={paymentReturn?.transactionRef ? `Mã giao dịch: ${paymentReturn.transactionRef}` : null}
+        errors={[
+          packagePlans.error,
+          monthlyPasses.error,
+          qrPasses.error,
+          slotRegistrations.error,
+        ]}
+      />
       {selectedPass && (
         <section className="card section-card animate-fade-in qr-follow-card">
           <div className="section-header">

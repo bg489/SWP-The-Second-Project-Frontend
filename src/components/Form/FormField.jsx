@@ -19,7 +19,13 @@ const FormField = ({
       <div className="form-control-wrapper">
         {React.Children.map(children, (child) => {
           if (React.isValidElement(child)) {
-            return React.cloneElement(child, { error: !!error });
+            if (typeof child.type === "string") {
+              return React.cloneElement(child, {
+                "aria-invalid": error ? true : undefined,
+              });
+            }
+
+            return React.cloneElement(child, { error: error ? true : undefined });
           }
           return child;
         })}

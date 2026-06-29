@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Building2,
-  CheckCircle,
   Edit2,
   Layers,
   Plus,
@@ -12,8 +11,10 @@ import {
 } from "lucide-react";
 
 import Button from "../../components/Button/Button";
+import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
+import Table from "../../components/Table/Table";
 import { fetchBuildingsRequest } from "../backend/buildings/buildingSlice";
 import {
   clearFloorNotice,
@@ -47,13 +48,42 @@ const emptyForm = {
   operationNote: "",
 };
 
+const normalizeText = (value) =>
+  String(value ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+const getFloorType = (floor) => floor.floorType || floor.floor_type;
+const getBuildingId = (floor) => floor.buildingId || floor.building_id;
+
+const getFloorSearchValue = (floor, column) => {
+  const floorType = getFloorType(floor);
+  const capacityOrSlot =
+    floorType === "MOTORBIKE"
+      ? `${floor.capacity || 0} xe máy`
+      : `${floor.slotCount || floor.slot_count || 0} ô đỗ ô tô`;
+
+  const values = {
+    id: floor.id,
+    name: floor.name,
+    buildingName: floor.buildingName || floor.building_name,
+    floorType: floorTypeLabels[floorType] || floorType,
+    capacityOrSlot,
+    status: statusLabels[floor.status] || floor.status,
+    note: floor.operationNote || floor.operation_note || floor.note,
+  };
+
+  if (column === "all") {
+    return Object.values(values).join(" ");
+  }
+
+  return values[column] ?? "";
+};
+
 const FloorManagementPage = () => {
   const dispatch = useDispatch();
-
   const formSectionRef = useRef(null);
-  const PAGE_SIZE = 5;
-
-  const [floorPage, setFloorPage] = useState(1);
 
   const { buildings, loading: buildingsLoading } = useSelector(
     (state) => state.buildings
@@ -74,13 +104,6 @@ const FloorManagementPage = () => {
   const [form, setForm] = useState(emptyForm);
   const [formErrors, setFormErrors] = useState({});
   const [selectedCarFloorId, setSelectedCarFloorId] = useState(null);
-
-  const isEditing = Boolean(editingId);
-
-  const selectedCarFloor = useMemo(() => {
-    return floors.find((floor) => Number(floor.id) === Number(selectedCarFloorId));
-  }, [floors, selectedCarFloorId]);
-
   const [filters, setFilters] = useState({
     searchText: "",
     searchColumn: "all",
@@ -89,82 +112,39 @@ const FloorManagementPage = () => {
     status: "",
   });
 
+  const isEditing = Boolean(editingId);
+
+  const selectedCarFloor = useMemo(() => {
+    return floors.find((floor) => Number(floor.id) === Number(selectedCarFloorId));
+  }, [floors, selectedCarFloorId]);
+
   const motorbikeCount = useMemo(
-    () => floors.filter((floor) => floor.floorType === "MOTORBIKE").length,
+    () => floors.filter((floor) => getFloorType(floor) === "MOTORBIKE").length,
     [floors]
   );
 
   const carCount = useMemo(
-    () => floors.filter((floor) => floor.floorType === "CAR").length,
+    () => floors.filter((floor) => getFloorType(floor) === "CAR").length,
     [floors]
   );
-
-  const normalizeText = (value) => {
-    return String(value ?? "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-  };
-
-  const getFloorSearchValue = (floor, column) => {
-    const floorType = floor.floorType || floor.floor_type;
-    const capacityOrSlot =
-      floorType === "MOTORBIKE"
-        ? `${floor.capacity || 0} xe máy`
-        : `${floor.slotCount || floor.slot_count || 0} ô đỗ ô tô`;
-
-    const values = {
-      id: floor.id,
-      name: floor.name,
-      buildingName: floor.buildingName || floor.building_name,
-      floorType: floorTypeLabels[floorType] || floorType,
-      capacityOrSlot,
-      status: statusLabels[floor.status] || floor.status,
-      note: floor.operationNote || floor.operation_note || floor.note,
-    };
-
-    if (column === "all") {
-      return Object.values(values).join(" ");
-    }
-
-    return values[column] ?? "";
-  };
 
   const filteredFloors = useMemo(() => {
     const search = normalizeText(filters.searchText);
 
     return floors.filter((floor) => {
-      const floorType = floor.floorType || floor.floor_type;
-      const buildingId = floor.buildingId || floor.building_id;
-
+      const floorType = getFloorType(floor);
+      const buildingId = getBuildingId(floor);
       const matchSearch =
         !search ||
-        normalizeText(getFloorSearchValue(floor, filters.searchColumn)).includes(
-          search
-        );
-
+        normalizeText(getFloorSearchValue(floor, filters.searchColumn)).includes(search);
       const matchBuilding =
-        !filters.buildingId ||
-        Number(buildingId) === Number(filters.buildingId);
-
+        !filters.buildingId || Number(buildingId) === Number(filters.buildingId);
       const matchType = !filters.floorType || floorType === filters.floorType;
-
       const matchStatus = !filters.status || floor.status === filters.status;
 
       return matchSearch && matchBuilding && matchType && matchStatus;
     });
   }, [floors, filters]);
-
-  const totalFloorPages = Math.max(
-    1,
-    Math.ceil(filteredFloors.length / PAGE_SIZE)
-  );
-  const currentFloorPage = Math.min(floorPage, totalFloorPages);
-
-  const paginatedFloors = useMemo(() => {
-    const startIndex = (currentFloorPage - 1) * PAGE_SIZE;
-    return filteredFloors.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [currentFloorPage, filteredFloors]);
 
   const scrollToForm = () => {
     setTimeout(() => {
@@ -199,8 +179,6 @@ const FloorManagementPage = () => {
       ...prev,
       [field]: value,
     }));
-
-    setFloorPage(1);
   };
 
   const validateForm = () => {
@@ -214,16 +192,12 @@ const FloorManagementPage = () => {
       nextErrors.name = "Vui lòng nhập tên tầng.";
     }
 
-    if (form.floorType === "MOTORBIKE") {
-      if (!form.capacity || Number(form.capacity) <= 0) {
-        nextErrors.capacity = "Tầng xe máy cần sức chứa lớn hơn 0.";
-      }
+    if (form.floorType === "MOTORBIKE" && (!form.capacity || Number(form.capacity) <= 0)) {
+      nextErrors.capacity = "Tầng xe máy cần sức chứa lớn hơn 0.";
     }
 
-    if (form.floorType === "CAR" && !isEditing) {
-      if (!form.slotCount || Number(form.slotCount) <= 0) {
-        nextErrors.slotCount = "Tầng ô tô cần số lượng ô lớn hơn 0.";
-      }
+    if (form.floorType === "CAR" && !isEditing && (!form.slotCount || Number(form.slotCount) <= 0)) {
+      nextErrors.slotCount = "Tầng ô tô cần số lượng ô lớn hơn 0.";
     }
 
     setFormErrors(nextErrors);
@@ -294,13 +268,11 @@ const FloorManagementPage = () => {
 
   const startEdit = (floor) => {
     dispatch(clearFloorNotice());
-
     setEditingId(floor.id);
-
     setForm({
-      buildingId: String(floor.buildingId || floor.building_id || ""),
+      buildingId: String(getBuildingId(floor) || ""),
       name: floor.name || "",
-      floorType: floor.floorType || floor.floor_type || "MOTORBIKE",
+      floorType: getFloorType(floor) || "MOTORBIKE",
       capacity: floor.capacity ? String(floor.capacity) : "",
       slotCount: floor.slotCount ? String(floor.slotCount) : "",
       slotsText: "",
@@ -308,9 +280,7 @@ const FloorManagementPage = () => {
       operationNote: floor.operationNote || floor.operation_note || "",
     });
 
-    const floorType = floor.floorType || floor.floor_type;
-
-    if (floorType === "CAR") {
+    if (getFloorType(floor) === "CAR") {
       setSelectedCarFloorId(floor.id);
     } else {
       setSelectedCarFloorId(null);
@@ -332,6 +302,65 @@ const FloorManagementPage = () => {
     dispatch(fetchFloorsRequest());
   };
 
+  const columns = [
+    { header: "Mã", key: "id", render: (floor) => `#${floor.id}` },
+    { header: "Tên tầng", key: "name", render: (floor) => <strong>{floor.name}</strong> },
+    { header: "Tòa nhà", key: "buildingName", render: (floor) => floor.buildingName || floor.building_name || "-" },
+    {
+      header: "Loại",
+      key: "floorType",
+      render: (floor) => floorTypeLabels[getFloorType(floor)] || getFloorType(floor),
+    },
+    {
+      header: "Sức chứa / Ô đỗ",
+      key: "capacity",
+      render: (floor) =>
+        getFloorType(floor) === "MOTORBIKE"
+          ? `${floor.capacity || 0} xe máy`
+          : `${floor.slotCount || floor.slot_count || 0} ô tô`,
+    },
+    {
+      header: "Trạng thái",
+      key: "status",
+      render: (floor) => statusLabels[floor.status] || floor.status || "-",
+    },
+    {
+      header: "Ghi chú",
+      key: "operationNote",
+      render: (floor) => floor.operationNote || floor.operation_note || "-",
+    },
+    {
+      header: "Thao tác",
+      key: "actions",
+      render: (floor) => (
+        <div className="action-row">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            icon={Edit2}
+            disabled={Boolean(updatingId) || Boolean(deletingId)}
+            onClick={() => startEdit(floor)}
+          >
+            Sửa
+          </Button>
+
+          <Button
+            type="button"
+            size="sm"
+            variant="danger"
+            icon={Trash2}
+            loading={deletingId === floor.id}
+            disabled={Boolean(deletingId)}
+            onClick={() => handleDelete(floor)}
+          >
+            Xóa
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="parking-page">
       <section className="page-hero">
@@ -343,8 +372,7 @@ const FloorManagementPage = () => {
           <h1 className="page-title">Quản lý tầng xe máy & ô tô</h1>
 
           <p className="page-subtitle">
-            Quản lý có thể thêm, sửa, xóa tầng xe máy và tầng ô tô theo từng tòa
-            nhà.
+            Quản lý có thể thêm, sửa, xóa tầng xe máy và tầng ô tô theo từng tòa nhà.
           </p>
         </div>
 
@@ -357,21 +385,7 @@ const FloorManagementPage = () => {
         </div>
       </section>
 
-      {(mutationSuccess || mutationError || error) && (
-        <section className="card soft-panel">
-          {mutationSuccess && (
-            <span className="pill success">
-              <CheckCircle size={14} /> {mutationSuccess}
-            </span>
-          )}
-
-          {mutationError && (
-            <p style={{ color: "var(--danger)" }}>{mutationError}</p>
-          )}
-
-          {error && <p style={{ color: "var(--danger)" }}>{error}</p>}
-        </section>
-      )}
+      <StatusBanner success={mutationSuccess} errors={[mutationError, error]} />
 
       <section ref={formSectionRef} className="card section-card">
         <div className="section-header">
@@ -449,9 +463,7 @@ const FloorManagementPage = () => {
                   min="1"
                   placeholder="Ví dụ: 20"
                   value={form.slotCount}
-                  onChange={(event) =>
-                    updateField("slotCount", event.target.value)
-                  }
+                  onChange={(event) => updateField("slotCount", event.target.value)}
                   disabled={creating || Boolean(updatingId)}
                 />
               </FormField>
@@ -462,9 +474,7 @@ const FloorManagementPage = () => {
                   rows="4"
                   placeholder={`Mỗi dòng là 1 mã ô đỗ, ví dụ:\nCAR-A01\nCAR-A02\nCAR-A03`}
                   value={form.slotsText}
-                  onChange={(event) =>
-                    updateField("slotsText", event.target.value)
-                  }
+                  onChange={(event) => updateField("slotsText", event.target.value)}
                   disabled={creating || Boolean(updatingId)}
                 />
               </FormField>
@@ -491,9 +501,7 @@ const FloorManagementPage = () => {
               rows="3"
               placeholder="Ví dụ: Tầng dành cho cư dân block A"
               value={form.operationNote}
-              onChange={(event) =>
-                updateField("operationNote", event.target.value)
-              }
+              onChange={(event) => updateField("operationNote", event.target.value)}
               disabled={creating || Boolean(updatingId)}
             />
           </FormField>
@@ -615,16 +623,15 @@ const FloorManagementPage = () => {
               className="mg-pagination"
               type="button"
               variant="outline"
-              onClick={() => {
+              onClick={() =>
                 setFilters({
                   searchText: "",
                   searchColumn: "all",
                   buildingId: "",
                   floorType: "",
                   status: "",
-                });
-                setFloorPage(1);
-              }}
+                })
+              }
             >
               Xóa lọc
             </Button>
@@ -645,123 +652,12 @@ const FloorManagementPage = () => {
           </div>
         </div>
 
-        <div className="table-wrapper">
-          <table className="custom-table">
-            <thead>
-              <tr>
-                <th>Mã</th>
-                <th>Tên tầng</th>
-                <th>Tòa nhà</th>
-                <th>Loại</th>
-                <th>Sức chứa / Ô đỗ</th>
-                <th>Trạng thái</th>
-                <th>Ghi chú</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan="8">Đang tải danh sách tầng...</td>
-                </tr>
-              )}
-
-              {!loading && filteredFloors.length === 0 && (
-                <tr>
-                  <td colSpan="8">Chưa có tầng nào.</td>
-                </tr>
-              )}
-
-              {!loading &&
-                paginatedFloors.map((floor) => (
-                  <tr key={floor.id}>
-                    <td>#{floor.id}</td>
-
-                    <td>
-                      <strong>{floor.name}</strong>
-                    </td>
-
-                    <td>{floor.buildingName || floor.building_name || "-"}</td>
-
-                    <td>
-                      {floorTypeLabels[floor.floorType || floor.floor_type] ||
-                        floor.floorType ||
-                        floor.floor_type}
-                    </td>
-
-                    <td>
-                      {(floor.floorType || floor.floor_type) === "MOTORBIKE"
-                        ? `${floor.capacity || 0} xe máy`
-                        : `${floor.slotCount || floor.slot_count || 0} ô tô`}
-                    </td>
-
-                    <td>
-                      {statusLabels[floor.status] || floor.status || "-"}
-                    </td>
-
-                    <td>{floor.operationNote || floor.operation_note || "-"}</td>
-
-                    <td>
-                      <div className="action-row">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          icon={Edit2}
-                          disabled={Boolean(updatingId) || Boolean(deletingId)}
-                          onClick={() => startEdit(floor)}
-                        >
-                          Sửa
-                        </Button>
-
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="danger"
-                          icon={Trash2}
-                          loading={deletingId === floor.id}
-                          disabled={Boolean(deletingId)}
-                          onClick={() => handleDelete(floor)}
-                        >
-                          Xóa
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="pagination-bar">
-          <span className="mg-pagination">
-            Trang {currentFloorPage}/{totalFloorPages} • Hiển thị {filteredFloors.length}/{floors.length} tầng
-          </span>
-
-          <div className="action-row mg-pagination">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={currentFloorPage <= 1}
-              onClick={() => setFloorPage((prev) => Math.max(prev - 1, 1))}
-            >
-              Trước
-            </Button>
-
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={currentFloorPage >= totalFloorPages}
-              onClick={() =>
-                setFloorPage((prev) => Math.min(prev + 1, totalFloorPages))
-              }
-            >
-              Sau
-            </Button>
-          </div>
-        </div>
+        <Table
+          columns={columns}
+          data={filteredFloors}
+          loading={loading}
+          emptyMessage="Chưa có tầng nào."
+        />
       </section>
     </div>
   );

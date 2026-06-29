@@ -148,7 +148,13 @@ const initialState = {
         active: parkingSessions.filter((session) =>
             ["ACTIVE", "PENDING_PAYMENT"].includes(session.status)
         ),
+        mine: parkingSessions.filter(
+            (session) =>
+                session.userId === 1 &&
+                ["ACTIVE", "PENDING_PAYMENT"].includes(session.status)
+        ),
         loading: false,
+        myLoading: false,
         checkingIn: false,
         checkingOut: false,
         lastCheckIn: null,
@@ -635,6 +641,19 @@ const parkingSlice = createSlice({
             state.parkingSessions.error = action.payload;
         },
 
+        fetchMyActiveParkingSessionsRequest: (state) => {
+            state.parkingSessions.myLoading = true;
+            state.parkingSessions.error = null;
+        },
+        fetchMyActiveParkingSessionsSuccess: (state, action) => {
+            state.parkingSessions.myLoading = false;
+            state.parkingSessions.mine = action.payload || [];
+        },
+        fetchMyActiveParkingSessionsFailure: (state, action) => {
+            state.parkingSessions.myLoading = false;
+            state.parkingSessions.error = action.payload;
+        },
+
         checkInRequest: (state) => {
             state.parkingSessions.checkingIn = true;
             state.parkingSessions.lastCheckIn = null;
@@ -664,8 +683,12 @@ const parkingSlice = createSlice({
         checkOutSuccess: (state, action) => {
             state.parkingSessions.checkingOut = false;
             state.parkingSessions.checkoutResult = action.payload;
+            const checkedOutSession = action.payload?.session || action.payload;
             state.parkingSessions.active = state.parkingSessions.active.filter(
-                (session) => String(session.id) !== String(action.payload?.id)
+                (session) => String(session.id) !== String(checkedOutSession?.id)
+            );
+            state.parkingSessions.mine = state.parkingSessions.mine.filter(
+                (session) => String(session.id) !== String(checkedOutSession?.id)
             );
             state.notice = "Đã hoàn tất xe ra.";
         },
@@ -683,8 +706,12 @@ const parkingSlice = createSlice({
         checkOutByQrSuccess: (state, action) => {
             state.parkingSessions.checkingOut = false;
             state.parkingSessions.checkoutResult = action.payload;
+            const checkedOutSession = action.payload?.session || action.payload;
             state.parkingSessions.active = state.parkingSessions.active.filter(
-                (session) => String(session.id) !== String(action.payload?.id)
+                (session) => String(session.id) !== String(checkedOutSession?.id)
+            );
+            state.parkingSessions.mine = state.parkingSessions.mine.filter(
+                (session) => String(session.id) !== String(checkedOutSession?.id)
             );
             state.notice = "Đã hoàn tất xe ra.";
         },
@@ -792,6 +819,9 @@ export const {
     fetchActiveParkingSessionsFailure,
     fetchActiveParkingSessionsRequest,
     fetchActiveParkingSessionsSuccess,
+    fetchMyActiveParkingSessionsFailure,
+    fetchMyActiveParkingSessionsRequest,
+    fetchMyActiveParkingSessionsSuccess,
     fetchAllVehiclesFailure,
     fetchAllVehiclesRequest,
     fetchAllVehiclesSuccess,

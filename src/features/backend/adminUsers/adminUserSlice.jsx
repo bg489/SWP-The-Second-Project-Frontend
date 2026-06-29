@@ -44,10 +44,10 @@ const adminUserSlice = createSlice({
             state.updateError = null;
             state.updateSuccess = "Cập nhật tài khoản thành công.";
 
-            const updatedUser = action.payload;
+            const updatedUser = action.payload?.user || action.payload;
 
             state.users = state.users.map((user) =>
-                user.id === updatedUser.id ? updatedUser : user
+                Number(user.id) === Number(updatedUser.id) ? updatedUser : user
             );
         },
 

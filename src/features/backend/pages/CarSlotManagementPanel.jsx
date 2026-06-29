@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
     Car,
-    CheckCircle,
     Plus,
     RefreshCcw,
     Save,
@@ -11,6 +10,7 @@ import {
 } from "lucide-react";
 
 import Button from "../../../components/Button/Button";
+import StatusBanner from "../../../components/Feedback/StatusBanner";
 import FormField from "../../../components/Form/FormField";
 import Input from "../../../components/Form/Input";
 import {
@@ -253,21 +253,7 @@ const CarSlotManagementPanel = ({ floor }) => {
                 </Button>
             </div>
 
-            {(mutationSuccess || mutationError || error) && (
-                <div className="soft-panel" style={{ marginBottom: 16 }}>
-                    {mutationSuccess && (
-                        <span className="pill success">
-                            <CheckCircle size={14} /> {mutationSuccess}
-                        </span>
-                    )}
-
-                    {mutationError && (
-                        <p style={{ color: "var(--danger)" }}>{mutationError}</p>
-                    )}
-
-                    {error && <p style={{ color: "var(--danger)" }}>{error}</p>}
-                </div>
-            )}
+            <StatusBanner success={mutationSuccess} errors={[mutationError, error]} />
 
             <div className="car-slot-manager-grid">
                 <div className="car-slot-map-card">
