@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
 
 import { useMockAuth } from "../../context/MockAuthContext";
@@ -6,13 +5,7 @@ import { roleLabels } from "../../services/mockParkingData";
 import "./Layout.css";
 
 const Header = ({ toggleSidebar, sidebarHidden, toggleSidebarHidden }) => {
-  const { role, roles, user, switchRole, isDarkMode, toggleDarkMode, isAuthenticated } = useMockAuth();
-  const navigate = useNavigate();
-
-  const handleRoleChange = (event) => {
-    const path = switchRole(event.target.value);
-    navigate(path);
-  };
+  const { role, user, isDarkMode, toggleDarkMode, isAuthenticated } = useMockAuth();
 
   return (
     <header className="header-container">
@@ -36,15 +29,9 @@ const Header = ({ toggleSidebar, sidebarHidden, toggleSidebarHidden }) => {
       </div>
 
       <div className="header-right">
-        <div className="role-switcher-widget">
-          <span className="switcher-label">Chế độ xem</span>
-          <select className="role-select-dropdown" value={role} onChange={handleRoleChange}>
-            {roles.map((roleKey) => (
-              <option key={roleKey} value={roleKey}>
-                {roleLabels[roleKey]}
-              </option>
-            ))}
-          </select>
+        <div className="role-switcher-widget role-display-widget" aria-label="Vai trò hiện tại">
+          <span className="switcher-label">Vai trò</span>
+          <span className="role-display-value">{roleLabels[role] || role}</span>
         </div>
 
         <button

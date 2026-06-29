@@ -65,13 +65,6 @@ export const MockAuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   };
 
-  const switchRole = (newRole) => {
-    if (!mockUsersByRole[newRole]) return roleHomePaths[ROLE_KEYS.USER];
-    setRole(newRole);
-    setIsAuthenticated(true);
-    return roleHomePaths[newRole];
-  };
-
   const toggleDarkMode = () => {
     setIsDarkMode((prev) => !prev);
   };
@@ -81,12 +74,10 @@ export const MockAuthProvider = ({ children }) => {
       value={{
         role,
         user,
-        roles: Object.keys(mockUsersByRole),
         isAuthenticated,
         isDarkMode,
         login,
         logout,
-        switchRole,
         toggleDarkMode,
       }}
     >

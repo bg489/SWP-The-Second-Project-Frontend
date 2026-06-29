@@ -16,7 +16,7 @@ const Unauthorized = () => {
         </div>
         <h1 className="section-title" style={{ justifyContent: "center" }}>Bạn chưa có quyền vào trang này</h1>
         <p className="section-copy" style={{ marginTop: 10 }}>
-          Chế độ xem hiện tại là <strong>{roleLabels[role] || role}</strong>. Hãy đổi chế độ xem trên thanh trên cùng hoặc quay lại trang phù hợp.
+          Vai trò hiện tại của bạn là <strong>{roleLabels[role] || role}</strong>. Hãy quay lại trang phù hợp với tài khoản này.
         </p>
         <div style={{ marginTop: 20 }}>
           <Button variant="primary" icon={ArrowLeft} onClick={() => navigate(roleHomePaths[role] || "/login")}>
