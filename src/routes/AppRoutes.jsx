@@ -23,6 +23,7 @@ import FloorManagementPage from "../features/pages/FloorManagementPage";
 import ReportsPage from "../features/pages/ReportsPage";
 import UserProfilePage from "../features/pages/UserProfilePage";
 import ManagerPricingPackagesPage from "../features/pages/ManagerPricingPackagesPage";
+import ManagerMonthlyPassesPage from "../features/pages/ManagerMonthlyPassesPage";
 import TempQrCardsPage from "../features/pages/TempQrCardsPage";
 import StaffViolationsPage from "../features/pages/StaffViolationsPage";
 import AdminVehicleApprovalPage from "../features/pages/AdminVehicleApprovalPage";
@@ -76,6 +77,7 @@ const AppRoutes = () => {
           <Route path="/manager/building" element={<BuildingManagementPage />} />
           <Route path="/manager/floors" element={<FloorManagementPage />} />
           <Route path="/manager/pricing-packages" element={<ManagerPricingPackagesPage />} />
+          <Route path="/manager/monthly-passes" element={<ManagerMonthlyPassesPage />} />
           <Route path="/manager/temp-qr-cards" element={<TempQrCardsPage />} />
           <Route path="/manager/reports" element={<ReportsPage />} />
           <Route path="/manager/violation-types" element={<ManagerViolationTypesPage />} />

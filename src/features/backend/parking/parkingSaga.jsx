@@ -478,9 +478,11 @@ function* handleBuyPackagePlan(action) {
     }
 }
 
-function* handleFetchMonthlyPasses() {
+function* handleFetchMonthlyPasses(action) {
     try {
-        const response = yield call([api, api.get], "/monthly-passes");
+        const response = yield call([api, api.get], "/monthly-passes", {
+            params: action.payload,
+        });
         yield put(fetchMonthlyPassesSuccess(extractList(response, ["monthlyPasses"])));
     } catch (error) {
         if (shouldUseSample(error)) {

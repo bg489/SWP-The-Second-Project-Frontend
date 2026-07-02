@@ -45,6 +45,7 @@ const menus = {
     { path: "/manager/building", label: "Tòa nhà", icon: Building2 },
     { path: "/manager/floors", label: "Tầng & ô đỗ", icon: Layers },
     { path: "/manager/pricing-packages", label: "Bảng giá & gói tháng", icon: BadgeDollarSign },
+    { path: "/manager/monthly-passes", label: "QR gói tháng", icon: QrCode },
     { path: "/manager/temp-qr-cards", label: "QR tạm", icon: QrCode },
     { path: "/manager/reports", label: "Báo cáo", icon: BarChart3 },
     { path: "/manager/violation-types", label: "Cấu hình vi phạm", icon: AlertTriangle }
