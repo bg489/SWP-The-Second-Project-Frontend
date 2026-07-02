@@ -246,6 +246,40 @@
   margin-bottom: 10px;
 }
 
+.slot-preview-panel {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(237, 153, 81, 0.32);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(255, 184, 245, 0.18), rgba(237, 153, 81, 0.13));
+}
+
+.slot-preview-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.slot-preview-pill,
+.slot-preview-more {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(237, 153, 81, 0.35);
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.slot-preview-more {
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
 .data-list {
   display: grid;
   gap: 10px;
@@ -838,7 +872,7 @@ body.dark-theme .login-panel-wrap .section-card {
   box-shadow: 0 0 0 3px rgba(237, 153, 81, 0.22);
 }
 
-.car-slot-card.available.selected {
+.car-slot-card.selected:not(:disabled) {
   z-index: 1;
   border: 2px solid #0fa66b;
   background:
@@ -853,12 +887,12 @@ body.dark-theme .login-panel-wrap .section-card {
   animation: selected-slot-glow 1.35s ease-in-out infinite alternate;
 }
 
-.car-slot-card.available.selected::before {
+.car-slot-card.selected:not(:disabled)::before {
   content: none;
 }
 
-.car-slot-card.available.selected::after {
-  content: "Đang chọn ✓";
+.car-slot-card.selected:not(:disabled)::after {
+  content: "Đang chọn  ✓";
   position: absolute;
   inset: auto 0 0;
   padding: 5px 6px 6px;
@@ -873,7 +907,7 @@ body.dark-theme .login-panel-wrap .section-card {
   text-transform: uppercase;
 }
 
-.car-slot-card.available.selected .car-slot-code {
+.car-slot-card.selected:not(:disabled) .car-slot-code {
   color: #063f2d;
   font-size: 1.05rem;
   max-width: calc(100% - 14px);
@@ -883,7 +917,7 @@ body.dark-theme .login-panel-wrap .section-card {
   white-space: nowrap;
 }
 
-.car-slot-card.available.selected .car-slot-status {
+.car-slot-card.selected:not(:disabled) .car-slot-status {
   margin-bottom: 22px;
   color: #0b7a50;
   font-weight: 900;

@@ -45,7 +45,14 @@ const getPaymentReturnFromUrl = () => {
   };
 };
 
-const getPassQrValue = (pass) => pass?.qrCode || pass?.code || "";
+const normalizePlateQrValue = (value) =>
+  String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[\s.-]/g, "");
+
+const getPassQrValue = (pass) =>
+  normalizePlateQrValue(pass?.plateNumber || pass?.vehiclePlateNumber) || pass?.qrCode || pass?.code || "";
 
 const getPassPackageName = (pass) =>
   pass?.packagePlanName || pass?.packageName || pass?.planName || "Gói tháng";

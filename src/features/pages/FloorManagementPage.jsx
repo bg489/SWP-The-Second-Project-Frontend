@@ -42,10 +42,23 @@ const emptyForm = {
   name: "",
   floorType: "MOTORBIKE",
   capacity: "",
+  slotPrefix: "",
   slotCount: "",
   slotsText: "",
   status: "ACTIVE",
   operationNote: "",
+};
+
+const normalizeSlotPrefixPreview = (value) => {
+  const normalized = String(value || "")
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toUpperCase();
+
+  return normalized || "CAR";
 };
 
 const normalizeText = (value) =>
@@ -146,6 +159,28 @@ const FloorManagementPage = () => {
     });
   }, [floors, filters]);
 
+  const previewSlotCodes = useMemo(() => {
+    if (form.floorType !== "CAR" || isEditing) return [];
+
+    const manualSlots = form.slotsText
+      .split("\n")
+      .map((slot) => slot.trim().toUpperCase())
+      .filter(Boolean);
+
+    if (manualSlots.length > 0) {
+      return manualSlots.slice(0, 12);
+    }
+
+    const count = Math.max(Number(form.slotCount || 0), 0);
+    const previewCount = Math.min(count, 12);
+    const prefix = normalizeSlotPrefixPreview(form.slotPrefix || form.name);
+
+    return Array.from({ length: previewCount }, (_, index) => {
+      const slotNumber = String(index + 1).padStart(2, "0");
+      return `${prefix}-${slotNumber}`;
+    });
+  }, [form.floorType, form.name, form.slotCount, form.slotPrefix, form.slotsText, isEditing]);
+
   const scrollToForm = () => {
     setTimeout(() => {
       formSectionRef.current?.scrollIntoView({
@@ -225,6 +260,10 @@ const FloorManagementPage = () => {
       payload.floorType = "CAR";
       payload.slotCount = Number(form.slotCount);
 
+      if (form.slotPrefix.trim()) {
+        payload.slotPrefix = form.slotPrefix.trim();
+      }
+
       const slots = form.slotsText
         .split("\n")
         .map((slot) => slot.trim())
@@ -274,6 +313,7 @@ const FloorManagementPage = () => {
       name: floor.name || "",
       floorType: getFloorType(floor) || "MOTORBIKE",
       capacity: floor.capacity ? String(floor.capacity) : "",
+      slotPrefix: "",
       slotCount: floor.slotCount ? String(floor.slotCount) : "",
       slotsText: "",
       status: floor.status || "ACTIVE",
@@ -457,6 +497,15 @@ const FloorManagementPage = () => {
 
           {form.floorType === "CAR" && !isEditing && (
             <>
+              <FormField label="Tiền tố mã ô">
+                <Input
+                  placeholder="Ví dụ: B3, C1, TANG-OTO"
+                  value={form.slotPrefix}
+                  onChange={(event) => updateField("slotPrefix", event.target.value.toUpperCase())}
+                  disabled={creating || Boolean(updatingId)}
+                />
+              </FormField>
+
               <FormField label="Số lượng ô tô" required error={formErrors.slotCount}>
                 <Input
                   type="number"
@@ -467,6 +516,29 @@ const FloorManagementPage = () => {
                   disabled={creating || Boolean(updatingId)}
                 />
               </FormField>
+
+              {previewSlotCodes.length > 0 && (
+                <div className="slot-preview-panel">
+                  <strong>Mã ô sẽ được tạo</strong>
+                  <span className="section-copy">
+                    {form.slotsText.trim()
+                      ? "Đang dùng danh sách mã bạn nhập."
+                      : "Hệ thống sẽ tự sinh theo tiền tố và số lượng ô."}
+                  </span>
+                  <div className="slot-preview-list">
+                    {previewSlotCodes.map((slotCode) => (
+                      <span className="slot-preview-pill" key={slotCode}>
+                        {slotCode}
+                      </span>
+                    ))}
+                    {Number(form.slotCount || 0) > previewSlotCodes.length && (
+                      <span className="slot-preview-more">
+                        +{Number(form.slotCount || 0) - previewSlotCodes.length} ô khác
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <FormField label="Mã ô đỗ ô tô">
                 <textarea

@@ -24,7 +24,14 @@ import {
 } from "../backend/parking/parkingSlice";
 import { Bell, Building2, Calendar, Car, Clock, CreditCard, Plus, QrCode, ShieldCheck } from "lucide-react";
 
-const getPassQrValue = (pass) => pass?.qrCode || pass?.code || "";
+const normalizePlateQrValue = (value) =>
+  String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[\s.-]/g, "");
+
+const getPassQrValue = (pass) =>
+  normalizePlateQrValue(pass?.plateNumber || pass?.vehiclePlateNumber) || pass?.qrCode || pass?.code || "";
 const getPassName = (pass) => pass?.packagePlanName || pass?.packageName || pass?.planName || "Gói tháng";
 const getPassTime = (pass) =>
   new Date(pass?.updatedAt || pass?.createdAt || pass?.startDate || pass?.validFrom || 0).getTime();
