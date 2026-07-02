@@ -67,6 +67,10 @@ const BuildingManagementPage = () => {
   const [form, setForm] = useState({
     name: "",
     address: "",
+    motorbikeTurnPrice: "4000",
+    carHourlyPrice: "20000",
+    motorbikeMonthlyPrice: "120000",
+    carMonthlyPrice: "1800000",
   });
   const [formErrors, setFormErrors] = useState({});
 
@@ -130,6 +134,19 @@ const BuildingManagementPage = () => {
       nextErrors.address = "Vui lòng nhập địa chỉ tòa nhà.";
     }
 
+    if (!editingId) {
+      [
+        ["motorbikeTurnPrice", "Vui lòng nhập giá xe máy một lượt."],
+        ["carHourlyPrice", "Vui lòng nhập giá ô tô một giờ."],
+        ["motorbikeMonthlyPrice", "Vui lòng nhập giá gói tháng xe máy."],
+        ["carMonthlyPrice", "Vui lòng nhập giá gói tháng ô tô."],
+      ].forEach(([field, message]) => {
+        if (!Number.isInteger(Number(form[field])) || Number(form[field]) <= 0) {
+          nextErrors[field] = message;
+        }
+      });
+    }
+
     setFormErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -139,6 +156,10 @@ const BuildingManagementPage = () => {
     setForm({
       name: "",
       address: "",
+      motorbikeTurnPrice: "4000",
+      carHourlyPrice: "20000",
+      motorbikeMonthlyPrice: "120000",
+      carMonthlyPrice: "1800000",
     });
     setFormErrors({});
   };
@@ -161,7 +182,13 @@ const BuildingManagementPage = () => {
         })
       );
     } else {
-      dispatch(createBuildingRequest(payload));
+      dispatch(createBuildingRequest({
+        ...payload,
+        motorbikeTurnPrice: Number(form.motorbikeTurnPrice),
+        carHourlyPrice: Number(form.carHourlyPrice),
+        motorbikeMonthlyPrice: Number(form.motorbikeMonthlyPrice),
+        carMonthlyPrice: Number(form.carMonthlyPrice),
+      }));
     }
 
     resetForm();
@@ -173,6 +200,10 @@ const BuildingManagementPage = () => {
     setForm({
       name: building.name || "",
       address: building.address || "",
+      motorbikeTurnPrice: "4000",
+      carHourlyPrice: "20000",
+      motorbikeMonthlyPrice: "120000",
+      carMonthlyPrice: "1800000",
     });
     scrollToForm();
   };
@@ -300,6 +331,50 @@ const BuildingManagementPage = () => {
               disabled={creating || Boolean(updatingId)}
             />
           </FormField>
+
+          {!editingId && (
+            <div className="filter-grid">
+              <FormField label="Giá xe máy một lượt" required error={formErrors.motorbikeTurnPrice}>
+                <Input
+                  type="number"
+                  min="1"
+                  value={form.motorbikeTurnPrice}
+                  onChange={(event) => updateField("motorbikeTurnPrice", event.target.value)}
+                  disabled={creating}
+                />
+              </FormField>
+
+              <FormField label="Giá ô tô một giờ" required error={formErrors.carHourlyPrice}>
+                <Input
+                  type="number"
+                  min="1"
+                  value={form.carHourlyPrice}
+                  onChange={(event) => updateField("carHourlyPrice", event.target.value)}
+                  disabled={creating}
+                />
+              </FormField>
+
+              <FormField label="Gói tháng xe máy" required error={formErrors.motorbikeMonthlyPrice}>
+                <Input
+                  type="number"
+                  min="1"
+                  value={form.motorbikeMonthlyPrice}
+                  onChange={(event) => updateField("motorbikeMonthlyPrice", event.target.value)}
+                  disabled={creating}
+                />
+              </FormField>
+
+              <FormField label="Gói tháng ô tô" required error={formErrors.carMonthlyPrice}>
+                <Input
+                  type="number"
+                  min="1"
+                  value={form.carMonthlyPrice}
+                  onChange={(event) => updateField("carMonthlyPrice", event.target.value)}
+                  disabled={creating}
+                />
+              </FormField>
+            </div>
+          )}
 
           <div className="action-row">
             <Button

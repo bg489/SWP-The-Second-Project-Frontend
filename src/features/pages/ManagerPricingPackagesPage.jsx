@@ -16,6 +16,7 @@ import {
   savePackagePlanRequest,
   savePricingPolicyRequest,
 } from "../backend/parking/parkingSlice";
+import { fetchBuildingsRequest } from "../backend/buildings/buildingSlice";
 import { formatCurrency, getStatusLabel, getStatusTone, getVehicleTypeLabel } from "../../services/mockParkingData";
 
 const pricingTypeLabels = {
@@ -35,6 +36,9 @@ const ManagerPricingPackagesPage = () => {
     packagePlans,
     notice,
   } = useSelector((state) => state.parking);
+  const { buildings } = useSelector((state) => state.buildings);
+  const [selectedBuildingId, setSelectedBuildingId] = useState("");
+  const effectiveBuildingId = selectedBuildingId || (buildings[0]?.id ? String(buildings[0].id) : "");
 
   const [priceForm, setPriceForm] = useState({
     vehicleType: "MOTORBIKE",
@@ -52,9 +56,15 @@ const ManagerPricingPackagesPage = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchPricingPoliciesRequest());
-    dispatch(fetchPackagePlansRequest());
+    dispatch(fetchBuildingsRequest());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!effectiveBuildingId) return;
+
+    dispatch(fetchPricingPoliciesRequest({ buildingId: effectiveBuildingId }));
+    dispatch(fetchPackagePlansRequest({ buildingId: effectiveBuildingId }));
+  }, [dispatch, effectiveBuildingId]);
 
   const activePackages = useMemo(() => {
     return packagePlans.items.filter((plan) => (plan.status || "ACTIVE") === "ACTIVE").length;
@@ -87,6 +97,7 @@ const ManagerPricingPackagesPage = () => {
         pricingType: priceForm.pricingType,
         amount: Number(priceForm.amount),
         status: priceForm.status,
+        buildingId: Number(effectiveBuildingId),
       })
     );
   };
@@ -100,17 +111,19 @@ const ManagerPricingPackagesPage = () => {
         price: Number(planForm.price),
         durationDays: Number(planForm.durationDays),
         status: planForm.status,
+        buildingId: Number(effectiveBuildingId),
       })
     );
   };
 
   const refresh = () => {
     dispatch(clearParkingNotice());
-    dispatch(fetchPricingPoliciesRequest());
-    dispatch(fetchPackagePlansRequest());
+    dispatch(fetchPricingPoliciesRequest({ buildingId: effectiveBuildingId }));
+    dispatch(fetchPackagePlansRequest({ buildingId: effectiveBuildingId }));
   };
 
   const priceColumns = [
+    { header: "Tòa nhà", key: "buildingName", render: (row) => row.buildingName || "Dùng chung" },
     { header: "Loại xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
     { header: "Cách tính", key: "pricingType", render: (row) => pricingTypeLabels[row.pricingType] || row.pricingType },
     { header: "Mức thu", key: "amount", render: (row) => formatCurrency(row.amount) },
@@ -122,6 +135,7 @@ const ManagerPricingPackagesPage = () => {
   ];
 
   const packageColumns = [
+    { header: "Tòa nhà", key: "buildingName", render: (row) => row.buildingName || "Dùng chung" },
     { header: "Tên gói", key: "name" },
     { header: "Loại xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
     { header: "Thời hạn", key: "durationDays", render: (row) => `${row.durationDays || 30} ngày` },
@@ -167,6 +181,23 @@ const ManagerPricingPackagesPage = () => {
       </section>
 
       <StatusBanner success={notice} errors={[pricingPolicies.error, packagePlans.error]} />
+
+      <section className="card section-card">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title"><BadgeDollarSign size={19} /> Chọn tòa nhà áp dụng</h2>
+            <p className="section-copy">Mỗi tòa có giá lượt và gói tháng riêng.</p>
+          </div>
+        </div>
+        <FormField label="Tòa nhà">
+          <Select
+            value={effectiveBuildingId}
+            onChange={(event) => setSelectedBuildingId(event.target.value)}
+            options={buildings.map((building) => ({ value: building.id, label: building.name }))}
+            placeholder="Chọn tòa nhà"
+          />
+        </FormField>
+      </section>
 
       <div className="two-column-grid">
         <section className="card section-card">
@@ -220,7 +251,7 @@ const ManagerPricingPackagesPage = () => {
               />
             </FormField>
 
-            <Button type="submit" icon={Save} loading={pricingPolicies.saving}>
+            <Button type="submit" icon={Save} loading={pricingPolicies.saving} disabled={!effectiveBuildingId || pricingPolicies.saving}>
               Lưu mức thu
             </Button>
           </form>
@@ -259,7 +290,7 @@ const ManagerPricingPackagesPage = () => {
               <Input type="number" min="1" value={planForm.durationDays} onChange={(event) => updatePlanForm("durationDays", event.target.value)} />
             </FormField>
 
-            <Button type="submit" icon={Plus} loading={packagePlans.saving}>
+            <Button type="submit" icon={Plus} loading={packagePlans.saving} disabled={!effectiveBuildingId || packagePlans.saving}>
               Lưu gói tháng
             </Button>
           </form>

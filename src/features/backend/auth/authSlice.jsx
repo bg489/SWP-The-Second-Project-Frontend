@@ -120,6 +120,44 @@ const authSlice = createSlice({
             state.registerBuildingsLoading = false;
             state.registerBuildingsError = action.payload;
         },
+
+        refreshSessionRequest: (state) => {
+            state.loading = true;
+            state.error = null;
+        },
+
+        refreshSessionSuccess: (state, action) => {
+            state.loading = false;
+            state.error = null;
+            state.token = action.payload.token;
+            state.user = action.payload.user;
+            state.frontendRole = action.payload.frontendRole;
+            state.isAuthenticated = Boolean(action.payload.token);
+        },
+
+        refreshSessionFailure: (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+            state.token = null;
+            state.user = null;
+            state.isAuthenticated = false;
+        },
+
+        updateAvatarRequest: (state) => {
+            state.loading = true;
+            state.error = null;
+        },
+
+        updateAvatarSuccess: (state, action) => {
+            state.loading = false;
+            state.error = null;
+            state.user = action.payload;
+        },
+
+        updateAvatarFailure: (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        },
     },
 });
 
@@ -136,6 +174,12 @@ export const {
     fetchRegisterBuildingsRequest,
     fetchRegisterBuildingsSuccess,
     fetchRegisterBuildingsFailure,
+    refreshSessionRequest,
+    refreshSessionSuccess,
+    refreshSessionFailure,
+    updateAvatarRequest,
+    updateAvatarSuccess,
+    updateAvatarFailure,
 } = authSlice.actions;
 
 export default authSlice.reducer;

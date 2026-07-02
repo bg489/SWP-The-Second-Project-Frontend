@@ -1,95 +1,109 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ROLE_KEYS, roleHomePaths } from "../services/mockParkingData";
 
 const MockAuthContext = createContext();
 
-const mockUsersByRole = {
-  USER: {
-    id: 1,
-    name: "Nguyễn An",
-    email: "nguyen.an@example.com",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80",
-    role: ROLE_KEYS.USER,
-    details: "Cư dân có xe đã duyệt",
-  },
-  PARKING_STAFF: {
-    id: 2,
-    name: "Trần Bảo",
-    email: "staff@example.com",
-    avatar: "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?auto=format&fit=crop&w=160&q=80",
-    role: ROLE_KEYS.PARKING_STAFF,
-    details: "Nhân viên vận hành cổng xe",
-  },
-  PARKING_MANAGER: {
-    id: 3,
-    name: "Phạm Minh Châu",
-    email: "manager@example.com",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&q=80",
-    role: ROLE_KEYS.PARKING_MANAGER,
-    details: "Quản lý vận hành bãi xe",
-  },
-  ADMIN: {
-    id: 4,
-    name: "Lê Hoàng Duy",
-    email: "admin@example.com",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=160&q=80",
-    role: ROLE_KEYS.ADMIN,
-    details: "Quản trị viên hệ thống",
-  },
+const safeJsonParse = (value) => {
+  try {
+    return value ? JSON.parse(value) : null;
+  } catch {
+    return null;
+  }
 };
 
-export const MockAuthProvider = ({ children }) => {
-  const [role, setRole] = useState(() => localStorage.getItem("mock_role") || ROLE_KEYS.USER);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
-  const user = mockUsersByRole[role] || mockUsersByRole.USER;
+const backendToFrontendRole = {
+  ADMIN: ROLE_KEYS.ADMIN,
+  USER: ROLE_KEYS.USER,
+  MANAGER: ROLE_KEYS.PARKING_MANAGER,
+  STAFF: ROLE_KEYS.PARKING_STAFF,
+  PARKING_MANAGER: ROLE_KEYS.PARKING_MANAGER,
+  PARKING_STAFF: ROLE_KEYS.PARKING_STAFF,
+};
 
-  useEffect(() => {
-    localStorage.setItem("mock_role", role);
-  }, [role]);
+const normalizeRole = (role) => backendToFrontendRole[String(role || "").toUpperCase()] || ROLE_KEYS.USER;
+
+export const MockAuthProvider = ({ children }) => {
+  const initialUser = safeJsonParse(localStorage.getItem("auth_user"));
+  const initialToken = localStorage.getItem("access_token");
+  const [role, setRole] = useState(() =>
+    localStorage.getItem("mock_role") || normalizeRole(initialUser?.role)
+  );
+  const [user, setUser] = useState(initialUser);
+  const [isAuthenticated, setIsAuthenticated] = useState(Boolean(initialToken));
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
 
   useEffect(() => {
     document.body.classList.toggle("dark-theme", isDarkMode);
     localStorage.setItem("theme", isDarkMode ? "dark" : "light");
   }, [isDarkMode]);
 
-  const login = (selectedRole) => {
-    const nextRole = mockUsersByRole[selectedRole] ? selectedRole : ROLE_KEYS.USER;
+  const login = useCallback((selectedRole, nextUser, token) => {
+    const nextRole = normalizeRole(selectedRole || nextUser?.role);
+
     setRole(nextRole);
-    setIsAuthenticated(true);
-    return roleHomePaths[nextRole];
-  };
+    setUser(nextUser || null);
+    setIsAuthenticated(Boolean(token || localStorage.getItem("access_token")));
 
-  const logout = () => {
+    localStorage.setItem("mock_role", nextRole);
+
+    if (nextUser) {
+      localStorage.setItem("auth_user", JSON.stringify(nextUser));
+    }
+
+    if (token) {
+      localStorage.setItem("access_token", token);
+    }
+
+    return roleHomePaths[nextRole] || "/login";
+  }, []);
+
+  const updateUser = useCallback((nextUser) => {
+    setUser(nextUser || null);
+
+    if (nextUser) {
+      localStorage.setItem("auth_user", JSON.stringify(nextUser));
+      const nextRole = normalizeRole(nextUser.role);
+      setRole(nextRole);
+      localStorage.setItem("mock_role", nextRole);
+    }
+  }, []);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("auth_user");
+    localStorage.removeItem("auth_role");
+    localStorage.removeItem("mock_role");
+    setUser(null);
+    setRole(ROLE_KEYS.USER);
     setIsAuthenticated(false);
-  };
+  }, []);
 
-  const toggleDarkMode = () => {
+  const toggleDarkMode = useCallback(() => {
     setIsDarkMode((prev) => !prev);
-  };
+  }, []);
 
-  return (
-    <MockAuthContext.Provider
-      value={{
-        role,
-        user,
-        isAuthenticated,
-        isDarkMode,
-        login,
-        logout,
-        toggleDarkMode,
-      }}
-    >
-      {children}
-    </MockAuthContext.Provider>
+  const value = useMemo(
+    () => ({
+      role,
+      user,
+      isAuthenticated,
+      isDarkMode,
+      login,
+      logout,
+      toggleDarkMode,
+      updateUser,
+    }),
+    [isAuthenticated, isDarkMode, login, logout, role, toggleDarkMode, updateUser, user]
   );
+
+  return <MockAuthContext.Provider value={value}>{children}</MockAuthContext.Provider>;
 };
 
 export const useMockAuth = () => {
   const context = useContext(MockAuthContext);
   if (!context) {
-    throw new Error("useMockAuth phải được sử dụng trong MockAuthProvider");
+    throw new Error("useMockAuth phai duoc su dung trong MockAuthProvider");
   }
   return context;
 };

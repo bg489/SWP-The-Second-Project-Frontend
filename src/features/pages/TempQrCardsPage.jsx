@@ -16,6 +16,7 @@ import {
   fetchTempQrCardsRequest,
   updateTempQrCardStatusRequest,
 } from "../backend/parking/parkingSlice";
+import { fetchBuildingsRequest } from "../backend/buildings/buildingSlice";
 import { getStatusLabel, getStatusTone } from "../../services/mockParkingData";
 
 const statusOptions = [
@@ -30,8 +31,11 @@ const statusOptions = [
 const TempQrCardsPage = () => {
   const dispatch = useDispatch();
   const { role } = useMockAuth();
+  const { user: authUser, frontendRole } = useSelector((state) => state.auth);
   const { tempQrCards, notice } = useSelector((state) => state.parking);
-  const canCreate = role === "PARKING_MANAGER";
+  const { buildings, loading: buildingsLoading } = useSelector((state) => state.buildings);
+  const effectiveRole = frontendRole || role;
+  const canCreate = effectiveRole === "PARKING_MANAGER";
 
   const [form, setForm] = useState({
     cardCode: "TEMP-001",
@@ -42,10 +46,25 @@ const TempQrCardsPage = () => {
   const [filter, setFilter] = useState("");
   const [formError, setFormError] = useState("");
   const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedBuildingId, setSelectedBuildingId] = useState("");
+  const effectiveBuildingId = canCreate
+    ? selectedBuildingId || (buildings[0]?.id ? String(buildings[0].id) : "")
+    : authUser?.buildingId ? String(authUser.buildingId) : "";
 
   useEffect(() => {
-    dispatch(fetchTempQrCardsRequest());
+    dispatch(fetchBuildingsRequest());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!effectiveBuildingId) return;
+
+    dispatch(
+      fetchTempQrCardsRequest({
+        buildingId: effectiveBuildingId,
+        ...(filter ? { status: filter } : {}),
+      })
+    );
+  }, [dispatch, effectiveBuildingId, filter]);
 
   const cards = useMemo(() => {
     if (!filter) return tempQrCards.items;
@@ -72,6 +91,10 @@ const TempQrCardsPage = () => {
     const cardCode = previewCode;
 
     if (!cardCode) return;
+    if (!effectiveBuildingId) {
+      setFormError("Vui lòng chọn tòa nhà cho thẻ QR tạm.");
+      return;
+    }
     if (new TextEncoder().encode(cardCode).length > 32) {
       setFormError("Mã thẻ cần ngắn hơn 32 ký tự không dấu để QR dễ quét.");
       return;
@@ -80,6 +103,7 @@ const TempQrCardsPage = () => {
     dispatch(
       createTempQrCardRequest({
         cardCode,
+        buildingId: Number(effectiveBuildingId),
         status: form.status,
         note: form.note.trim() || undefined,
       })
@@ -88,7 +112,10 @@ const TempQrCardsPage = () => {
 
   const refresh = () => {
     dispatch(clearParkingNotice());
-    dispatch(fetchTempQrCardsRequest(filter ? { status: filter } : undefined));
+    dispatch(fetchTempQrCardsRequest({
+      buildingId: effectiveBuildingId,
+      ...(filter ? { status: filter } : {}),
+    }));
   };
 
   const columns = [
@@ -116,6 +143,7 @@ const TempQrCardsPage = () => {
       key: "cardCode",
       render: (row) => <strong>{row.cardCode || row.id}</strong>,
     },
+    { header: "Tòa nhà", key: "buildingName", render: (row) => row.buildingName || "-" },
     {
       header: "Trạng thái",
       key: "status",
@@ -164,6 +192,30 @@ const TempQrCardsPage = () => {
       </section>
 
       <StatusBanner success={notice} errors={tempQrCards.error} />
+
+      <section className="card section-card">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title">Tòa nhà sử dụng QR tạm</h2>
+            <p className="section-copy">Thẻ QR tạm chỉ dùng trong đúng tòa nhà đang chọn.</p>
+          </div>
+        </div>
+        <FormField label="Tòa nhà">
+          {canCreate ? (
+            <Select
+              value={effectiveBuildingId}
+              onChange={(event) => setSelectedBuildingId(event.target.value)}
+              options={buildings.map((building) => ({ value: building.id, label: building.name }))}
+              placeholder={buildingsLoading ? "Đang tải tòa nhà..." : "Chọn tòa nhà"}
+            />
+          ) : (
+            <Input
+              value={buildings.find((building) => String(building.id) === String(effectiveBuildingId))?.name || authUser?.buildingName || "Chưa có tòa nhà"}
+              disabled
+            />
+          )}
+        </FormField>
+      </section>
 
       <div className={canCreate ? "two-column-grid" : "dashboard-grid"}>
         {canCreate && (

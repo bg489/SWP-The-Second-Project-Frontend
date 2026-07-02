@@ -9,18 +9,20 @@ import { useMockAuth } from "../../context/MockAuthContext";
 import {
   formatCurrency,
   formatDate,
+  formatDateTime,
   getStatusLabel,
   getStatusTone,
   getVehicleTypeLabel,
 } from "../../services/mockParkingData";
 import {
   fetchMyMonthlyPassesRequest,
+  fetchMyNotificationsRequest,
   fetchMyQrPassesRequest,
   fetchMySlotRegistrationsRequest,
   fetchMyVehiclesRequest,
   fetchPackagePlansRequest,
 } from "../backend/parking/parkingSlice";
-import { Calendar, Car, Clock, CreditCard, Plus, QrCode, ShieldCheck } from "lucide-react";
+import { Bell, Building2, Calendar, Car, Clock, CreditCard, Plus, QrCode, ShieldCheck } from "lucide-react";
 
 const getPassQrValue = (pass) => pass?.qrCode || pass?.code || "";
 const getPassName = (pass) => pass?.packagePlanName || pass?.packageName || pass?.planName || "Gói tháng";
@@ -33,15 +35,16 @@ const UserDashboard = () => {
   const { user: mockUser } = useMockAuth();
   const { user: authUser } = useSelector((state) => state.auth);
   const user = authUser || mockUser;
-  const { vehicles, monthlyPasses, packagePlans, qrPasses, slotRegistrations } = useSelector((state) => state.parking);
+  const { vehicles, monthlyPasses, notifications, packagePlans, qrPasses, slotRegistrations } = useSelector((state) => state.parking);
 
   useEffect(() => {
     dispatch(fetchMyVehiclesRequest());
     dispatch(fetchMyMonthlyPassesRequest());
     dispatch(fetchMyQrPassesRequest());
     dispatch(fetchMySlotRegistrationsRequest());
-    dispatch(fetchPackagePlansRequest({ status: "ACTIVE" }));
-  }, [dispatch]);
+    dispatch(fetchMyNotificationsRequest());
+    dispatch(fetchPackagePlansRequest({ status: "ACTIVE", buildingId: user?.buildingId }));
+  }, [dispatch, user?.buildingId]);
 
   const myVehicles = vehicles.mine;
   const myPasses = monthlyPasses.mine;
@@ -109,8 +112,20 @@ const UserDashboard = () => {
           qrPasses.error,
           slotRegistrations.error,
           packagePlans.error,
+          notifications.error,
         ]}
       />
+
+      <section className="card soft-panel">
+        <div className="data-row">
+          <span><Building2 size={16} /> Tòa nhà hiện tại</span>
+          <strong>{user?.buildingName || "Chưa có tòa nhà"}</strong>
+        </div>
+        <div className="data-row">
+          <span>Địa chỉ</span>
+          <strong>{user?.buildingAddress || "Chưa có địa chỉ"}</strong>
+        </div>
+      </section>
 
       <div className="dashboard-grid">
         <div className="card metric-card">
@@ -215,6 +230,32 @@ const UserDashboard = () => {
           </div>
         </section>
       </div>
+
+      <section className="card section-card">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title"><Bell size={19} /> Thông báo của tôi</h2>
+            <p className="section-copy">Các nhắc nhở cần xử lý, bao gồm yêu cầu dời xe khi đậu sai ô.</p>
+          </div>
+        </div>
+        <div className="data-list">
+          {notifications.mine.slice(0, 5).map((item) => (
+            <div className="soft-panel" key={item.id}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+                <div>
+                  <strong>{item.title}</strong>
+                  <p className="section-copy">{item.message}</p>
+                  <span className="metric-note">{formatDateTime(item.createdAt)}</span>
+                </div>
+                {item.evidenceUrl && <img className="evidence-thumb" src={item.evidenceUrl} alt="Bằng chứng" />}
+              </div>
+            </div>
+          ))}
+          {!notifications.loading && notifications.mine.length === 0 && (
+            <div className="soft-panel">Bạn chưa có thông báo mới.</div>
+          )}
+        </div>
+      </section>
 
       <section className="card section-card">
         <div className="section-header">

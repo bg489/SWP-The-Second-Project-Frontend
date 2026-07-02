@@ -18,8 +18,9 @@ import {
   fetchMyVehiclesRequest,
   fetchPackagePlansRequest,
 } from "../backend/parking/parkingSlice";
+import { fetchFloorsRequest } from "../backend/floors/floorSlice";
+import { fetchSlotsByFloorRequest } from "../backend/slots/slotSlice";
 import {
-  carSlots,
   formatCurrency,
   formatDate,
   getStatusLabel,
@@ -65,6 +66,9 @@ const MyQRPassPage = () => {
     vehicles,
     notice,
   } = useSelector((state) => state.parking);
+  const { user } = useSelector((state) => state.auth);
+  const { floors } = useSelector((state) => state.floors);
+  const { slotsByFloor, loading: slotsLoading } = useSelector((state) => state.slots);
 
   const [selectedPass, setSelectedPass] = useState(null);
   const [paymentReturn] = useState(getPaymentReturnFromUrl);
@@ -72,15 +76,21 @@ const MyQRPassPage = () => {
     packagePlanId: "",
     vehicleId: "",
     slotId: "",
+    carFloorId: "",
   });
 
   useEffect(() => {
     dispatch(fetchMyQrPassesRequest());
     dispatch(fetchMyMonthlyPassesRequest());
-    dispatch(fetchPackagePlansRequest({ status: "ACTIVE" }));
+    dispatch(fetchPackagePlansRequest({ status: "ACTIVE", buildingId: user?.buildingId }));
     dispatch(fetchMyVehiclesRequest());
     dispatch(fetchMySlotRegistrationsRequest());
-  }, [dispatch]);
+  }, [dispatch, user?.buildingId]);
+
+  useEffect(() => {
+    if (!user?.buildingId) return;
+    dispatch(fetchFloorsRequest({ buildingId: user.buildingId, status: "ACTIVE", limit: 100 }));
+  }, [dispatch, user?.buildingId]);
 
   useEffect(() => {
     if (!paymentReturn) return;
@@ -95,16 +105,54 @@ const MyQRPassPage = () => {
     return vehicles.mine.filter((vehicle) => ["APPROVED", "ACTIVE"].includes(vehicle.status));
   }, [vehicles.mine]);
 
-  const effectivePackagePlanId = purchaseForm.packagePlanId || packagePlans.items[0]?.id || "";
   const effectiveVehicleId = purchaseForm.vehicleId || approvedVehicles[0]?.id || "";
-
-  const selectedPackage = useMemo(() => {
-    return packagePlans.items.find((plan) => String(plan.id) === String(effectivePackagePlanId));
-  }, [effectivePackagePlanId, packagePlans.items]);
 
   const selectedVehicle = useMemo(() => {
     return approvedVehicles.find((vehicle) => String(vehicle.id) === String(effectiveVehicleId));
   }, [approvedVehicles, effectiveVehicleId]);
+
+  const availablePackagePlans = useMemo(() => {
+    return packagePlans.items.filter(
+      (plan) => !selectedVehicle || plan.vehicleType === selectedVehicle.vehicleType
+    );
+  }, [packagePlans.items, selectedVehicle]);
+
+  const effectivePackagePlanId =
+    purchaseForm.packagePlanId &&
+    availablePackagePlans.some((plan) => String(plan.id) === String(purchaseForm.packagePlanId))
+      ? purchaseForm.packagePlanId
+      : availablePackagePlans[0]?.id || "";
+
+  const selectedPackage = useMemo(() => {
+    return availablePackagePlans.find((plan) => String(plan.id) === String(effectivePackagePlanId));
+  }, [availablePackagePlans, effectivePackagePlanId]);
+
+  const carFloors = useMemo(() => {
+    return floors.filter(
+      (floor) =>
+        Number(floor.buildingId) === Number(user?.buildingId) &&
+        floor.floorType === "CAR" &&
+        floor.status === "ACTIVE"
+    );
+  }, [floors, user?.buildingId]);
+
+  const effectiveCarFloorId = purchaseForm.carFloorId || (carFloors[0]?.id ? String(carFloors[0].id) : "");
+  const carSlotsInFloor = useMemo(() => {
+    return effectiveCarFloorId ? slotsByFloor[effectiveCarFloorId] || [] : [];
+  }, [effectiveCarFloorId, slotsByFloor]);
+  const availableCarSlots = useMemo(
+    () => carSlotsInFloor.filter((slot) => slot.status === "AVAILABLE"),
+    [carSlotsInFloor]
+  );
+  const effectiveSlotId =
+    purchaseForm.slotId && availableCarSlots.some((slot) => String(slot.id) === String(purchaseForm.slotId))
+      ? purchaseForm.slotId
+      : String(availableCarSlots[0]?.id || "");
+
+  useEffect(() => {
+    if (!effectiveCarFloorId) return;
+    dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
+  }, [dispatch, effectiveCarFloorId]);
 
   const updatePurchaseForm = (field, value) => {
     dispatch(clearParkingNotice());
@@ -118,7 +166,7 @@ const MyQRPassPage = () => {
       dispatch(
         createSlotRegistrationRequest({
           vehicleId: selectedVehicle.id,
-          slotId: purchaseForm.slotId || carSlots.find((slot) => slot.status === "AVAILABLE")?.id,
+          slotId: Number(effectiveSlotId),
           packagePlanId: selectedPackage.id,
           bankCode: "NCB",
         })
@@ -147,7 +195,6 @@ const MyQRPassPage = () => {
   };
 
   const activePassCount = qrPasses.mine.filter((pass) => (pass.status || "ACTIVE") === "ACTIVE").length;
-  const availableCarSlots = carSlots.filter((slot) => slot.status === "AVAILABLE");
   const pendingMonthlyPasses = monthlyPasses.mine.filter((pass) =>
     ["PENDING_PAYMENT", "CANCELLED"].includes(pass.status)
   );
@@ -280,7 +327,7 @@ const MyQRPassPage = () => {
               <Select
                 value={effectivePackagePlanId}
                 onChange={(event) => updatePurchaseForm("packagePlanId", event.target.value)}
-                options={packagePlans.items.map((plan) => ({
+                options={availablePackagePlans.map((plan) => ({
                   value: plan.id,
                   label: `${plan.name} - ${formatCurrency(plan.price)}`,
                 }))}
@@ -302,15 +349,44 @@ const MyQRPassPage = () => {
 
             {selectedVehicle?.vehicleType === "CAR" && (
               <FormField label="Ô đỗ ô tô">
-                <Select
-                  value={purchaseForm.slotId}
-                  onChange={(event) => updatePurchaseForm("slotId", event.target.value)}
-                  options={availableCarSlots.map((slot) => ({
-                    value: slot.id,
-                    label: slot.slotCode,
-                  }))}
-                  placeholder="Chọn ô đỗ còn trống"
-                />
+                <div style={{ display: "grid", gap: 12 }}>
+                  {carFloors.length > 1 && (
+                    <Select
+                      value={effectiveCarFloorId}
+                      onChange={(event) => {
+                        updatePurchaseForm("carFloorId", event.target.value);
+                        updatePurchaseForm("slotId", "");
+                      }}
+                      options={carFloors.map((floor) => ({ value: floor.id, label: floor.name }))}
+                      placeholder="Chọn tầng ô tô"
+                    />
+                  )}
+
+                  <div className="car-slot-grid">
+                    {carSlotsInFloor.map((slot) => {
+                      const isAvailable = slot.status === "AVAILABLE";
+                      const isSelected = String(effectiveSlotId) === String(slot.id);
+
+                      return (
+                        <button
+                          type="button"
+                          key={slot.id}
+                          className={`car-slot-card ${String(slot.status || "AVAILABLE").toLowerCase()} ${isSelected ? "selected" : ""}`}
+                          disabled={!isAvailable}
+                          onClick={() => updatePurchaseForm("slotId", String(slot.id))}
+                        >
+                          <span className="car-slot-code">{slot.slotCode}</span>
+                          <span className="car-slot-status">{getStatusLabel(slot.status)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {slotsLoading && <p className="section-copy">Đang tải ô đỗ...</p>}
+                  {!slotsLoading && carSlotsInFloor.length === 0 && (
+                    <p className="section-copy">Tòa nhà của bạn chưa có ô ô tô còn hoạt động.</p>
+                  )}
+                </div>
               </FormField>
             )}
 
@@ -318,7 +394,7 @@ const MyQRPassPage = () => {
               variant="primary"
               icon={ShieldCheck}
               loading={packagePlans.buyingId === selectedPackage?.id || slotRegistrations.creating}
-              disabled={!selectedPackage || !selectedVehicle}
+              disabled={!selectedPackage || !selectedVehicle || (selectedVehicle.vehicleType === "CAR" && !effectiveSlotId)}
               onClick={buyPackage}
             >
               Gửi yêu cầu thanh toán

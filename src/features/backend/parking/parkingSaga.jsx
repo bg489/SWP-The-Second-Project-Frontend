@@ -34,6 +34,9 @@ import {
     checkOutFailure,
     checkOutRequest,
     checkOutSuccess,
+    confirmWrongSlotFailure,
+    confirmWrongSlotRequest,
+    confirmWrongSlotSuccess,
     continueMonthlyPassPaymentFailure,
     continueMonthlyPassPaymentRequest,
     continueMonthlyPassPaymentSuccess,
@@ -61,6 +64,9 @@ import {
     fetchMyActiveParkingSessionsFailure,
     fetchMyActiveParkingSessionsRequest,
     fetchMyActiveParkingSessionsSuccess,
+    fetchMyNotificationsFailure,
+    fetchMyNotificationsRequest,
+    fetchMyNotificationsSuccess,
     fetchAllVehiclesFailure,
     fetchAllVehiclesRequest,
     fetchAllVehiclesSuccess,
@@ -100,9 +106,15 @@ import {
     fetchViolationsFailure,
     fetchViolationsRequest,
     fetchViolationsSuccess,
+    fetchWrongSlotCasesFailure,
+    fetchWrongSlotCasesRequest,
+    fetchWrongSlotCasesSuccess,
     rejectVehicleFailure,
     rejectVehicleRequest,
     rejectVehicleSuccess,
+    reportWrongSlotFailure,
+    reportWrongSlotRequest,
+    reportWrongSlotSuccess,
     savePackagePlanFailure,
     savePackagePlanRequest,
     savePackagePlanSuccess,
@@ -550,10 +562,14 @@ function* handleFetchTempQrCards(action) {
     } catch (error) {
         if (shouldUseSample(error)) {
             const status = action.payload?.status;
+            const buildingId = action.payload?.buildingId;
             const cards = readStoredTempQrCards();
             yield put(
                 fetchTempQrCardsSuccess(
-                    status ? cards.filter((card) => card.status === status) : cards
+                    cards.filter((card) =>
+                        (!status || card.status === status) &&
+                        (!buildingId || String(card.buildingId || 1) === String(buildingId))
+                    )
                 )
             );
             return;
@@ -567,7 +583,10 @@ function* handleCreateTempQrCard(action) {
     try {
         const response = yield call([api, api.post], "/temp-qr-cards", action.payload);
         yield put(createTempQrCardSuccess(extractData(response)));
-        yield put(fetchTempQrCardsRequest());
+        yield put(fetchTempQrCardsRequest({
+            buildingId: action.payload?.buildingId,
+            status: action.payload?.status,
+        }));
     } catch (error) {
         if (shouldUseSample(error)) {
             const card = withId(
@@ -721,6 +740,51 @@ function* handleCreateSlotRegistration(action) {
         }
 
         yield put(createSlotRegistrationFailure(getErrorMessage(error, "Đăng ký ô đỗ thất bại.")));
+    }
+}
+
+function* handleFetchMyNotifications() {
+    try {
+        const response = yield call([api, api.get], "/notifications/my");
+        yield put(fetchMyNotificationsSuccess(extractList(response, ["notifications"])));
+    } catch (error) {
+        yield put(fetchMyNotificationsFailure(getErrorMessage(error, "Khong lay duoc thong bao cua ban.")));
+    }
+}
+
+function* handleFetchWrongSlotCases(action) {
+    try {
+        const response = yield call([api, api.get], "/wrong-slot-cases", {
+            params: action.payload,
+        });
+        yield put(fetchWrongSlotCasesSuccess(extractList(response, ["wrongSlotCases", "cases"])));
+    } catch (error) {
+        yield put(fetchWrongSlotCasesFailure(getErrorMessage(error, "Khong lay duoc danh sach dau sai o.")));
+    }
+}
+
+function* handleReportWrongSlot(action) {
+    try {
+        const { buildingId, ...payload } = action.payload || {};
+        const response = yield call([api, api.post], "/wrong-slot-cases/report", payload);
+        yield put(reportWrongSlotSuccess(extractData(response)));
+        yield put(fetchWrongSlotCasesRequest(buildingId ? { buildingId } : undefined));
+        yield put(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
+    } catch (error) {
+        yield put(reportWrongSlotFailure(getErrorMessage(error, "Ghi nhan dau sai o that bai.")));
+    }
+}
+
+function* handleConfirmWrongSlot(action) {
+    try {
+        const { buildingId, id, ...payload } = action.payload;
+        const response = yield call([api, api.post], `/wrong-slot-cases/${id}/confirm`, payload);
+        yield put(confirmWrongSlotSuccess(extractData(response)));
+        yield put(fetchWrongSlotCasesRequest(buildingId ? { buildingId } : undefined));
+        yield put(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
+        yield put(fetchViolationsRequest());
+    } catch (error) {
+        yield put(confirmWrongSlotFailure(getErrorMessage(error, "Xac nhan dau sai o that bai.")));
     }
 }
 
@@ -1024,6 +1088,10 @@ export default function* parkingSaga() {
 
     yield takeLatest(fetchMySlotRegistrationsRequest.type, handleFetchMySlotRegistrations);
     yield takeEvery(createSlotRegistrationRequest.type, handleCreateSlotRegistration);
+    yield takeLatest(fetchMyNotificationsRequest.type, handleFetchMyNotifications);
+    yield takeLatest(fetchWrongSlotCasesRequest.type, handleFetchWrongSlotCases);
+    yield takeEvery(reportWrongSlotRequest.type, handleReportWrongSlot);
+    yield takeEvery(confirmWrongSlotRequest.type, handleConfirmWrongSlot);
 
     yield takeLatest(fetchActiveParkingSessionsRequest.type, handleFetchActiveParkingSessions);
     yield takeLatest(fetchMyActiveParkingSessionsRequest.type, handleFetchMyActiveParkingSessions);

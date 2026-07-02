@@ -9,6 +9,7 @@ import Input from "../../components/Form/Input";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
 import { useMockAuth } from "../../context/MockAuthContext";
+import { updateAvatarRequest } from "../backend/auth/authSlice";
 import {
   clearParkingNotice,
   createVehicleRequest,
@@ -19,9 +20,11 @@ import { formatDate, getStatusLabel, getStatusTone, getVehicleTypeLabel } from "
 const UserProfilePage = () => {
   const dispatch = useDispatch();
   const { user: mockUser } = useMockAuth();
-  const { user: authUser } = useSelector((state) => state.auth);
+  const { error: authError, loading: authLoading, user: authUser } = useSelector((state) => state.auth);
   const user = authUser || mockUser;
   const { vehicles, notice } = useSelector((state) => state.parking);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const displayAvatar = avatarPreview || user?.avatarUrl || user?.avatar || "";
 
   const [form, setForm] = useState({
     plateNumber: "",
@@ -61,6 +64,20 @@ const UserProfilePage = () => {
     });
   };
 
+  const handleAvatarChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file || !file.type.startsWith("image/")) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const avatarUrl = String(reader.result || "");
+      setAvatarPreview(avatarUrl);
+      dispatch(updateAvatarRequest({ avatarUrl }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const columns = [
     { header: "Biển số", key: "plateNumber", render: (row) => <strong>{row.plateNumber}</strong> },
     { header: "Loại xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
@@ -90,7 +107,7 @@ const UserProfilePage = () => {
         </div>
       </section>
 
-      <StatusBanner success={notice} errors={vehicles.error} />
+      <StatusBanner success={notice} errors={[vehicles.error, authError]} />
 
       <div className="two-column-grid">
         <section className="card section-card">
@@ -101,6 +118,23 @@ const UserProfilePage = () => {
             </div>
           </div>
           <div className="data-list">
+            <div className="profile-avatar-panel">
+              {displayAvatar ? (
+                <img src={displayAvatar} alt={user.name} className="profile-avatar-large" />
+              ) : (
+                <div className="profile-avatar-large profile-avatar-placeholder">
+                  {String(user?.name || "U").slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <strong>Ảnh đại diện</strong>
+                <p className="section-copy">Ảnh này sẽ hiển thị trên thanh trên cùng.</p>
+                <label className="btn btn-outline btn-sm profile-avatar-upload">
+                  Chọn ảnh mới
+                  <input type="file" accept="image/*" onChange={handleAvatarChange} disabled={authLoading} />
+                </label>
+              </div>
+            </div>
             <div className="data-row"><span>Họ tên</span><strong>{user.name}</strong></div>
             <div className="data-row"><span>Email</span><strong>{user.email}</strong></div>
             <div className="data-row"><span>Tòa nhà</span><strong>{user.buildingName || "Chưa có tòa nhà"}</strong></div>

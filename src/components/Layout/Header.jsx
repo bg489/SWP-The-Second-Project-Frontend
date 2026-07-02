@@ -1,11 +1,17 @@
 import { Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
+import { useSelector } from "react-redux";
 
 import { useMockAuth } from "../../context/MockAuthContext";
 import { roleLabels } from "../../services/mockParkingData";
 import "./Layout.css";
 
 const Header = ({ toggleSidebar, sidebarHidden, toggleSidebarHidden }) => {
-  const { role, user, isDarkMode, toggleDarkMode, isAuthenticated } = useMockAuth();
+  const { role: contextRole, user: contextUser, isDarkMode, toggleDarkMode, isAuthenticated } = useMockAuth();
+  const { user: authUser, frontendRole } = useSelector((state) => state.auth);
+  const user = authUser || contextUser;
+  const role = frontendRole || contextRole;
+  const avatarUrl = user?.avatarUrl || user?.avatar || "";
+  const initials = String(user?.name || "U").slice(0, 1).toUpperCase();
 
   return (
     <header className="header-container">
@@ -45,10 +51,14 @@ const Header = ({ toggleSidebar, sidebarHidden, toggleSidebarHidden }) => {
 
         {isAuthenticated && user && (
           <div className="header-user-profile">
-            <img src={user.avatar} alt={user.name} className="user-profile-avatar" />
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={user.name} className="user-profile-avatar" />
+            ) : (
+              <div className="user-profile-avatar avatar-fallback">{initials}</div>
+            )}
             <div className="user-profile-info">
               <span className="profile-name">{user.name}</span>
-              <span className="profile-role">{user.details}</span>
+              <span className="profile-role">{user.details || roleLabels[role]}</span>
             </div>
           </div>
         )}

@@ -45,6 +45,7 @@ const CheckInQRPage = () => {
     slotId: "",
   });
   const [selectedCarFloorId, setSelectedCarFloorId] = useState("");
+  const [selectedMotorbikeFloorId, setSelectedMotorbikeFloorId] = useState("");
   const [scannerTarget, setScannerTarget] = useState("");
   const [formError, setFormError] = useState("");
 
@@ -70,10 +71,11 @@ const CheckInQRPage = () => {
   }, [buildingFloors]);
 
   const effectiveCarFloorId = selectedCarFloorId || (carFloors[0]?.id ? String(carFloors[0].id) : "");
+  const firstAvailableMotorbikeFloor = motorbikeFloors.find((floor) => Number(floor.currentCount || 0) < Number(floor.capacity || 0));
+  const effectiveMotorbikeFloorId = selectedMotorbikeFloorId || (firstAvailableMotorbikeFloor?.id ? String(firstAvailableMotorbikeFloor.id) : "");
 
   useEffect(() => {
     dispatch(fetchBuildingsRequest());
-    dispatch(fetchTempQrCardsRequest({ status: "READY" }));
   }, [dispatch]);
 
   useEffect(() => {
@@ -81,6 +83,7 @@ const CheckInQRPage = () => {
 
     dispatch(fetchFloorsRequest({ buildingId: currentBuildingId, status: "ACTIVE", limit: 100 }));
     dispatch(fetchActiveParkingSessionsRequest({ buildingId: currentBuildingId }));
+    dispatch(fetchTempQrCardsRequest({ buildingId: currentBuildingId, status: "READY" }));
   }, [currentBuildingId, dispatch]);
 
   useEffect(() => {
@@ -98,8 +101,8 @@ const CheckInQRPage = () => {
   const selectedSlot = currentCarSlots.find((slot) => String(slot.id) === selectedCarSlotId);
 
   const motorbikeFloor = useMemo(() => {
-    return motorbikeFloors.find((floor) => Number(floor.currentCount || 0) < Number(floor.capacity || 0));
-  }, [motorbikeFloors]);
+    return motorbikeFloors.find((floor) => String(floor.id) === String(effectiveMotorbikeFloorId));
+  }, [effectiveMotorbikeFloorId, motorbikeFloors]);
 
   const motorbikeCapacity = useMemo(() => {
     return motorbikeFloors.reduce(
@@ -209,6 +212,10 @@ const CheckInQRPage = () => {
         return;
       }
     } else if (motorbikeFloor?.id) {
+      if (Number(motorbikeFloor.currentCount || 0) >= Number(motorbikeFloor.capacity || 0)) {
+        setFormError("Tầng xe máy đang chọn đã hết chỗ.");
+        return;
+      }
       payload.floorId = Number(motorbikeFloor.id);
     } else {
       setFormError("Khu xe máy của tòa nhà hiện tại đã hết chỗ.");
@@ -348,6 +355,20 @@ const CheckInQRPage = () => {
                     onScan={handleQrScan}
                   />
                 </div>
+              </FormField>
+            )}
+
+            {form.vehicleType === "MOTORBIKE" && (
+              <FormField label="Tầng xe máy">
+                <Select
+                  value={effectiveMotorbikeFloorId}
+                  onChange={(event) => setSelectedMotorbikeFloorId(event.target.value)}
+                  options={motorbikeFloors.map((floor) => ({
+                    value: floor.id,
+                    label: `${floor.name} - ${Math.max(Number(floor.capacity || 0) - Number(floor.currentCount || 0), 0)} chỗ trống`,
+                  }))}
+                  placeholder={floorsLoading ? "Đang tải tầng xe máy..." : "Chọn tầng xe máy"}
+                />
               </FormField>
             )}
 

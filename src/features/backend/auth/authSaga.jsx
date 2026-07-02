@@ -11,6 +11,12 @@ import {
     registerFailure,
     registerRequest,
     registerSuccess,
+    refreshSessionFailure,
+    refreshSessionRequest,
+    refreshSessionSuccess,
+    updateAvatarFailure,
+    updateAvatarRequest,
+    updateAvatarSuccess,
 } from "./authSlice";
 
 const backendToFrontendRole = {
@@ -131,6 +137,54 @@ function* handleRegister(action) {
     }
 }
 
+function* handleRefreshSession() {
+    try {
+        const response = yield call([api, api.post], "/auth/refresh");
+        const { token, user, backendRole, frontendRole } = extractLoginData(response);
+
+        if (!token) {
+            throw new Error("Khong the lam moi dang nhap.");
+        }
+
+        localStorage.setItem("access_token", token);
+        localStorage.setItem("auth_user", JSON.stringify(user));
+        localStorage.setItem("auth_role", backendRole);
+        localStorage.setItem("mock_role", frontendRole);
+
+        yield put(refreshSessionSuccess({ token, user, frontendRole }));
+    } catch (error) {
+        const message =
+            error?.response?.data?.message ||
+            error?.message ||
+            "Phien dang nhap da het han.";
+
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("auth_user");
+        localStorage.removeItem("auth_role");
+        localStorage.removeItem("mock_role");
+
+        yield put(refreshSessionFailure(message));
+    }
+}
+
+function* handleUpdateAvatar(action) {
+    try {
+        const response = yield call([api, api.patch], "/users/me/avatar", action.payload);
+        const user = response?.data?.data || response?.data;
+
+        localStorage.setItem("auth_user", JSON.stringify(user));
+
+        yield put(updateAvatarSuccess(user));
+    } catch (error) {
+        const message =
+            error?.response?.data?.message ||
+            error?.message ||
+            "Cap nhat anh dai dien that bai.";
+
+        yield put(updateAvatarFailure(message));
+    }
+}
+
 function* handleLogout() {
     yield call(() => {
         localStorage.removeItem("access_token");
@@ -143,6 +197,8 @@ function* handleLogout() {
 export default function* authSaga() {
     yield takeLatest(loginRequest.type, handleLogin);
     yield takeLatest(registerRequest.type, handleRegister);
+    yield takeLatest(refreshSessionRequest.type, handleRefreshSession);
+    yield takeLatest(updateAvatarRequest.type, handleUpdateAvatar);
     yield takeLatest(fetchRegisterBuildingsRequest.type, handleFetchRegisterBuildings);
     yield takeEvery(logout.type, handleLogout);
 }

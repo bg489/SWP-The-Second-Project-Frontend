@@ -1,8 +1,12 @@
-﻿import { Navigate, Outlet } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Navigate, Outlet } from "react-router-dom";
 import { useMockAuth } from "../context/MockAuthContext";
 
 const RoleProtectedRoute = ({ allowedRoles = [] }) => {
-  const { isAuthenticated, role } = useMockAuth();
+  const { isAuthenticated: contextAuthenticated, role: contextRole } = useMockAuth();
+  const { isAuthenticated: storeAuthenticated, frontendRole } = useSelector((state) => state.auth);
+  const isAuthenticated = contextAuthenticated && storeAuthenticated;
+  const role = frontendRole || contextRole;
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
