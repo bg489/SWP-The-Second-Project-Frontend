@@ -540,8 +540,17 @@ const parkingSlice = createSlice({
         },
         createTempQrCardSuccess: (state, action) => {
             state.tempQrCards.saving = false;
-            state.tempQrCards.items = upsertById(state.tempQrCards.items, action.payload);
-            state.notice = "Đã thêm thẻ QR tạm.";
+            const createdCards = Array.isArray(action.payload)
+                ? action.payload
+                : [action.payload].filter(Boolean);
+
+            createdCards.forEach((card) => {
+                state.tempQrCards.items = upsertById(state.tempQrCards.items, card);
+            });
+            state.notice =
+                createdCards.length > 1
+                    ? `Đã tạo ${createdCards.length} thẻ QR tạm.`
+                    : "Đã thêm thẻ QR tạm.";
         },
         createTempQrCardFailure: (state, action) => {
             state.tempQrCards.saving = false;
