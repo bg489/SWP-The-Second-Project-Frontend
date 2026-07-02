@@ -31,6 +31,11 @@ const getInitialState = () => {
         registerBuildings: [],
         registerBuildingsLoading: false,
         registerBuildingsError: null,
+
+        passwordResetLoading: false,
+        passwordResetError: null,
+        passwordResetNotice: null,
+        passwordResetVerified: false,
     };
 };
 
@@ -158,6 +163,68 @@ const authSlice = createSlice({
             state.loading = false;
             state.error = action.payload;
         },
+
+        requestPasswordResetRequest: (state) => {
+            state.passwordResetLoading = true;
+            state.passwordResetError = null;
+            state.passwordResetNotice = null;
+            state.passwordResetVerified = false;
+        },
+
+        requestPasswordResetSuccess: (state, action) => {
+            state.passwordResetLoading = false;
+            state.passwordResetError = null;
+            state.passwordResetNotice = action.payload;
+        },
+
+        requestPasswordResetFailure: (state, action) => {
+            state.passwordResetLoading = false;
+            state.passwordResetError = action.payload;
+        },
+
+        verifyPasswordResetRequest: (state) => {
+            state.passwordResetLoading = true;
+            state.passwordResetError = null;
+            state.passwordResetVerified = false;
+        },
+
+        verifyPasswordResetSuccess: (state, action) => {
+            state.passwordResetLoading = false;
+            state.passwordResetError = null;
+            state.passwordResetNotice = action.payload;
+            state.passwordResetVerified = true;
+        },
+
+        verifyPasswordResetFailure: (state, action) => {
+            state.passwordResetLoading = false;
+            state.passwordResetError = action.payload;
+            state.passwordResetVerified = false;
+        },
+
+        resetPasswordRequest: (state) => {
+            state.passwordResetLoading = true;
+            state.passwordResetError = null;
+            state.passwordResetNotice = null;
+        },
+
+        resetPasswordSuccess: (state, action) => {
+            state.passwordResetLoading = false;
+            state.passwordResetError = null;
+            state.passwordResetNotice = action.payload;
+            state.passwordResetVerified = false;
+        },
+
+        resetPasswordFailure: (state, action) => {
+            state.passwordResetLoading = false;
+            state.passwordResetError = action.payload;
+        },
+
+        clearPasswordResetState: (state) => {
+            state.passwordResetLoading = false;
+            state.passwordResetError = null;
+            state.passwordResetNotice = null;
+            state.passwordResetVerified = false;
+        },
     },
 });
 
@@ -180,6 +247,16 @@ export const {
     updateAvatarRequest,
     updateAvatarSuccess,
     updateAvatarFailure,
+    requestPasswordResetRequest,
+    requestPasswordResetSuccess,
+    requestPasswordResetFailure,
+    verifyPasswordResetRequest,
+    verifyPasswordResetSuccess,
+    verifyPasswordResetFailure,
+    resetPasswordRequest,
+    resetPasswordSuccess,
+    resetPasswordFailure,
+    clearPasswordResetState,
 } = authSlice.actions;
 
 export default authSlice.reducer;

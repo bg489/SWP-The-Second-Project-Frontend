@@ -6,10 +6,11 @@ const Input = React.forwardRef(({
   error = false,
   className = "",
   icon: Icon,
+  rightElement,
   ...props
 }, ref) => {
   return (
-    <div className={`input-wrapper ${error ? "has-error" : ""} ${Icon ? "has-icon" : ""}`}>
+    <div className={`input-wrapper ${error ? "has-error" : ""} ${Icon ? "has-icon" : ""} ${rightElement ? "has-right-element" : ""}`}>
       {Icon && <Icon className="input-icon" size={18} />}
       <input
         ref={ref}
@@ -17,6 +18,7 @@ const Input = React.forwardRef(({
         className={`form-input ${className}`}
         {...props}
       />
+      {rightElement && <div className="input-right-element">{rightElement}</div>}
     </div>
   );
 });

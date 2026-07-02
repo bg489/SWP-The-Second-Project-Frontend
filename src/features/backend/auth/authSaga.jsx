@@ -11,12 +11,21 @@ import {
     registerFailure,
     registerRequest,
     registerSuccess,
+    requestPasswordResetFailure,
+    requestPasswordResetRequest,
+    requestPasswordResetSuccess,
+    resetPasswordFailure,
+    resetPasswordRequest,
+    resetPasswordSuccess,
     refreshSessionFailure,
     refreshSessionRequest,
     refreshSessionSuccess,
     updateAvatarFailure,
     updateAvatarRequest,
     updateAvatarSuccess,
+    verifyPasswordResetFailure,
+    verifyPasswordResetRequest,
+    verifyPasswordResetSuccess,
 } from "./authSlice";
 
 const backendToFrontendRole = {
@@ -137,6 +146,39 @@ function* handleRegister(action) {
     }
 }
 
+const getResponseMessage = (response, fallback) =>
+    response?.data?.message || response?.message || fallback;
+
+const getErrorMessage = (error, fallback) =>
+    error?.response?.data?.message || error?.message || fallback;
+
+function* handleRequestPasswordReset(action) {
+    try {
+        const response = yield call([api, api.post], "/auth/forgot-password", action.payload);
+        yield put(requestPasswordResetSuccess(getResponseMessage(response, "Đã gửi hướng dẫn đổi mật khẩu tới email của bạn.")));
+    } catch (error) {
+        yield put(requestPasswordResetFailure(getErrorMessage(error, "Gửi yêu cầu đổi mật khẩu thất bại.")));
+    }
+}
+
+function* handleVerifyPasswordReset(action) {
+    try {
+        const response = yield call([api, api.post], "/auth/verify-reset", action.payload);
+        yield put(verifyPasswordResetSuccess(getResponseMessage(response, "Mã xác minh hợp lệ.")));
+    } catch (error) {
+        yield put(verifyPasswordResetFailure(getErrorMessage(error, "Mã xác minh không đúng hoặc đã hết hạn.")));
+    }
+}
+
+function* handleResetPassword(action) {
+    try {
+        const response = yield call([api, api.post], "/auth/reset-password", action.payload);
+        yield put(resetPasswordSuccess(getResponseMessage(response, "Đổi mật khẩu thành công.")));
+    } catch (error) {
+        yield put(resetPasswordFailure(getErrorMessage(error, "Đổi mật khẩu thất bại.")));
+    }
+}
+
 function* handleRefreshSession() {
     try {
         const response = yield call([api, api.post], "/auth/refresh");
@@ -197,6 +239,9 @@ function* handleLogout() {
 export default function* authSaga() {
     yield takeLatest(loginRequest.type, handleLogin);
     yield takeLatest(registerRequest.type, handleRegister);
+    yield takeLatest(requestPasswordResetRequest.type, handleRequestPasswordReset);
+    yield takeLatest(verifyPasswordResetRequest.type, handleVerifyPasswordReset);
+    yield takeLatest(resetPasswordRequest.type, handleResetPassword);
     yield takeLatest(refreshSessionRequest.type, handleRefreshSession);
     yield takeLatest(updateAvatarRequest.type, handleUpdateAvatar);
     yield takeLatest(fetchRegisterBuildingsRequest.type, handleFetchRegisterBuildings);
