@@ -278,11 +278,20 @@
 }
 
 .user-profile-avatar {
+  display: grid;
+  place-items: center;
   width: 34px;
   height: 34px;
   border: 2px solid rgba(255, 184, 245, 0.8);
   border-radius: var(--radius-full);
   object-fit: cover;
+}
+
+.avatar-fallback {
+  background: linear-gradient(135deg, var(--pink), var(--orange));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
 }
 
 .user-profile-info {

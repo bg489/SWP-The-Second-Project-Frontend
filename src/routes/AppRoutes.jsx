@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { useSelector } from "react-redux";
 import MainLayout from "../components/Layout/MainLayout";
 import RoleProtectedRoute from "./RoleProtectedRoute";
 import { useMockAuth } from "../context/MockAuthContext";
@@ -32,7 +33,15 @@ import AdminBuildingChangeRequestsPage from "../features/backend/pages/AdminBuil
 import ManagerViolationTypesPage from "../features/pages/ManagerViolationTypesPage";
 
 const DefaultRedirect = () => {
-  const { role } = useMockAuth();
+  const { isAuthenticated: contextAuthenticated, role: contextRole } = useMockAuth();
+  const { isAuthenticated: storeAuthenticated, frontendRole } = useSelector((state) => state.auth);
+  const isAuthenticated = contextAuthenticated && storeAuthenticated;
+  const role = frontendRole || contextRole;
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
   return <Navigate to={roleHomePaths[role] || "/login"} replace />;
 };
 
@@ -60,6 +69,7 @@ const AppRoutes = () => {
           <Route path="/staff/violations" element={<StaffViolationsPage />} />
           <Route path="/staff/motorbike-status" element={<MotorbikeFloorStatusPage />} />
           <Route path="/staff/car-slots" element={<CarSlotMapPage />} />
+          <Route path="/staff/building-change" element={<UserBuildingChangeRequestPage />} />
         </Route>
 
         <Route element={<RoleProtectedRoute allowedRoles={["PARKING_MANAGER"]} />}>

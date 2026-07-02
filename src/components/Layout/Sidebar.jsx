@@ -39,6 +39,7 @@ const menus = {
     { path: "/staff/violations", label: "Vi phạm", icon: AlertTriangle },
     { path: "/staff/motorbike-status", label: "Sức chứa xe máy", icon: Layers },
     { path: "/staff/car-slots", label: "Ô đỗ ô tô", icon: Car },
+    { path: "/staff/building-change", label: "Đổi cơ sở", icon: Building2 },
   ],
   PARKING_MANAGER: [
     { path: "/manager/dashboard", label: "Tổng quan quản lý", icon: LayoutDashboard },

@@ -17,7 +17,7 @@ import {
   fetchViolationsRequest,
 } from "../backend/parking/parkingSlice";
 import { fetchFloorsRequest } from "../backend/floors/floorSlice";
-import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Car, Layers, QrCode, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Building2, Car, Layers, QrCode, ShieldCheck } from "lucide-react";
 
 const StaffDashboard = () => {
   const dispatch = useDispatch();
@@ -32,7 +32,7 @@ const StaffDashboard = () => {
   useEffect(() => {
     dispatch(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
     dispatch(fetchFloorsRequest({ buildingId, status: "ACTIVE", limit: 100 }));
-    dispatch(fetchTempQrCardsRequest({ status: "READY" }));
+    dispatch(fetchTempQrCardsRequest({ buildingId, status: "READY" }));
     dispatch(fetchViolationsRequest());
   }, [buildingId, dispatch]);
 
@@ -116,6 +116,17 @@ const StaffDashboard = () => {
       </section>
 
       <StatusBanner errors={[parkingSessions.error, tempQrCards.error, violations.error]} />
+
+      <section className="card soft-panel">
+        <div className="data-row">
+          <span><Building2 size={16} /> Tòa nhà đang trực</span>
+          <strong>{user?.buildingName || "Chưa có tòa nhà"}</strong>
+        </div>
+        <div className="data-row">
+          <span>Địa chỉ</span>
+          <strong>{user?.buildingAddress || "Chưa có địa chỉ"}</strong>
+        </div>
+      </section>
 
       <div className="dashboard-grid">
         <div className="card metric-card">

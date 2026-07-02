@@ -144,6 +144,21 @@ const initialState = {
         error: null,
     },
 
+    notifications: {
+        mine: [],
+        loading: false,
+        error: null,
+    },
+
+    wrongSlotCases: {
+        items: [],
+        loading: false,
+        reporting: false,
+        confirmingId: null,
+        lastCase: null,
+        error: null,
+    },
+
     parkingSessions: {
         active: parkingSessions.filter((session) =>
             ["ACTIVE", "PENDING_PAYMENT"].includes(session.status)
@@ -251,6 +266,8 @@ const parkingSlice = createSlice({
             state.tempQrCards.error = null;
             state.qrPasses.error = null;
             state.slotRegistrations.error = null;
+            state.notifications.error = null;
+            state.wrongSlotCases.error = null;
             state.parkingSessions.error = null;
             state.violations.error = null;
             state.payments.error = null;
@@ -628,6 +645,65 @@ const parkingSlice = createSlice({
             state.slotRegistrations.error = action.payload;
         },
 
+        fetchMyNotificationsRequest: (state) => {
+            state.notifications.loading = true;
+            state.notifications.error = null;
+        },
+        fetchMyNotificationsSuccess: (state, action) => {
+            state.notifications.loading = false;
+            state.notifications.mine = action.payload || [];
+        },
+        fetchMyNotificationsFailure: (state, action) => {
+            state.notifications.loading = false;
+            state.notifications.error = action.payload;
+        },
+
+        fetchWrongSlotCasesRequest: (state) => {
+            state.wrongSlotCases.loading = true;
+            state.wrongSlotCases.error = null;
+        },
+        fetchWrongSlotCasesSuccess: (state, action) => {
+            state.wrongSlotCases.loading = false;
+            state.wrongSlotCases.items = action.payload || [];
+        },
+        fetchWrongSlotCasesFailure: (state, action) => {
+            state.wrongSlotCases.loading = false;
+            state.wrongSlotCases.error = action.payload;
+        },
+        reportWrongSlotRequest: (state) => {
+            state.wrongSlotCases.reporting = true;
+            state.wrongSlotCases.error = null;
+            state.wrongSlotCases.lastCase = null;
+            state.notice = null;
+        },
+        reportWrongSlotSuccess: (state, action) => {
+            state.wrongSlotCases.reporting = false;
+            state.wrongSlotCases.lastCase = action.payload;
+            state.wrongSlotCases.items = upsertById(state.wrongSlotCases.items, action.payload);
+            state.notice =
+                action.payload?.status === "ALLOWED"
+                    ? "Slot chưa được đặt trước, xe được phép đậu tại đó và không phát sinh phí."
+                    : "Đã gửi thông báo yêu cầu dời xe trong 15 phút.";
+        },
+        reportWrongSlotFailure: (state, action) => {
+            state.wrongSlotCases.reporting = false;
+            state.wrongSlotCases.error = action.payload;
+        },
+        confirmWrongSlotRequest: (state, action) => {
+            state.wrongSlotCases.confirmingId = action.payload.id;
+            state.wrongSlotCases.error = null;
+            state.notice = null;
+        },
+        confirmWrongSlotSuccess: (state, action) => {
+            state.wrongSlotCases.confirmingId = null;
+            state.wrongSlotCases.items = upsertById(state.wrongSlotCases.items, action.payload);
+            state.notice = "Đã xác nhận quá hạn dời xe và ghi nhận phí vi phạm.";
+        },
+        confirmWrongSlotFailure: (state, action) => {
+            state.wrongSlotCases.confirmingId = null;
+            state.wrongSlotCases.error = action.payload;
+        },
+
         fetchActiveParkingSessionsRequest: (state) => {
             state.parkingSessions.loading = true;
             state.parkingSessions.error = null;
@@ -795,6 +871,9 @@ export const {
     checkOutRequest,
     checkOutSuccess,
     clearParkingNotice,
+    confirmWrongSlotFailure,
+    confirmWrongSlotRequest,
+    confirmWrongSlotSuccess,
     continueMonthlyPassPaymentFailure,
     continueMonthlyPassPaymentRequest,
     continueMonthlyPassPaymentSuccess,
@@ -822,6 +901,9 @@ export const {
     fetchMyActiveParkingSessionsFailure,
     fetchMyActiveParkingSessionsRequest,
     fetchMyActiveParkingSessionsSuccess,
+    fetchMyNotificationsFailure,
+    fetchMyNotificationsRequest,
+    fetchMyNotificationsSuccess,
     fetchAllVehiclesFailure,
     fetchAllVehiclesRequest,
     fetchAllVehiclesSuccess,
@@ -861,9 +943,15 @@ export const {
     fetchViolationsFailure,
     fetchViolationsRequest,
     fetchViolationsSuccess,
+    fetchWrongSlotCasesFailure,
+    fetchWrongSlotCasesRequest,
+    fetchWrongSlotCasesSuccess,
     rejectVehicleFailure,
     rejectVehicleRequest,
     rejectVehicleSuccess,
+    reportWrongSlotFailure,
+    reportWrongSlotRequest,
+    reportWrongSlotSuccess,
     savePackagePlanFailure,
     savePackagePlanRequest,
     savePackagePlanSuccess,
