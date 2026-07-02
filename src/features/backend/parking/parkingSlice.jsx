@@ -147,6 +147,12 @@ const initialState = {
     notifications: {
         mine: [],
         loading: false,
+        preferences: {
+            emailNotificationsEnabled: true,
+            loading: false,
+            saving: false,
+            error: null,
+        },
         error: null,
     },
 
@@ -267,6 +273,7 @@ const parkingSlice = createSlice({
             state.qrPasses.error = null;
             state.slotRegistrations.error = null;
             state.notifications.error = null;
+            state.notifications.preferences.error = null;
             state.wrongSlotCases.error = null;
             state.parkingSessions.error = null;
             state.violations.error = null;
@@ -657,6 +664,34 @@ const parkingSlice = createSlice({
             state.notifications.loading = false;
             state.notifications.error = action.payload;
         },
+        fetchNotificationPreferencesRequest: (state) => {
+            state.notifications.preferences.loading = true;
+            state.notifications.preferences.error = null;
+        },
+        fetchNotificationPreferencesSuccess: (state, action) => {
+            state.notifications.preferences.loading = false;
+            state.notifications.preferences.emailNotificationsEnabled =
+                action.payload?.emailNotificationsEnabled !== false;
+        },
+        fetchNotificationPreferencesFailure: (state, action) => {
+            state.notifications.preferences.loading = false;
+            state.notifications.preferences.error = action.payload;
+        },
+        updateNotificationPreferencesRequest: (state, action) => {
+            state.notifications.preferences.saving = true;
+            state.notifications.preferences.error = null;
+            state.notifications.preferences.emailNotificationsEnabled =
+                action.payload?.emailNotificationsEnabled !== false;
+        },
+        updateNotificationPreferencesSuccess: (state, action) => {
+            state.notifications.preferences.saving = false;
+            state.notifications.preferences.emailNotificationsEnabled =
+                action.payload?.emailNotificationsEnabled !== false;
+        },
+        updateNotificationPreferencesFailure: (state, action) => {
+            state.notifications.preferences.saving = false;
+            state.notifications.preferences.error = action.payload;
+        },
 
         fetchWrongSlotCasesRequest: (state) => {
             state.wrongSlotCases.loading = true;
@@ -904,6 +939,9 @@ export const {
     fetchMyNotificationsFailure,
     fetchMyNotificationsRequest,
     fetchMyNotificationsSuccess,
+    fetchNotificationPreferencesFailure,
+    fetchNotificationPreferencesRequest,
+    fetchNotificationPreferencesSuccess,
     fetchAllVehiclesFailure,
     fetchAllVehiclesRequest,
     fetchAllVehiclesSuccess,
@@ -961,6 +999,9 @@ export const {
     updateQrPassStatusFailure,
     updateQrPassStatusRequest,
     updateQrPassStatusSuccess,
+    updateNotificationPreferencesFailure,
+    updateNotificationPreferencesRequest,
+    updateNotificationPreferencesSuccess,
     updateTempQrCardStatusFailure,
     updateTempQrCardStatusRequest,
     updateTempQrCardStatusSuccess,

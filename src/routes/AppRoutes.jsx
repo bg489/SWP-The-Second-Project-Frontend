@@ -22,7 +22,6 @@ import BuildingManagementPage from "../features/pages/BuildingManagementPage";
 import FloorManagementPage from "../features/pages/FloorManagementPage";
 import ReportsPage from "../features/pages/ReportsPage";
 import UserProfilePage from "../features/pages/UserProfilePage";
-import AdminSettingsPage from "../features/pages/AdminSettingsPage";
 import ManagerPricingPackagesPage from "../features/pages/ManagerPricingPackagesPage";
 import TempQrCardsPage from "../features/pages/TempQrCardsPage";
 import StaffViolationsPage from "../features/pages/StaffViolationsPage";
@@ -85,7 +84,6 @@ const AppRoutes = () => {
 
         <Route element={<RoleProtectedRoute allowedRoles={["ADMIN"]} />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/settings" element={<AdminSettingsPage />} />
           <Route path="/admin/users" element={<AdminUserApprovalPage />} />
           <Route path="/admin/vehicles" element={<AdminVehicleApprovalPage />} />
           <Route

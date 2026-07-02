@@ -12,7 +12,6 @@ import {
   Layers,
   LogOut,
   QrCode,
-  Settings,
   ShieldCheck,
   Sparkles,
   User,
@@ -55,7 +54,6 @@ const menus = {
     { path: "/admin/users", label: "Duyệt tài khoản", icon: UserCheck },
     { path: "/admin/vehicles", label: "Duyệt xe", icon: Car },
     { path: "/admin/building-change-requests", label: "Duyệt đổi tòa nhà", icon: Building2 },
-    { path: "/admin/settings", label: "Quy tắc chung", icon: Settings },
   ],
 };
 

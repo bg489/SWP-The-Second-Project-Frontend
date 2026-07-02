@@ -67,6 +67,9 @@ import {
     fetchMyNotificationsFailure,
     fetchMyNotificationsRequest,
     fetchMyNotificationsSuccess,
+    fetchNotificationPreferencesFailure,
+    fetchNotificationPreferencesRequest,
+    fetchNotificationPreferencesSuccess,
     fetchAllVehiclesFailure,
     fetchAllVehiclesRequest,
     fetchAllVehiclesSuccess,
@@ -124,6 +127,9 @@ import {
     updateQrPassStatusFailure,
     updateQrPassStatusRequest,
     updateQrPassStatusSuccess,
+    updateNotificationPreferencesFailure,
+    updateNotificationPreferencesRequest,
+    updateNotificationPreferencesSuccess,
     updateTempQrCardStatusFailure,
     updateTempQrCardStatusRequest,
     updateTempQrCardStatusSuccess,
@@ -752,6 +758,36 @@ function* handleFetchMyNotifications() {
     }
 }
 
+function* handleFetchNotificationPreferences() {
+    try {
+        const response = yield call([api, api.get], "/notifications/preferences");
+        yield put(fetchNotificationPreferencesSuccess(extractData(response)));
+    } catch (error) {
+        yield put(
+            fetchNotificationPreferencesFailure(
+                getErrorMessage(error, "Không lấy được tùy chọn thông báo.")
+            )
+        );
+    }
+}
+
+function* handleUpdateNotificationPreferences(action) {
+    try {
+        const response = yield call(
+            [api, api.patch],
+            "/notifications/preferences",
+            action.payload
+        );
+        yield put(updateNotificationPreferencesSuccess(extractData(response)));
+    } catch (error) {
+        yield put(
+            updateNotificationPreferencesFailure(
+                getErrorMessage(error, "Không cập nhật được tùy chọn thông báo.")
+            )
+        );
+    }
+}
+
 function* handleFetchWrongSlotCases(action) {
     try {
         const response = yield call([api, api.get], "/wrong-slot-cases", {
@@ -1089,6 +1125,14 @@ export default function* parkingSaga() {
     yield takeLatest(fetchMySlotRegistrationsRequest.type, handleFetchMySlotRegistrations);
     yield takeEvery(createSlotRegistrationRequest.type, handleCreateSlotRegistration);
     yield takeLatest(fetchMyNotificationsRequest.type, handleFetchMyNotifications);
+    yield takeLatest(
+        fetchNotificationPreferencesRequest.type,
+        handleFetchNotificationPreferences
+    );
+    yield takeEvery(
+        updateNotificationPreferencesRequest.type,
+        handleUpdateNotificationPreferences
+    );
     yield takeLatest(fetchWrongSlotCasesRequest.type, handleFetchWrongSlotCases);
     yield takeEvery(reportWrongSlotRequest.type, handleReportWrongSlot);
     yield takeEvery(confirmWrongSlotRequest.type, handleConfirmWrongSlot);
