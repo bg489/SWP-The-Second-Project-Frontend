@@ -23,6 +23,9 @@ import {
     updateAvatarFailure,
     updateAvatarRequest,
     updateAvatarSuccess,
+    updateProfileFailure,
+    updateProfileRequest,
+    updateProfileSuccess,
     verifyPasswordResetFailure,
     verifyPasswordResetRequest,
     verifyPasswordResetSuccess,
@@ -227,6 +230,24 @@ function* handleUpdateAvatar(action) {
     }
 }
 
+function* handleUpdateProfile(action) {
+    try {
+        const response = yield call([api, api.patch], "/users/me", action.payload);
+        const user = response?.data?.data || response?.data;
+
+        localStorage.setItem("auth_user", JSON.stringify(user));
+
+        yield put(updateProfileSuccess(user));
+    } catch (error) {
+        const message =
+            error?.response?.data?.message ||
+            error?.message ||
+            "Cập nhật hồ sơ thất bại.";
+
+        yield put(updateProfileFailure(message));
+    }
+}
+
 function* handleLogout() {
     yield call(() => {
         localStorage.removeItem("access_token");
@@ -244,6 +265,7 @@ export default function* authSaga() {
     yield takeLatest(resetPasswordRequest.type, handleResetPassword);
     yield takeLatest(refreshSessionRequest.type, handleRefreshSession);
     yield takeLatest(updateAvatarRequest.type, handleUpdateAvatar);
+    yield takeLatest(updateProfileRequest.type, handleUpdateProfile);
     yield takeLatest(fetchRegisterBuildingsRequest.type, handleFetchRegisterBuildings);
     yield takeEvery(logout.type, handleLogout);
 }

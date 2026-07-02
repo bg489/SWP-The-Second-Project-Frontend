@@ -54,6 +54,10 @@ const AppRoutes = () => {
       <Route element={<MainLayout />}>
         <Route path="/" element={<DefaultRedirect />} />
 
+        <Route element={<RoleProtectedRoute allowedRoles={["ADMIN", "PARKING_MANAGER", "PARKING_STAFF", "USER"]} />}>
+          <Route path="/profile" element={<UserProfilePage />} />
+        </Route>
+
         <Route element={<RoleProtectedRoute allowedRoles={["USER"]} />}>
           <Route path="/user/dashboard" element={<UserDashboard />} />
           <Route path="/user/qr-pass" element={<MyQRPassPage />} />

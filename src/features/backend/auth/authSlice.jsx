@@ -164,6 +164,22 @@ const authSlice = createSlice({
             state.error = action.payload;
         },
 
+        updateProfileRequest: (state) => {
+            state.loading = true;
+            state.error = null;
+        },
+
+        updateProfileSuccess: (state, action) => {
+            state.loading = false;
+            state.error = null;
+            state.user = action.payload;
+        },
+
+        updateProfileFailure: (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        },
+
         requestPasswordResetRequest: (state) => {
             state.passwordResetLoading = true;
             state.passwordResetError = null;
@@ -247,6 +263,9 @@ export const {
     updateAvatarRequest,
     updateAvatarSuccess,
     updateAvatarFailure,
+    updateProfileRequest,
+    updateProfileSuccess,
+    updateProfileFailure,
     requestPasswordResetRequest,
     requestPasswordResetSuccess,
     requestPasswordResetFailure,

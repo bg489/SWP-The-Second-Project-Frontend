@@ -31,6 +31,7 @@ const menus = {
     { path: "/user/building-change", label: "Đổi tòa nhà", icon: Building2 },
   ],
   PARKING_STAFF: [
+    { path: "/profile", label: "Hồ sơ cá nhân", icon: User },
     { path: "/staff/dashboard", label: "Bàn vận hành", icon: LayoutDashboard },
     { path: "/staff/check-in", label: "Xe vào", icon: ArrowDownLeft },
     { path: "/staff/check-out", label: "Xe ra", icon: ArrowUpRight },
@@ -41,6 +42,7 @@ const menus = {
     { path: "/staff/building-change", label: "Đổi cơ sở", icon: Building2 },
   ],
   PARKING_MANAGER: [
+    { path: "/profile", label: "Hồ sơ cá nhân", icon: User },
     { path: "/manager/dashboard", label: "Tổng quan quản lý", icon: LayoutDashboard },
     { path: "/manager/building", label: "Tòa nhà", icon: Building2 },
     { path: "/manager/floors", label: "Tầng & ô đỗ", icon: Layers },
@@ -51,6 +53,7 @@ const menus = {
     { path: "/manager/violation-types", label: "Cấu hình vi phạm", icon: AlertTriangle }
   ],
   ADMIN: [
+    { path: "/profile", label: "Hồ sơ cá nhân", icon: User },
     { path: "/admin/dashboard", label: "Tổng quan duyệt", icon: ShieldCheck },
     { path: "/admin/users", label: "Duyệt tài khoản", icon: UserCheck },
     { path: "/admin/vehicles", label: "Duyệt xe", icon: Car },

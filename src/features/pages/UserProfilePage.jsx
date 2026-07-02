@@ -9,7 +9,7 @@ import Input from "../../components/Form/Input";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
 import { useMockAuth } from "../../context/MockAuthContext";
-import { updateAvatarRequest } from "../backend/auth/authSlice";
+import { updateProfileRequest } from "../backend/auth/authSlice";
 import {
   clearParkingNotice,
   createVehicleRequest,
@@ -20,11 +20,16 @@ import { formatDate, getStatusLabel, getStatusTone, getVehicleTypeLabel } from "
 const UserProfilePage = () => {
   const dispatch = useDispatch();
   const { user: mockUser } = useMockAuth();
-  const { error: authError, loading: authLoading, user: authUser } = useSelector((state) => state.auth);
+  const { error: authError, frontendRole, loading: authLoading, user: authUser } = useSelector((state) => state.auth);
   const user = authUser || mockUser;
   const { vehicles, notice } = useSelector((state) => state.parking);
-  const [avatarPreview, setAvatarPreview] = useState("");
-  const displayAvatar = avatarPreview || user?.avatarUrl || user?.avatar || "";
+  const isResident = (frontendRole || user?.role || "USER") === "USER";
+  const [profileForm, setProfileForm] = useState({
+    name: user?.name || "",
+    phone: user?.phone || "",
+    avatarUrl: user?.avatarUrl || user?.avatar || "",
+  });
+  const displayAvatar = profileForm.avatarUrl || user?.avatarUrl || user?.avatar || "";
 
   const [form, setForm] = useState({
     plateNumber: "",
@@ -34,8 +39,22 @@ const UserProfilePage = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchMyVehiclesRequest());
-  }, [dispatch]);
+    if (isResident) {
+      dispatch(fetchMyVehiclesRequest());
+    }
+  }, [dispatch, isResident]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setProfileForm({
+        name: user?.name || "",
+        phone: user?.phone || "",
+        avatarUrl: user?.avatarUrl || user?.avatar || "",
+      });
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [user?.avatar, user?.avatarUrl, user?.name, user?.phone]);
 
   const updateForm = (field, value) => {
     dispatch(clearParkingNotice());
@@ -64,18 +83,21 @@ const UserProfilePage = () => {
     });
   };
 
-  const handleAvatarChange = (event) => {
-    const file = event.target.files?.[0];
+  const updateProfileForm = (field, value) => {
+    const nextValue = field === "phone" ? value.replace(/\D/g, "").slice(0, 10) : value;
+    setProfileForm((prev) => ({ ...prev, [field]: nextValue }));
+  };
 
-    if (!file || !file.type.startsWith("image/")) return;
+  const handleProfileSubmit = (event) => {
+    event.preventDefault();
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const avatarUrl = String(reader.result || "");
-      setAvatarPreview(avatarUrl);
-      dispatch(updateAvatarRequest({ avatarUrl }));
-    };
-    reader.readAsDataURL(file);
+    dispatch(
+      updateProfileRequest({
+        name: profileForm.name.trim(),
+        phone: profileForm.phone.trim() || undefined,
+        avatarUrl: profileForm.avatarUrl.trim() || undefined,
+      })
+    );
   };
 
   const columns = [
@@ -94,10 +116,10 @@ const UserProfilePage = () => {
     <div className="parking-page">
       <section className="page-hero">
         <div className="page-hero-content">
-          <div className="page-eyebrow"><User size={16} /> Hồ sơ cư dân</div>
-          <h1 className="page-title">Thông tin cá nhân và phương tiện</h1>
+          <div className="page-eyebrow"><User size={16} /> Hồ sơ cá nhân</div>
+          <h1 className="page-title">Thông tin tài khoản và ảnh đại diện</h1>
           <p className="page-subtitle">
-            Cư dân tạo hồ sơ xe, chờ duyệt rồi mới mua gói tháng hoặc dùng mã QR ra vào bãi.
+            Cập nhật tên, số điện thoại và link ảnh đại diện. Email và vai trò được giữ nguyên theo tài khoản đã duyệt.
           </p>
         </div>
         <div className="page-hero-aside">
@@ -109,15 +131,15 @@ const UserProfilePage = () => {
 
       <StatusBanner success={notice} errors={[vehicles.error, authError]} />
 
-      <div className="two-column-grid">
+      <div className={isResident ? "two-column-grid" : "dashboard-grid"}>
         <section className="card section-card">
           <div className="section-header">
             <div>
               <h2 className="section-title"><User size={19} /> Hồ sơ cá nhân</h2>
-              <p className="section-copy">Thông tin đang dùng khi đăng ký xe và mua gói tháng.</p>
+              <p className="section-copy">Ảnh được lưu bằng đường dẫn ngắn để hệ thống tải nhanh và không làm đầy cơ sở dữ liệu.</p>
             </div>
           </div>
-          <div className="data-list">
+          <form className="data-list" onSubmit={handleProfileSubmit}>
             <div className="profile-avatar-panel">
               {displayAvatar ? (
                 <img src={displayAvatar} alt={user.name} className="profile-avatar-large" />
@@ -128,21 +150,41 @@ const UserProfilePage = () => {
               )}
               <div>
                 <strong>Ảnh đại diện</strong>
-                <p className="section-copy">Ảnh này sẽ hiển thị trên thanh trên cùng.</p>
-                <label className="btn btn-outline btn-sm profile-avatar-upload">
-                  Chọn ảnh mới
-                  <input type="file" accept="image/*" onChange={handleAvatarChange} disabled={authLoading} />
-                </label>
+                <p className="section-copy">Dán link ảnh từ nơi lưu ảnh của bạn. Ảnh sẽ được cắt vừa khung tròn khi hiển thị.</p>
               </div>
             </div>
-            <div className="data-row"><span>Họ tên</span><strong>{user.name}</strong></div>
+
+            <FormField label="Họ tên" required>
+              <Input
+                value={profileForm.name}
+                onChange={(event) => updateProfileForm("name", event.target.value)}
+                placeholder="Nhập họ tên"
+              />
+            </FormField>
+            <FormField label="Số điện thoại">
+              <Input
+                value={profileForm.phone}
+                onChange={(event) => updateProfileForm("phone", event.target.value)}
+                placeholder="Ví dụ: 0901234567"
+              />
+            </FormField>
+            <FormField label="Link ảnh đại diện">
+              <Input
+                value={profileForm.avatarUrl}
+                onChange={(event) => updateProfileForm("avatarUrl", event.target.value)}
+                placeholder="https://..."
+              />
+            </FormField>
             <div className="data-row"><span>Email</span><strong>{user.email}</strong></div>
             <div className="data-row"><span>Tòa nhà</span><strong>{user.buildingName || "Chưa có tòa nhà"}</strong></div>
-            <div className="data-row"><span>Ngày tham gia</span><strong>{formatDate("2026-06-01")}</strong></div>
-            <div className="data-row"><span>Trạng thái</span><strong>Đang hoạt động</strong></div>
-          </div>
+            <div className="data-row"><span>Ngày tham gia</span><strong>{formatDate(user.createdAt || "2026-06-01")}</strong></div>
+            <Button type="submit" variant="primary" icon={Save} loading={authLoading}>
+              Lưu hồ sơ
+            </Button>
+          </form>
         </section>
 
+        {isResident && (
         <section className="card section-card">
           <div className="section-header">
             <div>
@@ -176,8 +218,10 @@ const UserProfilePage = () => {
             </Button>
           </form>
         </section>
+        )}
       </div>
 
+      {isResident && (
       <section className="card section-card">
         <div className="section-header">
           <div>
@@ -187,6 +231,7 @@ const UserProfilePage = () => {
         </div>
         <Table columns={columns} data={vehicles.mine} loading={vehicles.loading} />
       </section>
+      )}
     </div>
   );
 };
