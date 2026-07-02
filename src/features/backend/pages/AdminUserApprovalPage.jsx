@@ -185,6 +185,23 @@ const AdminUserApprovalPage = () => {
             ),
         },
         {
+            header: "Thông tin duyệt",
+            key: "approvalInfo",
+            render: (user) => (
+                <>
+                    <strong>{user.buildingName || "Chưa gán tòa nhà"}</strong>
+                    <br />
+                    <span className="metric-note">
+                        {Number(user.vehicleCount || 0)} xe đã đăng ký
+                    </span>
+                    <br />
+                    <span className="metric-note">
+                        {user.vehicleSummary || "Chưa có hồ sơ xe"}
+                    </span>
+                </>
+            ),
+        },
+        {
             header: "Quyền sử dụng",
             key: "role",
             render: (user) => (

@@ -10,6 +10,15 @@ import Table from "../../components/Table/Table";
 import { clearParkingNotice, fetchReportsRequest, fetchViolationsRequest } from "../backend/parking/parkingSlice";
 import { formatCurrency, formatDateTime, getStatusLabel, getStatusTone, revenueSeries } from "../../services/mockParkingData";
 
+const asArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.items)) return value.items;
+  if (Array.isArray(value?.rows)) return value.rows;
+  if (Array.isArray(value?.data)) return value.data;
+  if (Array.isArray(value?.byStatus)) return value.byStatus;
+  return [];
+};
+
 const ReportsPage = () => {
   const dispatch = useDispatch();
   const { reports, violations } = useSelector((state) => state.parking);
@@ -32,11 +41,27 @@ const ReportsPage = () => {
   const carSlots = data.carSlots || {};
   const qrPasses = data.qrPasses || {};
   const violationSummary = data.violations || {};
+  const trafficRows = asArray(traffic);
+  const motorbikeRows = asArray(motorbikeCapacity);
+  const carSlotRows = asArray(carSlots);
+  const qrStatusRows = asArray(qrPasses.byStatus || qrPasses);
+  const qrExpiringRows = asArray(qrPasses.expiringSoon);
+  const violationRows = asArray(violationSummary);
 
-  const currentMotorbike = Number(motorbikeCapacity.current || motorbikeCapacity.currentCount || 0);
-  const totalMotorbike = Number(motorbikeCapacity.total || motorbikeCapacity.capacity || 1);
-  const occupiedSlots = Number(carSlots.occupied || carSlots.occupiedSlots || 0);
-  const totalSlots = Number(carSlots.total || carSlots.totalSlots || 1);
+  const currentMotorbike = motorbikeRows.length > 0
+    ? motorbikeRows.reduce((sum, row) => sum + Number(row.currentCount || 0), 0)
+    : Number(motorbikeCapacity.current || motorbikeCapacity.currentCount || 0);
+  const totalMotorbike = motorbikeRows.length > 0
+    ? motorbikeRows.reduce((sum, row) => sum + Number(row.capacity || 0), 0)
+    : Number(motorbikeCapacity.total || motorbikeCapacity.capacity || 1);
+  const occupiedSlots = carSlotRows.length > 0
+    ? carSlotRows
+      .filter((row) => row.status === "OCCUPIED")
+      .reduce((sum, row) => sum + Number(row.total || 0), 0)
+    : Number(carSlots.occupied || carSlots.occupiedSlots || 0);
+  const totalSlots = carSlotRows.length > 0
+    ? carSlotRows.reduce((sum, row) => sum + Number(row.total || 0), 0)
+    : Number(carSlots.total || carSlots.totalSlots || 1);
 
   const violationColumns = [
     { header: "Mã", key: "id" },
@@ -62,9 +87,26 @@ const ReportsPage = () => {
     setTimeout(() => setExporting(false), 900);
   };
 
-  const trafficTotal = Number(traffic.trafficIn || traffic.inCount || 0) + Number(traffic.trafficOut || traffic.outCount || 0);
-  const activeQr = Number(qrPasses.active || qrPasses.activeQrPasses || 0);
-  const expiringQr = Number(qrPasses.expiring || qrPasses.expiringQrPasses || 0);
+  const trafficIn = trafficRows.length > 0
+    ? trafficRows.reduce((sum, row) => sum + Number(row.entryCount || 0), 0)
+    : Number(traffic.trafficIn || traffic.inCount || 0);
+  const trafficOut = trafficRows.length > 0
+    ? trafficRows.reduce((sum, row) => sum + Number(row.exitCount || 0), 0)
+    : Number(traffic.trafficOut || traffic.outCount || 0);
+  const trafficTotal = trafficIn + trafficOut;
+  const activeQr = qrStatusRows.length > 0
+    ? qrStatusRows
+      .filter((row) => row.status === "ACTIVE")
+      .reduce((sum, row) => sum + Number(row.total || 0), 0)
+    : Number(qrPasses.active || qrPasses.activeQrPasses || 0);
+  const expiringQr = qrExpiringRows.length > 0
+    ? qrExpiringRows.reduce((sum, row) => sum + Number(row.expiringSoon || 0), 0)
+    : Number(qrPasses.expiring || qrPasses.expiringQrPasses || 0);
+  const violationTotal = violationRows.length > 0
+    ? violationRows.reduce((sum, row) => sum + Number(row.total || 0), 0)
+    : Number(violationSummary.total || violations.items.length);
+  const motorbikeCapacityTotal = Math.max(totalMotorbike, 1);
+  const carSlotTotal = Math.max(totalSlots, 1);
 
   const barMax = useMemo(() => {
     return Math.max(...revenueSeries.map((item) => item.value), 1);
@@ -117,14 +159,14 @@ const ReportsPage = () => {
       <div className="dashboard-grid">
         <div className="card metric-card">
           <div className="metric-icon"><TrendingUp size={22} /></div>
-          <div className="metric-label">Doanh thu hôm nay</div>
-          <div className="metric-value">{formatCurrency(revenue.revenueToday || revenue.todayRevenue || 0)}</div>
+          <div className="metric-label">Doanh thu đã thanh toán</div>
+          <div className="metric-value">{formatCurrency(revenue.totalRevenue || revenue.paidRevenue || 0)}</div>
           <div className="metric-note">Gồm gửi lẻ, gói tháng và phí vi phạm</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><Car size={22} /></div>
           <div className="metric-label">Lượt xe vào/ra</div>
-          <div className="metric-value">{traffic.trafficIn || traffic.inCount || 0}/{traffic.trafficOut || traffic.outCount || 0}</div>
+          <div className="metric-value">{trafficIn}/{trafficOut}</div>
           <div className="metric-note">{trafficTotal} lượt trong kỳ</div>
         </div>
         <div className="card metric-card">
@@ -136,7 +178,7 @@ const ReportsPage = () => {
         <div className="card metric-card">
           <div className="metric-icon"><AlertTriangle size={22} /></div>
           <div className="metric-label">Vi phạm</div>
-          <div className="metric-value">{violationSummary.total || violations.items.length}</div>
+          <div className="metric-value">{violationTotal}</div>
           <div className="metric-note">Nhân viên ghi nhận tại bãi</div>
         </div>
       </div>
@@ -175,12 +217,12 @@ const ReportsPage = () => {
             <div className="soft-panel">
               <strong>Xe máy</strong>
               <p className="section-copy">{currentMotorbike}/{totalMotorbike} xe đang gửi</p>
-              <div className="progress-track"><div className="progress-fill" style={{ width: `${Math.min(100, (currentMotorbike / totalMotorbike) * 100)}%` }} /></div>
+              <div className="progress-track"><div className="progress-fill" style={{ width: `${Math.min(100, (currentMotorbike / motorbikeCapacityTotal) * 100)}%` }} /></div>
             </div>
             <div className="soft-panel">
               <strong>Ô tô</strong>
               <p className="section-copy">{occupiedSlots}/{totalSlots} ô đang dùng</p>
-              <div className="progress-track"><div className="progress-fill" style={{ width: `${Math.min(100, (occupiedSlots / totalSlots) * 100)}%` }} /></div>
+              <div className="progress-track"><div className="progress-fill" style={{ width: `${Math.min(100, (occupiedSlots / carSlotTotal) * 100)}%` }} /></div>
             </div>
           </div>
         </section>

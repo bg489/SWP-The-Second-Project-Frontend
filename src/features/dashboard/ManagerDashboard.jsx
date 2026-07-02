@@ -16,6 +16,13 @@ import { AlertTriangle, BarChart3, Building2, Car, Download, Layers, TrendingUp 
 const sumAmounts = (rows, predicate = () => true) =>
   rows.filter(predicate).reduce((sum, row) => sum + Number(row.totalAmount || 0), 0);
 
+const revenueSourceLabels = {
+  MONTHLY_PASS: "Gói tháng xe máy",
+  SLOT_REGISTRATION: "Gói tháng ô tô",
+  PARKING_SESSION: "Xe gửi lẻ",
+  OTHER: "Khoản khác",
+};
+
 const asArray = (value) => {
   if (Array.isArray(value)) return value;
   if (Array.isArray(value?.items)) return value.items;
@@ -45,6 +52,7 @@ const ManagerDashboard = () => {
   const revenue = data.revenue || {};
   const revenuePayments = asArray(revenue.payments);
   const revenueSessions = asArray(revenue.sessions);
+  const revenueSources = asArray(revenue.paymentSources);
   const qrPassReport = useMemo(
     () => data.qrPasses || { byStatus: [], expiringSoon: [] },
     [data.qrPasses]
@@ -108,10 +116,25 @@ const ManagerDashboard = () => {
   const violationAmount = violationRows.length > 0
     ? violationRows.reduce((sum, row) => sum + Number(row.penaltyTotal || row.pendingAmount || 0), 0)
     : Number(violationReport.pendingAmount || violationReport.penaltyTotal || 0);
-  const totalRevenue = sumAmounts(revenuePayments, (row) => row.status === "SUCCESS");
-  const monthlyPassRevenue = revenueSessions
+  const totalRevenue = Number(revenue.totalRevenue ?? sumAmounts(revenuePayments, (row) => row.status === "SUCCESS"));
+  const monthlyPassRevenue = Number(revenue.monthlyPassRevenue ?? revenueSessions
     .filter((row) => row.pricingType === "MONTHLY_PASS")
-    .reduce((sum, row) => sum + Number(row.totalAmount || 0), 0);
+    .reduce((sum, row) => sum + Number(row.totalAmount || 0), 0));
+  const revenueBreakdown = revenueSources.length > 0
+    ? revenueSources
+      .filter((item) => item.status === "SUCCESS")
+      .map((item) => ({
+        key: `${item.sourceType}-${item.status}`,
+        label: revenueSourceLabels[item.sourceType] || item.sourceType,
+        count: item.paymentCount,
+        totalAmount: item.totalAmount,
+      }))
+    : revenueSessions.map((item) => ({
+      key: `${item.vehicleType}-${item.pricingType}`,
+      label: `${item.vehicleType} - ${item.pricingType}`,
+      count: item.sessionCount,
+      totalAmount: item.totalAmount,
+    }));
 
   const floorColumns = [
     { header: "Tầng", key: "name" },
@@ -180,16 +203,16 @@ const ManagerDashboard = () => {
             <Button variant="outline" icon={Download}>Xuất báo cáo</Button>
           </div>
           <div style={{ display: "grid", gap: 12 }}>
-            {revenueSessions.map((item) => (
-              <div className="soft-panel" key={`${item.vehicleType}-${item.pricingType}`}>
+            {revenueBreakdown.map((item) => (
+              <div className="soft-panel" key={item.key}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                  <strong>{item.vehicleType} - {item.pricingType}</strong>
+                  <strong>{item.label}</strong>
                   <span>{formatCurrency(item.totalAmount || 0)}</span>
                 </div>
-                <p className="section-copy">{item.sessionCount || 0} lượt đã hoàn tất</p>
+                <p className="section-copy">{item.count || 0} khoản đã hoàn tất</p>
               </div>
             ))}
-            {revenueSessions.length === 0 && <div className="soft-panel">Chưa có dữ liệu doanh thu.</div>}
+            {revenueBreakdown.length === 0 && <div className="soft-panel">Chưa có dữ liệu doanh thu.</div>}
           </div>
         </section>
 

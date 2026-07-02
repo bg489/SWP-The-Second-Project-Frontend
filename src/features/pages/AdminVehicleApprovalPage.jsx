@@ -23,6 +23,8 @@ const statusOptions = [
   { value: "", label: "Tất cả" },
 ];
 
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString("vi-VN") : "-");
+
 const AdminVehicleApprovalPage = () => {
   const dispatch = useDispatch();
   const { vehicles, notice } = useSelector((state) => state.parking);
@@ -63,7 +65,30 @@ const AdminVehicleApprovalPage = () => {
 
   const columns = [
     { header: "Biển số", key: "plateNumber", render: (row) => <strong>{row.plateNumber}</strong> },
-    { header: "Chủ xe", key: "owner" },
+    {
+      header: "Chủ xe",
+      key: "ownerName",
+      render: (row) => (
+        <>
+          <strong>{row.ownerName || row.owner || "-"}</strong>
+          <br />
+          <span className="metric-note">{row.ownerEmail || "Chưa có email"}</span>
+          <br />
+          <span className="metric-note">{row.ownerPhone || "Chưa có SĐT"}</span>
+        </>
+      ),
+    },
+    {
+      header: "Tòa nhà",
+      key: "buildingName",
+      render: (row) => (
+        <>
+          <strong>{row.buildingName || "Chưa gán tòa"}</strong>
+          <br />
+          <span className="metric-note">Gửi ngày {formatDate(row.createdAt)}</span>
+        </>
+      ),
+    },
     { header: "Loại xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
     { header: "Thông tin xe", key: "brand", render: (row) => `${row.brand || "-"}${row.color ? `, ${row.color}` : ""}` },
     {

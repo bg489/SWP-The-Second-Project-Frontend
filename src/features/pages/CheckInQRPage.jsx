@@ -37,7 +37,7 @@ const CheckInQRPage = () => {
   const { slotsByFloor, loading: slotsLoading, error: slotsError } = useSelector((state) => state.slots);
 
   const [form, setForm] = useState({
-    plateNumber: "51G-776.51",
+    plateNumber: "",
     vehicleType: "CAR",
     customerType: "WALK_IN_GUEST",
     qrCode: "",
@@ -70,7 +70,15 @@ const CheckInQRPage = () => {
     return buildingFloors.filter((floor) => floor.floorType === "CAR" && floor.status === "ACTIVE");
   }, [buildingFloors]);
 
-  const effectiveCarFloorId = selectedCarFloorId || (carFloors[0]?.id ? String(carFloors[0].id) : "");
+  const validQrPass = qrPasses.validation?.valid || qrPasses.validation?.isValid
+    ? qrPasses.validation.qrPass || qrPasses.validation.pass
+    : null;
+  const registeredReservedSlotId = validQrPass?.slotId ? String(validQrPass.slotId) : "";
+  const registeredSlotFloorId = validQrPass?.slotFloorId ? String(validQrPass.slotFloorId) : "";
+  const effectiveCarFloorId =
+    (form.customerType === "REGISTERED_USER" && registeredSlotFloorId ? registeredSlotFloorId : "") ||
+    selectedCarFloorId ||
+    (carFloors[0]?.id ? String(carFloors[0].id) : "");
   const firstAvailableMotorbikeFloor = motorbikeFloors.find((floor) => Number(floor.currentCount || 0) < Number(floor.capacity || 0));
   const effectiveMotorbikeFloorId = selectedMotorbikeFloorId || (firstAvailableMotorbikeFloor?.id ? String(firstAvailableMotorbikeFloor.id) : "");
 
@@ -95,9 +103,23 @@ const CheckInQRPage = () => {
   const currentCarSlots = useMemo(() => {
     return effectiveCarFloorId ? slotsByFloor[effectiveCarFloorId] || [] : [];
   }, [effectiveCarFloorId, slotsByFloor]);
+  const isRegisteredCustomer = form.customerType === "REGISTERED_USER";
+  const isSelectableCarSlot = (slot) =>
+    (!isRegisteredCustomer && slot.status === "AVAILABLE") ||
+    (isRegisteredCustomer &&
+      Boolean(registeredReservedSlotId) &&
+      ["AVAILABLE", "RESERVED"].includes(slot.status) &&
+      String(slot.id) === registeredReservedSlotId);
+  const selectableCarSlots = currentCarSlots.filter(isSelectableCarSlot);
   const availableCarSlots = currentCarSlots.filter((slot) => slot.status === "AVAILABLE");
-  const formSlotStillAvailable = availableCarSlots.some((slot) => String(slot.id) === String(form.slotId));
-  const selectedCarSlotId = String((formSlotStillAvailable ? form.slotId : availableCarSlots[0]?.id) || "");
+  const preferredCarSlot = registeredReservedSlotId
+    ? selectableCarSlots.find((slot) => String(slot.id) === registeredReservedSlotId)
+    : null;
+  const fallbackCarSlot = isRegisteredCustomer ? null : selectableCarSlots[0];
+  const formSlotStillAvailable = selectableCarSlots.some((slot) => String(slot.id) === String(form.slotId));
+  const selectedCarSlotId = String(
+    (formSlotStillAvailable ? form.slotId : preferredCarSlot?.id || fallbackCarSlot?.id) || ""
+  );
   const selectedSlot = currentCarSlots.find((slot) => String(slot.id) === selectedCarSlotId);
 
   const motorbikeFloor = useMemo(() => {
@@ -177,7 +199,14 @@ const CheckInQRPage = () => {
     if (!scannedValue) return;
 
     if (scannerTarget === "MONTHLY") {
-      updateForm("qrCode", scannedValue);
+      dispatch(clearParkingNotice());
+      setFormError("");
+      setForm((prev) => ({
+        ...prev,
+        plateNumber: "",
+        qrCode: scannedValue,
+      }));
+      dispatch(validateQrPassRequest({ qrCode: scannedValue }));
       return;
     }
 
@@ -206,8 +235,15 @@ const CheckInQRPage = () => {
     }
 
     if (form.vehicleType === "CAR") {
-      payload.slotId = Number(form.slotId || selectedCarSlotId);
-      if (!payload.slotId) {
+      if (isRegisteredCustomer) {
+        if (registeredReservedSlotId) {
+          payload.slotId = Number(selectedCarSlotId || registeredReservedSlotId);
+        }
+      } else {
+        payload.slotId = Number(form.slotId || selectedCarSlotId);
+      }
+
+      if (!isRegisteredCustomer && !payload.slotId) {
         setFormError("Tòa nhà hiện tại chưa còn ô ô tô trống để nhận xe.");
         return;
       }
@@ -389,7 +425,7 @@ const CheckInQRPage = () => {
 
                   <div className="car-slot-grid">
                     {currentCarSlots.map((slot) => {
-                      const isAvailable = slot.status === "AVAILABLE";
+                      const isSelectable = isSelectableCarSlot(slot);
                       const isSelected = selectedCarSlotId === String(slot.id);
 
                       return (
@@ -397,7 +433,7 @@ const CheckInQRPage = () => {
                           type="button"
                           key={slot.id}
                           className={`car-slot-card ${slotClassName(slot.status)} ${isSelected ? "selected" : ""}`}
-                          disabled={!isAvailable}
+                          disabled={!isSelectable}
                           onClick={() => updateForm("slotId", String(slot.id))}
                         >
                           <span className="car-slot-code">{slot.slotCode}</span>
@@ -412,6 +448,11 @@ const CheckInQRPage = () => {
                   </div>
 
                   {slotsLoading && <p className="section-copy">Đang tải ô ô tô...</p>}
+                  {isRegisteredCustomer && registeredReservedSlotId && (
+                    <p className="section-copy">
+                      Xe có ô đã đặt trước, nhân viên có thể chọn đúng ô đó nếu đang còn sẵn sàng.
+                    </p>
+                  )}
                 </div>
               </FormField>
             )}
@@ -447,8 +488,8 @@ const CheckInQRPage = () => {
               <p className="section-copy">
                 {form.vehicleType === "CAR"
                   ? selectedSlot
-                    ? `Đã chọn ${selectedSlot.slotCode}. Còn ${availableCarSlots.length} ô trống trên tầng này.`
-                    : `${availableCarSlots.length} ô còn trống để chọn.`
+                    ? `Đã chọn ${selectedSlot.slotCode}. Còn ${availableCarSlots.length} ô trống và ${carSummary.reserved} ô đã đặt trước trên tầng này.`
+                    : `${selectableCarSlots.length} ô có thể chọn.`
                   : motorbikeFloor
                     ? `${motorbikeFloor.name} còn ${motorbikeFloor.capacity - motorbikeFloor.currentCount} chỗ.`
                     : "Khu xe máy đã đầy."}

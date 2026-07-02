@@ -29,6 +29,8 @@ const statusOptions = [
   { value: "INACTIVE", label: "Ngưng áp dụng" },
 ];
 
+const formatDate = (value) => (value ? new Date(value).toLocaleString("vi-VN") : "-");
+
 const ManagerPricingPackagesPage = () => {
   const dispatch = useDispatch();
   const {
@@ -69,6 +71,15 @@ const ManagerPricingPackagesPage = () => {
   const activePackages = useMemo(() => {
     return packagePlans.items.filter((plan) => (plan.status || "ACTIVE") === "ACTIVE").length;
   }, [packagePlans.items]);
+
+  const sortedPricingPolicies = useMemo(() => {
+    return [...pricingPolicies.items].sort((left, right) => {
+      const leftTime = new Date(left.updatedAt || left.createdAt || 0).getTime();
+      const rightTime = new Date(right.updatedAt || right.createdAt || 0).getTime();
+
+      return rightTime - leftTime || Number(right.id || 0) - Number(left.id || 0);
+    });
+  }, [pricingPolicies.items]);
 
   const updatePriceForm = (field, value) => {
     dispatch(clearParkingNotice());
@@ -127,6 +138,7 @@ const ManagerPricingPackagesPage = () => {
     { header: "Loại xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
     { header: "Cách tính", key: "pricingType", render: (row) => pricingTypeLabels[row.pricingType] || row.pricingType },
     { header: "Mức thu", key: "amount", render: (row) => formatCurrency(row.amount) },
+    { header: "Cập nhật", key: "updatedAt", render: (row) => formatDate(row.updatedAt || row.createdAt) },
     {
       header: "Trạng thái",
       key: "status",
@@ -307,7 +319,7 @@ const ManagerPricingPackagesPage = () => {
             Làm mới
           </Button>
         </div>
-        <Table columns={priceColumns} data={pricingPolicies.items} loading={pricingPolicies.loading} />
+        <Table columns={priceColumns} data={sortedPricingPolicies} loading={pricingPolicies.loading} />
       </section>
 
       <section className="card section-card">

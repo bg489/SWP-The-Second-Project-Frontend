@@ -47,7 +47,7 @@ const adminUserSlice = createSlice({
             const updatedUser = action.payload?.user || action.payload;
 
             state.users = state.users.map((user) =>
-                Number(user.id) === Number(updatedUser.id) ? updatedUser : user
+                Number(user.id) === Number(updatedUser.id) ? { ...user, ...updatedUser } : user
             );
         },
 

@@ -36,17 +36,18 @@ const getSessionQrCodes = (session) => {
     session.tempQrCardCode,
     session.temp_qr_card_code,
     session.monthlyPassQrCode,
+    session.plateNumber,
   ]
     .filter(Boolean)
     .map((value) => String(value).trim());
 };
 
 const findSessionByQrCode = (sessions, qrCode) => {
-  const normalizedCode = String(qrCode || "").trim().toUpperCase();
+  const normalizedCode = normalizePlateSearch(qrCode);
   if (!normalizedCode) return null;
 
   return sessions.find((session) =>
-    getSessionQrCodes(session).some((value) => value.toUpperCase() === normalizedCode)
+    getSessionQrCodes(session).some((value) => normalizePlateSearch(value) === normalizedCode)
   ) || null;
 };
 
