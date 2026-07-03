@@ -1068,6 +1068,7 @@ function* handleFetchReports(action) {
             revenue,
             qrPasses,
             violationReport,
+            fullReport,
         ] = yield all([
             call([api, api.get], "/reports/traffic", { params }),
             call([api, api.get], "/reports/motorbike-capacity", { params }),
@@ -1075,6 +1076,7 @@ function* handleFetchReports(action) {
             call([api, api.get], "/reports/revenue", { params }),
             call([api, api.get], "/reports/qr-passes", { params }),
             call([api, api.get], "/reports/violations", { params }),
+            call([api, api.get], "/reports/full", { params }),
         ]);
 
         yield put(
@@ -1085,6 +1087,7 @@ function* handleFetchReports(action) {
                 revenue: extractData(revenue),
                 qrPasses: extractData(qrPasses),
                 violations: extractData(violationReport),
+                full: extractData(fullReport),
             })
         );
     } catch (error) {

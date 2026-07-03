@@ -59,19 +59,28 @@ const renderReportTable = ({ columns, rows, title }) => `
 const ReportsPage = () => {
   const dispatch = useDispatch();
   const { reports, violations } = useSelector((state) => state.parking);
+  const { user } = useSelector((state) => state.auth);
 
   const [filters, setFilters] = useState({
     from: "2026-06-01",
     to: "2026-06-30",
   });
   const [exporting, setExporting] = useState(false);
+  const reportParams = useMemo(
+    () => ({
+      ...filters,
+      ...(user?.buildingId ? { buildingId: user.buildingId } : {}),
+    }),
+    [filters, user?.buildingId]
+  );
 
   useEffect(() => {
-    dispatch(fetchReportsRequest(filters));
+    dispatch(fetchReportsRequest(reportParams));
     dispatch(fetchViolationsRequest());
-  }, [dispatch, filters]);
+  }, [dispatch, reportParams]);
 
   const data = reports.data || {};
+  const fullReport = data.full || {};
   const revenue = data.revenue || {};
   const traffic = data.traffic || {};
   const motorbikeCapacity = data.motorbikeCapacity || {};
@@ -115,7 +124,7 @@ const ReportsPage = () => {
 
   const refresh = () => {
     dispatch(clearParkingNotice());
-    dispatch(fetchReportsRequest(filters));
+    dispatch(fetchReportsRequest(reportParams));
     dispatch(fetchViolationsRequest());
   };
 
@@ -262,6 +271,236 @@ const ReportsPage = () => {
     }, 500);
   };
 
+  const handleExportPdf = async () => {
+    setExporting(true);
+
+    try {
+      const html2pdfModule = await import("html2pdf.js");
+      const html2pdf = html2pdfModule.default || html2pdfModule;
+      const monthlyRows = asArray(fullReport.monthlyPasses?.rows);
+      const walkInRows = asArray(fullReport.walkIns?.rows);
+      const violationDetailRows = asArray(fullReport.violations?.rows);
+      const capacityRows = asArray(fullReport.capacity);
+      const sourceRows = asArray(revenue.paymentSources);
+      const createdAt = new Date().toLocaleString("vi-VN");
+      const reportNode = document.createElement("div");
+
+      reportNode.className = "pdf-report-root";
+      reportNode.innerHTML = `
+        <style>
+          .pdf-report-root {
+            width: 1120px;
+            padding: 28px;
+            background: #fff7fb;
+            color: #241122;
+            font-family: Arial, sans-serif;
+          }
+          .pdf-hero {
+            border-radius: 22px;
+            padding: 30px;
+            background: linear-gradient(135deg,#FFB8F5,#ED9951);
+            box-shadow: 0 20px 50px rgba(237,153,81,.20);
+          }
+          .pdf-eyebrow {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.48);
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+          }
+          .pdf-hero h1 {
+            margin: 18px 0 8px;
+            font-size: 34px;
+            line-height: 1.15;
+          }
+          .pdf-hero p {
+            margin: 0;
+            color: #5d3f58;
+            font-size: 15px;
+            font-weight: 700;
+          }
+          .pdf-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin: 20px 0;
+          }
+          .pdf-card,
+          .pdf-section,
+          .report-section {
+            border: 1px solid #f2d5e7;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 12px 26px rgba(237,153,81,.12);
+          }
+          .pdf-card {
+            padding: 16px;
+          }
+          .pdf-card span {
+            display: block;
+            color: #79536f;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+          }
+          .pdf-card strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 22px;
+          }
+          .pdf-section,
+          .report-section {
+            margin-top: 16px;
+            padding: 16px;
+            break-inside: avoid;
+          }
+          .pdf-section h2,
+          .report-section h2 {
+            margin: 0 0 12px;
+            font-size: 18px;
+          }
+          .pdf-section p,
+          .report-section p {
+            margin: -4px 0 12px;
+            color: #77566f;
+            font-size: 12px;
+            font-weight: 700;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+          th,
+          td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #f1ddea;
+            text-align: left;
+            vertical-align: top;
+            font-size: 12px;
+            line-height: 1.35;
+          }
+          th {
+            background: #fff1fb;
+            color: #6f526b;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+          }
+          tr:last-child td {
+            border-bottom: 0;
+          }
+        </style>
+        <section class="pdf-hero">
+          <span class="pdf-eyebrow">Sunrise Parking</span>
+          <h1>Báo cáo vận hành bãi xe</h1>
+          <p>${escapeHtml(user?.buildingName || "Tất cả tòa nhà")} • Từ ${escapeHtml(filters.from)} đến ${escapeHtml(filters.to)} • Xuất lúc ${escapeHtml(createdAt)}</p>
+        </section>
+        <section class="pdf-summary">
+          <div class="pdf-card"><span>Doanh thu đã thanh toán</span><strong>${escapeHtml(formatCurrency(revenue.totalRevenue || revenue.paidRevenue || 0))}</strong></div>
+          <div class="pdf-card"><span>Gói tháng</span><strong>${escapeHtml(formatCurrency(fullReport.monthlyPasses?.totalPaid || revenue.monthlyPassRevenue || 0))}</strong></div>
+          <div class="pdf-card"><span>Khách gửi lẻ</span><strong>${escapeHtml(formatCurrency(fullReport.walkIns?.totalAmount || revenue.walkInRevenue || 0))}</strong></div>
+          <div class="pdf-card"><span>Phí vi phạm đã trả</span><strong>${escapeHtml(formatCurrency(fullReport.violations?.paidPenalty || 0))}</strong></div>
+        </section>
+        ${renderReportTable({
+          title: "Cơ cấu doanh thu",
+          rows: sourceRows,
+          columns: [
+            { header: "Nguồn", key: "sourceType" },
+            { header: "Trạng thái", key: "status" },
+            { header: "Số khoản", key: "paymentCount" },
+            { header: "Tổng tiền", render: (row) => formatCurrency(row.totalAmount || 0) },
+          ],
+        })}
+        ${renderReportTable({
+          title: "Gói tháng xe máy và ô tô",
+          rows: monthlyRows,
+          columns: [
+            { header: "Người đăng ký", key: "ownerName" },
+            { header: "Biển số", key: "plateNumber" },
+            { header: "Loại xe", key: "vehicleType" },
+            { header: "Gói", key: "packageName" },
+            { header: "Trạng thái gói", key: "status" },
+            { header: "Thanh toán", key: "paymentStatus" },
+            { header: "Ngày hết hạn", render: (row) => formatDateTime(row.endDate) },
+            { header: "Số tiền", render: (row) => formatCurrency(row.amount || 0) },
+          ],
+        })}
+        ${renderReportTable({
+          title: "Khách gửi lẻ đã check out",
+          rows: walkInRows,
+          columns: [
+            { header: "Loại xe", key: "vehicleType" },
+            { header: "Số lượt thành công", key: "completedCount" },
+            { header: "Tiền gửi xe", render: (row) => formatCurrency(row.parkingFeeTotal || 0) },
+            { header: "Phí vi phạm", render: (row) => formatCurrency(row.violationFeeTotal || 0) },
+            { header: "Tổng tiền", render: (row) => formatCurrency(row.totalAmount || 0) },
+          ],
+        })}
+        ${renderReportTable({
+          title: "Phí vi phạm đã gộp theo lỗi",
+          rows: violationDetailRows,
+          columns: [
+            { header: "Lỗi vi phạm", key: "violationName" },
+            { header: "Số lần", key: "violationCount" },
+            { header: "User vi phạm", key: "userNames" },
+            { header: "Xe vi phạm", key: "plateNumbers" },
+            { header: "Tổng phạt", render: (row) => formatCurrency(row.totalPenalty || 0) },
+            { header: "Đã trả", render: (row) => formatCurrency(row.paidPenalty || 0) },
+          ],
+        })}
+        ${renderReportTable({
+          title: "Sức chứa theo tòa nhà",
+          rows: capacityRows,
+          columns: [
+            { header: "Tòa nhà", key: "buildingName" },
+            { header: "Xe máy đang gửi", key: "motorbikeCurrent" },
+            { header: "Sức chứa xe máy", key: "motorbikeCapacity" },
+            { header: "Xe máy đã đăng ký gói", key: "motorbikeMonthlyPasses" },
+            { header: "Xe máy còn nhận", key: "effectiveMotorbikeRemaining" },
+            { header: "Slot ô tô đang dùng", key: "carOccupiedSlots" },
+            { header: "Slot ô tô đã đăng ký gói", key: "carMonthlySlots" },
+            { header: "Tổng slot ô tô", key: "carTotalSlots" },
+          ],
+        })}
+      `;
+
+      document.body.appendChild(reportNode);
+
+      await html2pdf()
+        .set({
+          filename: `sunrise-parking-report-${filters.from || "from"}-${filters.to || "to"}.pdf`,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: "#fff7fb",
+          },
+          jsPDF: {
+            unit: "mm",
+            format: "a4",
+            orientation: "portrait",
+          },
+          margin: [8, 8, 8, 8],
+          pagebreak: {
+            mode: ["css", "legacy"],
+            avoid: [".pdf-card", ".pdf-section", ".report-section"],
+          },
+        })
+        .from(reportNode)
+        .save();
+
+      reportNode.remove();
+    } catch (error) {
+      console.error("[report:pdf]", error);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const trafficIn = trafficRows.length > 0
     ? trafficRows.reduce((sum, row) => sum + Number(row.entryCount || 0), 0)
     : Number(traffic.trafficIn || traffic.inCount || 0);
@@ -316,7 +555,7 @@ const ReportsPage = () => {
             <Button variant="outline" icon={RefreshCcw} loading={reports.loading} onClick={refresh}>
               Làm mới
             </Button>
-            <Button variant="primary" icon={Download} loading={exporting} onClick={handleExport}>
+            <Button variant="primary" icon={Download} loading={exporting} onClick={handleExportPdf}>
               {exporting ? "Đang chuẩn bị" : "Xuất báo cáo"}
             </Button>
           </div>
