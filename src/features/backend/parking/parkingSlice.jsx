@@ -156,6 +156,14 @@ const initialState = {
         error: null,
     },
 
+    staffAssignments: {
+        building: null,
+        items: [],
+        loading: false,
+        assigningId: null,
+        error: null,
+    },
+
     wrongSlotCases: {
         items: [],
         loading: false,
@@ -274,6 +282,7 @@ const parkingSlice = createSlice({
             state.slotRegistrations.error = null;
             state.notifications.error = null;
             state.notifications.preferences.error = null;
+            state.staffAssignments.error = null;
             state.wrongSlotCases.error = null;
             state.parkingSessions.error = null;
             state.violations.error = null;
@@ -702,6 +711,40 @@ const parkingSlice = createSlice({
             state.notifications.preferences.error = action.payload;
         },
 
+        fetchStaffAssignmentsRequest: (state) => {
+            state.staffAssignments.loading = true;
+            state.staffAssignments.error = null;
+        },
+        fetchStaffAssignmentsSuccess: (state, action) => {
+            const payload = action.payload || {};
+
+            state.staffAssignments.loading = false;
+            state.staffAssignments.building = payload.building || null;
+            state.staffAssignments.items =
+                payload.staff || payload.users || (Array.isArray(payload) ? payload : []);
+        },
+        fetchStaffAssignmentsFailure: (state, action) => {
+            state.staffAssignments.loading = false;
+            state.staffAssignments.error = action.payload;
+        },
+        assignStaffToBuildingRequest: (state, action) => {
+            state.staffAssignments.assigningId = action.payload.id;
+            state.staffAssignments.error = null;
+            state.notice = null;
+        },
+        assignStaffToBuildingSuccess: (state, action) => {
+            state.staffAssignments.assigningId = null;
+            state.staffAssignments.items = upsertById(
+                state.staffAssignments.items,
+                action.payload
+            );
+            state.notice = "Đã gán nhân viên vào tòa nhà.";
+        },
+        assignStaffToBuildingFailure: (state, action) => {
+            state.staffAssignments.assigningId = null;
+            state.staffAssignments.error = action.payload;
+        },
+
         fetchWrongSlotCasesRequest: (state) => {
             state.wrongSlotCases.loading = true;
             state.wrongSlotCases.error = null;
@@ -902,6 +945,9 @@ export const {
     approveVehicleFailure,
     approveVehicleRequest,
     approveVehicleSuccess,
+    assignStaffToBuildingFailure,
+    assignStaffToBuildingRequest,
+    assignStaffToBuildingSuccess,
     buyPackagePlanFailure,
     buyPackagePlanRequest,
     buyPackagePlanSuccess,
@@ -984,6 +1030,9 @@ export const {
     fetchReportsFailure,
     fetchReportsRequest,
     fetchReportsSuccess,
+    fetchStaffAssignmentsFailure,
+    fetchStaffAssignmentsRequest,
+    fetchStaffAssignmentsSuccess,
     fetchTempQrCardsFailure,
     fetchTempQrCardsRequest,
     fetchTempQrCardsSuccess,

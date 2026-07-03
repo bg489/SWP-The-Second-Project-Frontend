@@ -22,6 +22,9 @@ import {
     approveVehicleFailure,
     approveVehicleRequest,
     approveVehicleSuccess,
+    assignStaffToBuildingFailure,
+    assignStaffToBuildingRequest,
+    assignStaffToBuildingSuccess,
     buyPackagePlanFailure,
     buyPackagePlanRequest,
     buyPackagePlanSuccess,
@@ -103,6 +106,9 @@ import {
     fetchReportsFailure,
     fetchReportsRequest,
     fetchReportsSuccess,
+    fetchStaffAssignmentsFailure,
+    fetchStaffAssignmentsRequest,
+    fetchStaffAssignmentsSuccess,
     fetchTempQrCardsFailure,
     fetchTempQrCardsRequest,
     fetchTempQrCardsSuccess,
@@ -790,6 +796,43 @@ function* handleUpdateNotificationPreferences(action) {
     }
 }
 
+function* handleFetchStaffAssignments(action) {
+    try {
+        const response = yield call([api, api.get], "/users/staff-candidates", {
+            params: action.payload,
+        });
+
+        yield put(fetchStaffAssignmentsSuccess(extractData(response)));
+    } catch (error) {
+        if (shouldUseSample(error)) {
+            yield put(fetchStaffAssignmentsSuccess({ staff: [], building: null }));
+            return;
+        }
+
+        yield put(
+            fetchStaffAssignmentsFailure(
+                getErrorMessage(error, "Không lấy được danh sách nhân viên.")
+            )
+        );
+    }
+}
+
+function* handleAssignStaffToBuilding(action) {
+    try {
+        const { id } = action.payload;
+        const response = yield call([api, api.patch], `/users/staff/${id}/building`);
+
+        yield put(assignStaffToBuildingSuccess(extractData(response)));
+        yield put(fetchStaffAssignmentsRequest());
+    } catch (error) {
+        yield put(
+            assignStaffToBuildingFailure(
+                getErrorMessage(error, "Không gán được nhân viên vào tòa nhà.")
+            )
+        );
+    }
+}
+
 function* handleFetchWrongSlotCases(action) {
     try {
         const response = yield call([api, api.get], "/wrong-slot-cases", {
@@ -1135,6 +1178,8 @@ export default function* parkingSaga() {
         updateNotificationPreferencesRequest.type,
         handleUpdateNotificationPreferences
     );
+    yield takeLatest(fetchStaffAssignmentsRequest.type, handleFetchStaffAssignments);
+    yield takeEvery(assignStaffToBuildingRequest.type, handleAssignStaffToBuilding);
     yield takeLatest(fetchWrongSlotCasesRequest.type, handleFetchWrongSlotCases);
     yield takeEvery(reportWrongSlotRequest.type, handleReportWrongSlot);
     yield takeEvery(confirmWrongSlotRequest.type, handleConfirmWrongSlot);

@@ -16,12 +16,19 @@ import {
   Sparkles,
   User,
   UserCheck,
+  Users,
 } from "lucide-react";
 
 import { useMockAuth } from "../../context/MockAuthContext";
-import { roleLabels } from "../../services/mockParkingData";
 import { logout as logoutAction } from "../../features/backend/auth/authSlice";
 import "./Layout.css";
+
+const roleLabels = {
+  ADMIN: "Quản trị viên",
+  PARKING_MANAGER: "Quản lý bãi xe",
+  PARKING_STAFF: "Nhân viên bãi xe",
+  USER: "Cư dân",
+};
 
 const menus = {
   USER: [
@@ -49,8 +56,9 @@ const menus = {
     { path: "/manager/pricing-packages", label: "Bảng giá & gói tháng", icon: BadgeDollarSign },
     { path: "/manager/monthly-passes", label: "QR gói tháng", icon: QrCode },
     { path: "/manager/temp-qr-cards", label: "QR tạm", icon: QrCode },
+    { path: "/manager/staff", label: "Nhân viên", icon: Users },
     { path: "/manager/reports", label: "Báo cáo", icon: BarChart3 },
-    { path: "/manager/violation-types", label: "Cấu hình vi phạm", icon: AlertTriangle }
+    { path: "/manager/violation-types", label: "Cấu hình vi phạm", icon: AlertTriangle },
   ],
   ADMIN: [
     { path: "/profile", label: "Hồ sơ cá nhân", icon: User },
