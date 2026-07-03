@@ -28,6 +28,18 @@ const normalizeText = (value) =>
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[\s.-]/g, "");
 
+const normalizePlateQrValue = (value) =>
+  String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[\s.-]/g, "");
+
+const getPassQrValue = (pass) =>
+  normalizePlateQrValue(pass?.plateNumber || pass?.vehiclePlateNumber) ||
+  pass?.qrCode ||
+  pass?.code ||
+  "";
+
 const formatDate = (value) => {
   if (!value) return "-";
 
@@ -128,12 +140,15 @@ const ManagerMonthlyPassesPage = () => {
       header: "QR",
       key: "qrCode",
       width: "96px",
-      render: (row) =>
-        row.qrCode ? (
-          <QrCodeImage value={row.qrCode} size={62} title={`QR ${row.plateNumber || row.id}`} />
+      render: (row) => {
+        const qrValue = getPassQrValue(row);
+
+        return qrValue ? (
+          <QrCodeImage value={qrValue} size={62} title={`QR ${row.plateNumber || row.id}`} />
         ) : (
           <span className="pill warning">Chưa có</span>
-        ),
+        );
+      },
     },
     {
       header: "Người dùng",
