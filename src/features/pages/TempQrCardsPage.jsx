@@ -28,6 +28,33 @@ const statusOptions = [
   { value: "LOST", label: "Mất thẻ" },
 ];
 
+const buildBuildingPrefix = (buildingName = "") => {
+  const normalized = buildingName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9\s]/g, " ")
+    .trim();
+  const prefix = normalized
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+
+  return prefix || "QR";
+};
+
+const getNextPreviewNumber = (cards, prefix) => {
+  const matcher = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-(\\d+)$`);
+
+  return cards.reduce((max, card) => {
+    const match = String(card.cardCode || "").match(matcher);
+    if (!match) return max;
+
+    return Math.max(max, Number(match[1]) || 0);
+  }, 0) + 1;
+};
+
 const TempQrCardsPage = () => {
   const dispatch = useDispatch();
   const { role } = useMockAuth();
@@ -38,7 +65,7 @@ const TempQrCardsPage = () => {
   const canCreate = effectiveRole === "PARKING_MANAGER";
 
   const [form, setForm] = useState({
-    cardCode: "TEMP-001",
+    quantity: "50",
     status: "READY",
     note: "",
   });
@@ -75,34 +102,38 @@ const TempQrCardsPage = () => {
     return tempQrCards.items.filter((card) => card.status === "READY").length;
   }, [tempQrCards.items]);
 
-  const previewCode = form.cardCode.trim().toUpperCase();
+  const selectedBuilding = buildings.find((building) => String(building.id) === String(effectiveBuildingId));
+  const previewPrefix = buildBuildingPrefix(selectedBuilding?.name || authUser?.buildingName || "QR");
+  const previewStart = getNextPreviewNumber(tempQrCards.items, previewPrefix);
+  const previewEnd = previewStart + Math.max(Number(form.quantity) || 0, 1) - 1;
+  const previewFirstCode = `${previewPrefix}-${String(previewStart).padStart(4, "0")}`;
+  const previewLastCode = `${previewPrefix}-${String(previewEnd).padStart(4, "0")}`;
 
   const updateForm = (field, value) => {
     dispatch(clearParkingNotice());
     setFormError("");
     setForm((prev) => ({
       ...prev,
-      [field]: field === "cardCode" ? value.toUpperCase() : value,
+      [field]: field === "quantity" ? value.replace(/\D/g, "").slice(0, 3) : value,
     }));
   };
 
   const createCard = (event) => {
     event.preventDefault();
-    const cardCode = previewCode;
+    const quantity = Number(form.quantity);
 
-    if (!cardCode) return;
     if (!effectiveBuildingId) {
       setFormError("Vui lòng chọn tòa nhà cho thẻ QR tạm.");
       return;
     }
-    if (new TextEncoder().encode(cardCode).length > 32) {
-      setFormError("Mã thẻ cần ngắn hơn 32 ký tự không dấu để QR dễ quét.");
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 500) {
+      setFormError("Số lượng cần từ 1 đến 500 thẻ.");
       return;
     }
 
     dispatch(
       createTempQrCardRequest({
-        cardCode,
+        quantity,
         buildingId: Number(effectiveBuildingId),
         status: form.status,
         note: form.note.trim() || undefined,
@@ -222,17 +253,17 @@ const TempQrCardsPage = () => {
           <section className="card section-card">
             <div className="section-header">
               <div>
-                <h2 className="section-title"><Save size={19} /> Thêm thẻ QR</h2>
-                <p className="section-copy">Tạo sẵn thẻ để nhân viên phát cho khách vãng lai.</p>
+                <h2 className="section-title"><Save size={19} /> Tạo thẻ QR tự động</h2>
+                <p className="section-copy">Nhập số lượng, hệ thống sẽ tự sinh mã theo tên tòa nhà và số thứ tự kế tiếp.</p>
               </div>
             </div>
             <form onSubmit={createCard} style={{ display: "grid", gap: 14 }}>
-              <FormField label="Mã thẻ" required>
+              <FormField label="Số lượng thẻ cần tạo" required>
                 <Input
-                  value={form.cardCode}
-                  maxLength={32}
-                  onChange={(event) => updateForm("cardCode", event.target.value)}
-                  placeholder="Ví dụ: TEMP-001"
+                  value={form.quantity}
+                  maxLength={3}
+                  onChange={(event) => updateForm("quantity", event.target.value)}
+                  placeholder="Ví dụ: 50"
                 />
               </FormField>
               {formError && <p style={{ color: "var(--danger)", marginTop: -6 }}>{formError}</p>}
@@ -253,18 +284,18 @@ const TempQrCardsPage = () => {
               </FormField>
 
               <div className="qr-live-preview">
-                <QrCodeImage value={previewCode || "TEMP-001"} size={168} title={`QR ${previewCode || "TEMP-001"}`} />
+                <QrCodeImage value={previewFirstCode} size={168} title={`QR ${previewFirstCode}`} />
                 <div>
-                  <span className="metric-label">Mã sẽ in lên QR </span>
-                  <strong>{previewCode || "Chưa nhập mã"}</strong>
+                  <span className="metric-label">Dải mã sẽ tạo</span>
+                  <strong>{previewFirstCode} đến {previewLastCode}</strong>
                   <p className="section-copy">
-                    Khi quét mã này, hệ thống sẽ nhận đúng mã thẻ để phát cho khách gửi lẻ.
+                    Backend sẽ lưu từng mã vào đúng tòa nhà đang chọn, ví dụ {previewPrefix}-0001, {previewPrefix}-0002.
                   </p>
                 </div>
               </div>
 
               <Button type="submit" icon={Save} loading={tempQrCards.saving}>
-                Tạo và lưu thẻ QR
+                Tạo dải thẻ QR
               </Button>
             </form>
           </section>

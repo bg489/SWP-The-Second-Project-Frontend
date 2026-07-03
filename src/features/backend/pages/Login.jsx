@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
     Building2,
     Car,
+    Eye,
+    EyeOff,
     KeyRound,
     Lock,
     Mail,
@@ -20,9 +22,13 @@ import Input from "../../../components/Form/Input";
 import { useMockAuth } from "../../../context/MockAuthContext";
 import {
     clearRegisterState,
+    clearPasswordResetState,
     fetchRegisterBuildingsRequest,
     loginRequest,
     registerRequest,
+    requestPasswordResetRequest,
+    resetPasswordRequest,
+    verifyPasswordResetRequest,
 } from "../auth/authSlice";
 import {
     buildingInfo,
@@ -42,10 +48,15 @@ const demoAccounts = [
 const Login = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     const { login, isDarkMode, toggleDarkMode } = useMockAuth();
 
-    const [mode, setMode] = useState("login");
+    const [mode, setMode] = useState(searchParams.get("mode") === "reset" ? "reset" : "login");
+    const [showLoginPassword, setShowLoginPassword] = useState(false);
+    const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showResetPassword, setShowResetPassword] = useState(false);
 
     const [registerForm, setRegisterForm] = useState({
         name: "",
@@ -57,6 +68,14 @@ const Login = () => {
     });
 
     const [registerErrors, setRegisterErrors] = useState({});
+    const [resetForm, setResetForm] = useState({
+        email: searchParams.get("email") || "",
+        otp: "",
+        token: searchParams.get("token") || "",
+        password: "",
+        confirmPassword: "",
+    });
+    const [resetErrors, setResetErrors] = useState({});
 
     const {
         loading,
@@ -71,6 +90,10 @@ const Login = () => {
         registerBuildings,
         registerBuildingsLoading,
         registerBuildingsError,
+        passwordResetLoading,
+        passwordResetError,
+        passwordResetNotice,
+        passwordResetVerified,
     } = useSelector((state) => state.auth);
 
     useEffect(() => {
@@ -81,13 +104,19 @@ const Login = () => {
         setMode(nextMode);
         setErrors({});
         setRegisterErrors({});
+        setResetErrors({});
         dispatch(clearRegisterState());
+        dispatch(clearPasswordResetState());
     };
 
     const updateRegisterField = (field, value) => {
+        const nextValue = field === "phone"
+            ? value.replace(/\D/g, "").slice(0, 10)
+            : value;
+
         setRegisterForm((prev) => ({
             ...prev,
-            [field]: value,
+            [field]: nextValue,
         }));
 
         setRegisterErrors((prev) => ({
@@ -109,8 +138,8 @@ const Login = () => {
             nextErrors.email = "Email không hợp lệ.";
         }
 
-        if (registerForm.phone.trim() && !/^[0-9]{9,11}$/.test(registerForm.phone.trim())) {
-            nextErrors.phone = "Số điện thoại nên có 9-11 chữ số.";
+        if (registerForm.phone.trim() && !/^0\d{9}$/.test(registerForm.phone.trim())) {
+            nextErrors.phone = "Số điện thoại phải có đúng 10 chữ số và bắt đầu bằng 0.";
         }
 
         if (!registerForm.password) {
@@ -156,6 +185,28 @@ const Login = () => {
     });
 
     const [errors, setErrors] = useState({});
+
+    const updateResetField = (field, value) => {
+        setResetForm((prev) => ({
+            ...prev,
+            [field]: field === "otp" ? value.replace(/\D/g, "").slice(0, 6) : value,
+        }));
+        setResetErrors((prev) => ({
+            ...prev,
+            [field]: "",
+        }));
+    };
+
+    const passwordToggle = (visible, onClick, label) => (
+        <button
+            aria-label={label}
+            className="input-icon-button"
+            type="button"
+            onClick={onClick}
+        >
+            {visible ? <EyeOff size={17} /> : <Eye size={17} />}
+        </button>
+    );
 
     const motorbikeCapacity = useMemo(() => {
         return floors
@@ -219,6 +270,81 @@ const Login = () => {
             loginRequest({
                 emailOrPhone: form.emailOrPhone.trim(),
                 password: form.password,
+            })
+        );
+    };
+
+    const validateResetEmail = () => {
+        const nextErrors = {};
+
+        if (!resetForm.email.trim()) {
+            nextErrors.email = "Vui lòng nhập email.";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resetForm.email.trim())) {
+            nextErrors.email = "Email không hợp lệ.";
+        }
+
+        setResetErrors(nextErrors);
+        return Object.keys(nextErrors).length === 0;
+    };
+
+    const handleRequestReset = (event) => {
+        event.preventDefault();
+        if (!validateResetEmail()) return;
+        dispatch(requestPasswordResetRequest({ email: resetForm.email.trim() }));
+    };
+
+    const validateResetVerification = () => {
+        const nextErrors = {};
+
+        if (!resetForm.email.trim()) {
+            nextErrors.email = "Vui lòng nhập email.";
+        }
+
+        if (!resetForm.otp.trim() && !resetForm.token.trim()) {
+            nextErrors.otp = "Nhập OTP trong email hoặc dùng link xác minh.";
+        }
+
+        setResetErrors(nextErrors);
+        return Object.keys(nextErrors).length === 0;
+    };
+
+    const handleVerifyReset = (event) => {
+        event.preventDefault();
+        if (!validateResetVerification()) return;
+        dispatch(
+            verifyPasswordResetRequest({
+                email: resetForm.email.trim(),
+                otp: resetForm.otp.trim() || undefined,
+                token: resetForm.token.trim() || undefined,
+            })
+        );
+    };
+
+    const handleResetPassword = (event) => {
+        event.preventDefault();
+        const nextErrors = {};
+
+        if (!validateResetVerification()) return;
+
+        if (!resetForm.password) {
+            nextErrors.password = "Vui lòng nhập mật khẩu mới.";
+        } else if (resetForm.password.length < 6) {
+            nextErrors.password = "Mật khẩu mới phải có ít nhất 6 ký tự.";
+        }
+
+        if (resetForm.confirmPassword !== resetForm.password) {
+            nextErrors.confirmPassword = "Mật khẩu nhập lại không khớp.";
+        }
+
+        setResetErrors((prev) => ({ ...prev, ...nextErrors }));
+        if (Object.keys(nextErrors).length > 0) return;
+
+        dispatch(
+            resetPasswordRequest({
+                email: resetForm.email.trim(),
+                otp: resetForm.otp.trim() || undefined,
+                token: resetForm.token.trim() || undefined,
+                password: resetForm.password,
             })
         );
     };
@@ -317,6 +443,12 @@ const Login = () => {
 
                                 </>
                             )}
+
+                            {mode === "reset" && (
+                                <>
+                                    <h2 className="section-title">Đổi mật khẩu</h2>
+                                </>
+                            )}
                         </div>
 
                         <Button
@@ -329,7 +461,7 @@ const Login = () => {
                         </Button>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 18 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 18 }}>
                         <Button
                             type="button"
                             variant={mode === "login" ? "primary" : "outline"}
@@ -346,6 +478,15 @@ const Login = () => {
                             disabled={loading || registerLoading}
                         >
                             Đăng ký
+                        </Button>
+
+                        <Button
+                            type="button"
+                            variant={mode === "reset" ? "primary" : "outline"}
+                            onClick={() => switchMode("reset")}
+                            disabled={loading || registerLoading || passwordResetLoading}
+                        >
+                            Quên mật khẩu
                         </Button>
                     </div>
 
@@ -374,7 +515,7 @@ const Login = () => {
                                 <FormField label="Mật khẩu" required error={errors.password}>
                                     <Input
                                         icon={Lock}
-                                        type="password"
+                                        type={showLoginPassword ? "text" : "password"}
                                         placeholder="••••••"
                                         value={form.password}
                                         onChange={(event) =>
@@ -382,6 +523,11 @@ const Login = () => {
                                         }
                                         disabled={loading}
                                         autoComplete="current-password"
+                                        rightElement={passwordToggle(
+                                            showLoginPassword,
+                                            () => setShowLoginPassword((value) => !value),
+                                            showLoginPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"
+                                        )}
                                     />
                                 </FormField>
 
@@ -402,7 +548,7 @@ const Login = () => {
                     {mode === "register" && (
                         <>
                             <StatusBanner
-                                success={registerSuccess ? "??ng k? th?nh c?ng. T?i kho?n ?ang ch? qu?n tr? vi?n duy?t tr??c khi ??ng nh?p." : null}
+                                success={registerSuccess ? "Đăng ký thành công. Tài khoản đang chờ quản trị viên duyệt trước khi đăng nhập." : null}
                                 errors={registerError}
                             />
 
@@ -436,6 +582,8 @@ const Login = () => {
                                         onChange={(event) => updateRegisterField("phone", event.target.value)}
                                         disabled={registerLoading}
                                         autoComplete="tel"
+                                        inputMode="numeric"
+                                        maxLength={10}
                                     />
                                 </FormField>
 
@@ -470,7 +618,7 @@ const Login = () => {
                                 <FormField label="Mật khẩu" required error={registerErrors.password}>
                                     <Input
                                         icon={Lock}
-                                        type="password"
+                                        type={showRegisterPassword ? "text" : "password"}
                                         placeholder="Ít nhất 6 ký tự"
                                         value={registerForm.password}
                                         onChange={(event) =>
@@ -478,6 +626,11 @@ const Login = () => {
                                         }
                                         disabled={registerLoading}
                                         autoComplete="new-password"
+                                        rightElement={passwordToggle(
+                                            showRegisterPassword,
+                                            () => setShowRegisterPassword((value) => !value),
+                                            showRegisterPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"
+                                        )}
                                     />
                                 </FormField>
 
@@ -488,7 +641,7 @@ const Login = () => {
                                 >
                                     <Input
                                         icon={Lock}
-                                        type="password"
+                                        type={showConfirmPassword ? "text" : "password"}
                                         placeholder="Nhập lại mật khẩu"
                                         value={registerForm.confirmPassword}
                                         onChange={(event) =>
@@ -496,6 +649,11 @@ const Login = () => {
                                         }
                                         disabled={registerLoading}
                                         autoComplete="new-password"
+                                        rightElement={passwordToggle(
+                                            showConfirmPassword,
+                                            () => setShowConfirmPassword((value) => !value),
+                                            showConfirmPassword ? "Ẩn mật khẩu nhập lại" : "Hiện mật khẩu nhập lại"
+                                        )}
                                     />
                                 </FormField>
 
@@ -506,6 +664,108 @@ const Login = () => {
                                     disabled={registerLoading}
                                 >
                                     {registerLoading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
+                                </Button>
+                            </form>
+                        </>
+                    )}
+
+                    {mode === "reset" && (
+                        <>
+                            <StatusBanner
+                                success={passwordResetNotice}
+                                errors={passwordResetError}
+                            />
+
+                            <form onSubmit={handleRequestReset} style={{ display: "grid", gap: 16 }}>
+                                <FormField label="Email nhận mã xác minh" required error={resetErrors.email}>
+                                    <Input
+                                        icon={Mail}
+                                        type="email"
+                                        placeholder="user@example.com"
+                                        value={resetForm.email}
+                                        onChange={(event) => updateResetField("email", event.target.value)}
+                                        disabled={passwordResetLoading}
+                                        autoComplete="email"
+                                    />
+                                </FormField>
+
+                                <Button
+                                    type="submit"
+                                    variant="secondary"
+                                    loading={passwordResetLoading}
+                                    disabled={passwordResetLoading}
+                                >
+                                    Gửi email xác minh
+                                </Button>
+                            </form>
+
+                            <form onSubmit={passwordResetVerified ? handleResetPassword : handleVerifyReset} style={{ display: "grid", gap: 16, marginTop: 18 }}>
+                                <FormField label="OTP trong email" error={resetErrors.otp}>
+                                    <Input
+                                        placeholder="Nhập 6 số OTP hoặc dùng link trong email"
+                                        value={resetForm.otp}
+                                        onChange={(event) => updateResetField("otp", event.target.value)}
+                                        disabled={passwordResetLoading}
+                                        inputMode="numeric"
+                                        maxLength={6}
+                                    />
+                                </FormField>
+
+                                {resetForm.token && (
+                                    <div className="soft-panel">
+                                        <strong>Link xác minh đã sẵn sàng</strong>
+                                        <p className="section-copy">Bạn có thể đổi mật khẩu bằng link trong email hoặc nhập OTP.</p>
+                                    </div>
+                                )}
+
+                                <Button
+                                    type="submit"
+                                    variant={passwordResetVerified ? "outline" : "primary"}
+                                    loading={passwordResetLoading}
+                                    disabled={passwordResetLoading}
+                                >
+                                    {passwordResetVerified ? "Mã đã xác minh" : "Kiểm tra mã xác minh"}
+                                </Button>
+                            </form>
+
+                            <form onSubmit={handleResetPassword} style={{ display: "grid", gap: 16, marginTop: 18 }}>
+                                <FormField label="Mật khẩu mới" required error={resetErrors.password}>
+                                    <Input
+                                        icon={Lock}
+                                        type={showResetPassword ? "text" : "password"}
+                                        placeholder="Ít nhất 6 ký tự"
+                                        value={resetForm.password}
+                                        onChange={(event) => updateResetField("password", event.target.value)}
+                                        disabled={passwordResetLoading}
+                                        autoComplete="new-password"
+                                        rightElement={passwordToggle(
+                                            showResetPassword,
+                                            () => setShowResetPassword((value) => !value),
+                                            showResetPassword ? "Ẩn mật khẩu mới" : "Hiện mật khẩu mới"
+                                        )}
+                                    />
+                                </FormField>
+
+                                <FormField label="Nhập lại mật khẩu mới" required error={resetErrors.confirmPassword}>
+                                    <Input
+                                        icon={Lock}
+                                        type={showResetPassword ? "text" : "password"}
+                                        placeholder="Nhập lại mật khẩu mới"
+                                        value={resetForm.confirmPassword}
+                                        onChange={(event) => updateResetField("confirmPassword", event.target.value)}
+                                        disabled={passwordResetLoading}
+                                        autoComplete="new-password"
+                                    />
+                                </FormField>
+
+                                <Button
+                                    type="submit"
+                                    size="lg"
+                                    loading={passwordResetLoading}
+                                    disabled={passwordResetLoading}
+                                    icon={KeyRound}
+                                >
+                                    Đổi mật khẩu
                                 </Button>
                             </form>
                         </>

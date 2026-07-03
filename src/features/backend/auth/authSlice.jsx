@@ -31,6 +31,14 @@ const getInitialState = () => {
         registerBuildings: [],
         registerBuildingsLoading: false,
         registerBuildingsError: null,
+
+        passwordResetLoading: false,
+        passwordResetError: null,
+        passwordResetNotice: null,
+        passwordResetVerified: false,
+
+        profileUpdateRequestId: null,
+        profileUpdateNotice: null,
     };
 };
 
@@ -158,6 +166,126 @@ const authSlice = createSlice({
             state.loading = false;
             state.error = action.payload;
         },
+
+        updateProfileRequest: (state) => {
+            state.loading = true;
+            state.error = null;
+        },
+
+        updateProfileSuccess: (state, action) => {
+            state.loading = false;
+            state.error = null;
+            state.user = action.payload;
+        },
+
+        updateProfileFailure: (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        },
+
+        requestProfileUpdateOtpRequest: (state) => {
+            state.loading = true;
+            state.error = null;
+            state.profileUpdateNotice = null;
+            state.profileUpdateRequestId = null;
+        },
+
+        requestProfileUpdateOtpSuccess: (state, action) => {
+            state.loading = false;
+            state.error = null;
+            state.profileUpdateNotice = action.payload?.message;
+            state.profileUpdateRequestId = action.payload?.requestId || null;
+        },
+
+        requestProfileUpdateOtpFailure: (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        },
+
+        confirmProfileUpdateRequest: (state) => {
+            state.loading = true;
+            state.error = null;
+        },
+
+        confirmProfileUpdateSuccess: (state, action) => {
+            state.loading = false;
+            state.error = null;
+            state.user = action.payload?.user || action.payload;
+            state.profileUpdateNotice = "Cập nhật hồ sơ thành công.";
+            state.profileUpdateRequestId = null;
+        },
+
+        confirmProfileUpdateFailure: (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        },
+
+        clearProfileUpdateState: (state) => {
+            state.profileUpdateNotice = null;
+            state.profileUpdateRequestId = null;
+        },
+
+        requestPasswordResetRequest: (state) => {
+            state.passwordResetLoading = true;
+            state.passwordResetError = null;
+            state.passwordResetNotice = null;
+            state.passwordResetVerified = false;
+        },
+
+        requestPasswordResetSuccess: (state, action) => {
+            state.passwordResetLoading = false;
+            state.passwordResetError = null;
+            state.passwordResetNotice = action.payload;
+        },
+
+        requestPasswordResetFailure: (state, action) => {
+            state.passwordResetLoading = false;
+            state.passwordResetError = action.payload;
+        },
+
+        verifyPasswordResetRequest: (state) => {
+            state.passwordResetLoading = true;
+            state.passwordResetError = null;
+            state.passwordResetVerified = false;
+        },
+
+        verifyPasswordResetSuccess: (state, action) => {
+            state.passwordResetLoading = false;
+            state.passwordResetError = null;
+            state.passwordResetNotice = action.payload;
+            state.passwordResetVerified = true;
+        },
+
+        verifyPasswordResetFailure: (state, action) => {
+            state.passwordResetLoading = false;
+            state.passwordResetError = action.payload;
+            state.passwordResetVerified = false;
+        },
+
+        resetPasswordRequest: (state) => {
+            state.passwordResetLoading = true;
+            state.passwordResetError = null;
+            state.passwordResetNotice = null;
+        },
+
+        resetPasswordSuccess: (state, action) => {
+            state.passwordResetLoading = false;
+            state.passwordResetError = null;
+            state.passwordResetNotice = action.payload;
+            state.passwordResetVerified = false;
+        },
+
+        resetPasswordFailure: (state, action) => {
+            state.passwordResetLoading = false;
+            state.passwordResetError = action.payload;
+        },
+
+        clearPasswordResetState: (state) => {
+            state.passwordResetLoading = false;
+            state.passwordResetError = null;
+            state.passwordResetNotice = null;
+            state.passwordResetVerified = false;
+        },
     },
 });
 
@@ -180,6 +308,26 @@ export const {
     updateAvatarRequest,
     updateAvatarSuccess,
     updateAvatarFailure,
+    updateProfileRequest,
+    updateProfileSuccess,
+    updateProfileFailure,
+    requestProfileUpdateOtpRequest,
+    requestProfileUpdateOtpSuccess,
+    requestProfileUpdateOtpFailure,
+    confirmProfileUpdateRequest,
+    confirmProfileUpdateSuccess,
+    confirmProfileUpdateFailure,
+    clearProfileUpdateState,
+    requestPasswordResetRequest,
+    requestPasswordResetSuccess,
+    requestPasswordResetFailure,
+    verifyPasswordResetRequest,
+    verifyPasswordResetSuccess,
+    verifyPasswordResetFailure,
+    resetPasswordRequest,
+    resetPasswordSuccess,
+    resetPasswordFailure,
+    clearPasswordResetState,
 } = authSlice.actions;
 
 export default authSlice.reducer;

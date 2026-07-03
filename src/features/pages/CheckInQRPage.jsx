@@ -186,7 +186,7 @@ const CheckInQRPage = () => {
 
   const validateQr = () => {
     if (!form.qrCode.trim()) return;
-    dispatch(validateQrPassRequest({ qrCode: form.qrCode.trim() }));
+    dispatch(validateQrPassRequest({ buildingId: currentBuildingId, qrCode: form.qrCode.trim() }));
   };
 
   const openScanner = (target) => {
@@ -206,7 +206,7 @@ const CheckInQRPage = () => {
         plateNumber: "",
         qrCode: scannedValue,
       }));
-      dispatch(validateQrPassRequest({ qrCode: scannedValue }));
+      dispatch(validateQrPassRequest({ buildingId: currentBuildingId, qrCode: scannedValue }));
       return;
     }
 

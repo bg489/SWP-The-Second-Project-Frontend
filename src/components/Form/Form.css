@@ -57,6 +57,37 @@
   padding-left: 42px;
 }
 
+.has-right-element .form-input {
+  padding-right: 46px;
+}
+
+.input-right-element {
+  position: absolute;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-icon-button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.input-icon-button:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
 .form-input::placeholder {
   color: var(--text-muted);
 }

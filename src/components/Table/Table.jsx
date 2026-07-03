@@ -1,7 +1,8 @@
-import "./Table.css";
 import { useMemo, useState } from "react";
-import Button from "../Button/Button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+
+import Button from "../Button/Button";
+import "./Table.css";
 
 const Table = ({
   columns = [],

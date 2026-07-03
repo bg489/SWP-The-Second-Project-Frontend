@@ -22,6 +22,9 @@ import {
     approveVehicleFailure,
     approveVehicleRequest,
     approveVehicleSuccess,
+    assignStaffToBuildingFailure,
+    assignStaffToBuildingRequest,
+    assignStaffToBuildingSuccess,
     buyPackagePlanFailure,
     buyPackagePlanRequest,
     buyPackagePlanSuccess,
@@ -67,6 +70,9 @@ import {
     fetchMyNotificationsFailure,
     fetchMyNotificationsRequest,
     fetchMyNotificationsSuccess,
+    fetchNotificationPreferencesFailure,
+    fetchNotificationPreferencesRequest,
+    fetchNotificationPreferencesSuccess,
     fetchAllVehiclesFailure,
     fetchAllVehiclesRequest,
     fetchAllVehiclesSuccess,
@@ -100,6 +106,9 @@ import {
     fetchReportsFailure,
     fetchReportsRequest,
     fetchReportsSuccess,
+    fetchStaffAssignmentsFailure,
+    fetchStaffAssignmentsRequest,
+    fetchStaffAssignmentsSuccess,
     fetchTempQrCardsFailure,
     fetchTempQrCardsRequest,
     fetchTempQrCardsSuccess,
@@ -124,6 +133,9 @@ import {
     updateQrPassStatusFailure,
     updateQrPassStatusRequest,
     updateQrPassStatusSuccess,
+    updateNotificationPreferencesFailure,
+    updateNotificationPreferencesRequest,
+    updateNotificationPreferencesSuccess,
     updateTempQrCardStatusFailure,
     updateTempQrCardStatusRequest,
     updateTempQrCardStatusSuccess,
@@ -472,9 +484,11 @@ function* handleBuyPackagePlan(action) {
     }
 }
 
-function* handleFetchMonthlyPasses() {
+function* handleFetchMonthlyPasses(action) {
     try {
-        const response = yield call([api, api.get], "/monthly-passes");
+        const response = yield call([api, api.get], "/monthly-passes", {
+            params: action.payload,
+        });
         yield put(fetchMonthlyPassesSuccess(extractList(response, ["monthlyPasses"])));
     } catch (error) {
         if (shouldUseSample(error)) {
@@ -749,6 +763,73 @@ function* handleFetchMyNotifications() {
         yield put(fetchMyNotificationsSuccess(extractList(response, ["notifications"])));
     } catch (error) {
         yield put(fetchMyNotificationsFailure(getErrorMessage(error, "Khong lay duoc thong bao cua ban.")));
+    }
+}
+
+function* handleFetchNotificationPreferences() {
+    try {
+        const response = yield call([api, api.get], "/notifications/preferences");
+        yield put(fetchNotificationPreferencesSuccess(extractData(response)));
+    } catch (error) {
+        yield put(
+            fetchNotificationPreferencesFailure(
+                getErrorMessage(error, "Không lấy được tùy chọn thông báo.")
+            )
+        );
+    }
+}
+
+function* handleUpdateNotificationPreferences(action) {
+    try {
+        const response = yield call(
+            [api, api.patch],
+            "/notifications/preferences",
+            action.payload
+        );
+        yield put(updateNotificationPreferencesSuccess(extractData(response)));
+    } catch (error) {
+        yield put(
+            updateNotificationPreferencesFailure(
+                getErrorMessage(error, "Không cập nhật được tùy chọn thông báo.")
+            )
+        );
+    }
+}
+
+function* handleFetchStaffAssignments(action) {
+    try {
+        const response = yield call([api, api.get], "/users/staff-candidates", {
+            params: action.payload,
+        });
+
+        yield put(fetchStaffAssignmentsSuccess(extractData(response)));
+    } catch (error) {
+        if (shouldUseSample(error)) {
+            yield put(fetchStaffAssignmentsSuccess({ staff: [], building: null }));
+            return;
+        }
+
+        yield put(
+            fetchStaffAssignmentsFailure(
+                getErrorMessage(error, "Không lấy được danh sách nhân viên.")
+            )
+        );
+    }
+}
+
+function* handleAssignStaffToBuilding(action) {
+    try {
+        const { id } = action.payload;
+        const response = yield call([api, api.patch], `/users/staff/${id}/building`);
+
+        yield put(assignStaffToBuildingSuccess(extractData(response)));
+        yield put(fetchStaffAssignmentsRequest());
+    } catch (error) {
+        yield put(
+            assignStaffToBuildingFailure(
+                getErrorMessage(error, "Không gán được nhân viên vào tòa nhà.")
+            )
+        );
     }
 }
 
@@ -1089,6 +1170,16 @@ export default function* parkingSaga() {
     yield takeLatest(fetchMySlotRegistrationsRequest.type, handleFetchMySlotRegistrations);
     yield takeEvery(createSlotRegistrationRequest.type, handleCreateSlotRegistration);
     yield takeLatest(fetchMyNotificationsRequest.type, handleFetchMyNotifications);
+    yield takeLatest(
+        fetchNotificationPreferencesRequest.type,
+        handleFetchNotificationPreferences
+    );
+    yield takeEvery(
+        updateNotificationPreferencesRequest.type,
+        handleUpdateNotificationPreferences
+    );
+    yield takeLatest(fetchStaffAssignmentsRequest.type, handleFetchStaffAssignments);
+    yield takeEvery(assignStaffToBuildingRequest.type, handleAssignStaffToBuilding);
     yield takeLatest(fetchWrongSlotCasesRequest.type, handleFetchWrongSlotCases);
     yield takeEvery(reportWrongSlotRequest.type, handleReportWrongSlot);
     yield takeEvery(confirmWrongSlotRequest.type, handleConfirmWrongSlot);

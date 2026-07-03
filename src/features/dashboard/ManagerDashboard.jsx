@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Button from "../../components/Button/Button";
 import StatusBanner from "../../components/Feedback/StatusBanner";
@@ -39,6 +39,7 @@ const ManagerDashboard = () => {
   const user = authUser || mockUser;
   const { reports } = useSelector((state) => state.parking);
   const { floors, loading: floorsLoading } = useSelector((state) => state.floors);
+  const [showMonthlyRevenueDetails, setShowMonthlyRevenueDetails] = useState(false);
 
   const buildingId = user?.buildingId;
 
@@ -136,6 +137,38 @@ const ManagerDashboard = () => {
       totalAmount: item.totalAmount,
     }));
 
+  const monthlyRevenueRows = useMemo(() => {
+    const rowsFromPayments = revenueSources
+      .filter(
+        (item) =>
+          item.status === "SUCCESS" &&
+          ["MONTHLY_PASS", "SLOT_REGISTRATION"].includes(item.sourceType)
+      )
+      .map((item) => ({
+        id: item.sourceType,
+        label: revenueSourceLabels[item.sourceType] || item.sourceType,
+        count: item.paymentCount,
+        totalAmount: item.totalAmount,
+      }));
+
+    if (rowsFromPayments.length > 0) return rowsFromPayments;
+
+    return revenueSessions
+      .filter((item) => item.pricingType === "MONTHLY_PASS")
+      .map((item) => ({
+        id: `${item.vehicleType}-${item.pricingType}`,
+        label: item.vehicleType === "CAR" ? "Gói tháng ô tô" : "Gói tháng xe máy",
+        count: item.sessionCount,
+        totalAmount: item.totalAmount,
+      }));
+  }, [revenueSessions, revenueSources]);
+
+  const monthlyRevenueColumns = [
+    { header: "Nguồn thu", key: "label" },
+    { header: "Số khoản", key: "count", render: (row) => row.count || 0 },
+    { header: "Tổng tiền", key: "totalAmount", render: (row) => formatCurrency(row.totalAmount || 0) },
+  ];
+
   const floorColumns = [
     { header: "Tầng", key: "name" },
     { header: "Loại", key: "floorType", render: (row) => (row.floorType === "CAR" ? "Ô tô theo ô đỗ" : "Xe máy theo sức chứa") },
@@ -227,8 +260,29 @@ const ManagerDashboard = () => {
             <div className="data-row"><span>QR còn hiệu lực</span><strong>{qrSummary.active}</strong></div>
             <div className="data-row"><span>Sắp hết hạn</span><strong>{qrSummary.expiring}</strong></div>
             <div className="data-row"><span>Đã hết hạn</span><strong>{qrSummary.expired}</strong></div>
-            <div className="data-row"><span>Doanh thu gói tháng</span><strong>{formatCurrency(monthlyPassRevenue)}</strong></div>
+            <button
+              type="button"
+              className="data-row data-row-button"
+              onClick={() => setShowMonthlyRevenueDetails((current) => !current)}
+            >
+              <span>Doanh thu gói tháng</span>
+              <strong>{formatCurrency(monthlyPassRevenue)}</strong>
+            </button>
           </div>
+          {showMonthlyRevenueDetails && (
+            <div className="soft-panel">
+              <strong>Chi tiết doanh thu gói tháng</strong>
+              <p className="section-copy">
+                Bao gồm gói tháng xe máy và đăng ký ô đỗ ô tô đã thanh toán thành công.
+              </p>
+              <Table
+                columns={monthlyRevenueColumns}
+                data={monthlyRevenueRows}
+                emptyMessage="Chưa có doanh thu gói tháng đã thanh toán."
+                pageSize={5}
+              />
+            </div>
+          )}
         </section>
       </div>
 

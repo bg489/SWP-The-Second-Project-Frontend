@@ -4,6 +4,9 @@ import {
     fetchRegisterBuildingsFailure,
     fetchRegisterBuildingsRequest,
     fetchRegisterBuildingsSuccess,
+    confirmProfileUpdateFailure,
+    confirmProfileUpdateRequest,
+    confirmProfileUpdateSuccess,
     loginFailure,
     loginRequest,
     loginSuccess,
@@ -11,12 +14,27 @@ import {
     registerFailure,
     registerRequest,
     registerSuccess,
+    requestPasswordResetFailure,
+    requestPasswordResetRequest,
+    requestPasswordResetSuccess,
+    requestProfileUpdateOtpFailure,
+    requestProfileUpdateOtpRequest,
+    requestProfileUpdateOtpSuccess,
+    resetPasswordFailure,
+    resetPasswordRequest,
+    resetPasswordSuccess,
     refreshSessionFailure,
     refreshSessionRequest,
     refreshSessionSuccess,
     updateAvatarFailure,
     updateAvatarRequest,
     updateAvatarSuccess,
+    updateProfileFailure,
+    updateProfileRequest,
+    updateProfileSuccess,
+    verifyPasswordResetFailure,
+    verifyPasswordResetRequest,
+    verifyPasswordResetSuccess,
 } from "./authSlice";
 
 const backendToFrontendRole = {
@@ -137,6 +155,39 @@ function* handleRegister(action) {
     }
 }
 
+const getResponseMessage = (response, fallback) =>
+    response?.data?.message || response?.message || fallback;
+
+const getErrorMessage = (error, fallback) =>
+    error?.response?.data?.message || error?.message || fallback;
+
+function* handleRequestPasswordReset(action) {
+    try {
+        const response = yield call([api, api.post], "/auth/forgot-password", action.payload);
+        yield put(requestPasswordResetSuccess(getResponseMessage(response, "Đã gửi hướng dẫn đổi mật khẩu tới email của bạn.")));
+    } catch (error) {
+        yield put(requestPasswordResetFailure(getErrorMessage(error, "Gửi yêu cầu đổi mật khẩu thất bại.")));
+    }
+}
+
+function* handleVerifyPasswordReset(action) {
+    try {
+        const response = yield call([api, api.post], "/auth/verify-reset", action.payload);
+        yield put(verifyPasswordResetSuccess(getResponseMessage(response, "Mã xác minh hợp lệ.")));
+    } catch (error) {
+        yield put(verifyPasswordResetFailure(getErrorMessage(error, "Mã xác minh không đúng hoặc đã hết hạn.")));
+    }
+}
+
+function* handleResetPassword(action) {
+    try {
+        const response = yield call([api, api.post], "/auth/reset-password", action.payload);
+        yield put(resetPasswordSuccess(getResponseMessage(response, "Đổi mật khẩu thành công.")));
+    } catch (error) {
+        yield put(resetPasswordFailure(getErrorMessage(error, "Đổi mật khẩu thất bại.")));
+    }
+}
+
 function* handleRefreshSession() {
     try {
         const response = yield call([api, api.post], "/auth/refresh");
@@ -185,6 +236,61 @@ function* handleUpdateAvatar(action) {
     }
 }
 
+function* handleUpdateProfile(action) {
+    try {
+        const response = yield call([api, api.patch], "/users/me", action.payload);
+        const user = response?.data?.data || response?.data;
+
+        localStorage.setItem("auth_user", JSON.stringify(user));
+
+        yield put(updateProfileSuccess(user));
+    } catch (error) {
+        const message =
+            error?.response?.data?.message ||
+            error?.message ||
+            "Cập nhật hồ sơ thất bại.";
+
+        yield put(updateProfileFailure(message));
+    }
+}
+
+function* handleRequestProfileUpdateOtp(action) {
+    try {
+        const response = yield call([api, api.post], "/users/me/update-request", action.payload);
+        const data = response?.data?.data || response?.data || {};
+
+        yield put(
+            requestProfileUpdateOtpSuccess({
+                requestId: data.requestId,
+                message: response?.data?.message || "Đã gửi mã xác minh tới email của bạn.",
+            })
+        );
+    } catch (error) {
+        yield put(
+            requestProfileUpdateOtpFailure(
+                getErrorMessage(error, "Không gửi được mã xác minh hồ sơ.")
+            )
+        );
+    }
+}
+
+function* handleConfirmProfileUpdate(action) {
+    try {
+        const response = yield call([api, api.patch], "/users/me/confirm-update", action.payload);
+        const user = response?.data?.data || response?.data;
+
+        localStorage.setItem("auth_user", JSON.stringify(user));
+
+        yield put(confirmProfileUpdateSuccess(user));
+    } catch (error) {
+        yield put(
+            confirmProfileUpdateFailure(
+                getErrorMessage(error, "Không xác minh được cập nhật hồ sơ.")
+            )
+        );
+    }
+}
+
 function* handleLogout() {
     yield call(() => {
         localStorage.removeItem("access_token");
@@ -197,8 +303,14 @@ function* handleLogout() {
 export default function* authSaga() {
     yield takeLatest(loginRequest.type, handleLogin);
     yield takeLatest(registerRequest.type, handleRegister);
+    yield takeLatest(requestPasswordResetRequest.type, handleRequestPasswordReset);
+    yield takeLatest(verifyPasswordResetRequest.type, handleVerifyPasswordReset);
+    yield takeLatest(resetPasswordRequest.type, handleResetPassword);
     yield takeLatest(refreshSessionRequest.type, handleRefreshSession);
     yield takeLatest(updateAvatarRequest.type, handleUpdateAvatar);
+    yield takeLatest(updateProfileRequest.type, handleUpdateProfile);
+    yield takeLatest(requestProfileUpdateOtpRequest.type, handleRequestProfileUpdateOtp);
+    yield takeLatest(confirmProfileUpdateRequest.type, handleConfirmProfileUpdate);
     yield takeLatest(fetchRegisterBuildingsRequest.type, handleFetchRegisterBuildings);
     yield takeEvery(logout.type, handleLogout);
 }

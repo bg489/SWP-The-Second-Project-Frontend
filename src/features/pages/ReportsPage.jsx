@@ -19,6 +19,43 @@ const asArray = (value) => {
   return [];
 };
 
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+const renderTableRows = (rows, columns) => {
+  if (!rows.length) {
+    return `<tr><td colspan="${columns.length}">Chưa có dữ liệu.</td></tr>`;
+  }
+
+  return rows
+    .map(
+      (row) => `
+        <tr>
+          ${columns
+            .map((column) => `<td>${escapeHtml(column.render ? column.render(row) : row[column.key])}</td>`)
+            .join("")}
+        </tr>
+      `
+    )
+    .join("");
+};
+
+const renderReportTable = ({ columns, rows, title }) => `
+  <section class="report-section">
+    <h2>${escapeHtml(title)}</h2>
+    <table>
+      <thead>
+        <tr>${columns.map((column) => `<th>${escapeHtml(column.header)}</th>`).join("")}</tr>
+      </thead>
+      <tbody>${renderTableRows(rows, columns)}</tbody>
+    </table>
+  </section>
+`;
+
 const ReportsPage = () => {
   const dispatch = useDispatch();
   const { reports, violations } = useSelector((state) => state.parking);
@@ -84,7 +121,145 @@ const ReportsPage = () => {
 
   const handleExport = () => {
     setExporting(true);
-    setTimeout(() => setExporting(false), 900);
+    const reportWindow = window.open("", "_blank", "width=1100,height=800");
+
+    if (!reportWindow) {
+      setExporting(false);
+      return;
+    }
+
+    const sourceRows = asArray(revenue.paymentSources);
+    const paymentRows = asArray(revenue.payments);
+    const sessionRows = asArray(revenue.sessions);
+    const html = `
+      <!doctype html>
+      <html lang="vi">
+        <head>
+          <meta charset="utf-8" />
+          <title>Báo cáo Sunrise Parking</title>
+          <style>
+            @page { size: A4; margin: 14mm; }
+            * { box-sizing: border-box; }
+            body { margin: 0; font-family: Arial, sans-serif; color: #241122; background: #fff7fb; }
+            .report-shell { max-width: 1080px; margin: 0 auto; padding: 24px; }
+            .report-hero { border-radius: 18px; padding: 26px; background: linear-gradient(135deg,#FFB8F5,#ED9951); color: #241122; }
+            .eyebrow { display: inline-block; padding: 7px 12px; border-radius: 999px; background: rgba(255,255,255,.42); font-weight: 800; }
+            h1 { margin: 16px 0 8px; font-size: 30px; line-height: 1.15; }
+            h2 { margin: 0 0 12px; font-size: 18px; }
+            .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0; }
+            .summary-card, .report-section { border: 1px solid #f2d5e7; border-radius: 14px; background: #fff; box-shadow: 0 12px 26px rgba(237,153,81,.12); }
+            .summary-card { padding: 16px; }
+            .summary-card span { display: block; color: #77566f; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+            .summary-card strong { display: block; margin-top: 8px; font-size: 22px; }
+            .report-section { margin-top: 16px; padding: 16px; break-inside: avoid; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 10px 9px; border-bottom: 1px solid #f1ddea; text-align: left; font-size: 12px; vertical-align: top; }
+            th { background: #fff1fb; color: #6f526b; text-transform: uppercase; letter-spacing: .04em; }
+            tr:last-child td { border-bottom: 0; }
+            .print-actions { display: flex; justify-content: flex-end; margin: 18px 0; }
+            button { border: 0; border-radius: 12px; padding: 12px 18px; background: linear-gradient(135deg,#ED9951,#FF6FD8); color: #fff; font-weight: 800; cursor: pointer; }
+            @media print { body { background: #fff; } .print-actions { display: none; } .report-shell { padding: 0; } }
+          </style>
+        </head>
+        <body>
+          <main class="report-shell">
+            <section class="report-hero">
+              <span class="eyebrow">Sunrise Parking</span>
+              <h1>Báo cáo vận hành bãi xe</h1>
+              <p>Từ ${escapeHtml(filters.from)} đến ${escapeHtml(filters.to)}</p>
+            </section>
+            <div class="print-actions"><button onclick="window.print()">Lưu thành PDF</button></div>
+            <section class="summary-grid">
+              <div class="summary-card"><span>Doanh thu đã thanh toán</span><strong>${escapeHtml(formatCurrency(revenue.totalRevenue || revenue.paidRevenue || 0))}</strong></div>
+              <div class="summary-card"><span>Gói tháng</span><strong>${escapeHtml(formatCurrency(revenue.monthlyPassRevenue || 0))}</strong></div>
+              <div class="summary-card"><span>Khách gửi lẻ</span><strong>${escapeHtml(formatCurrency(revenue.walkInRevenue || 0))}</strong></div>
+              <div class="summary-card"><span>Phí vi phạm</span><strong>${escapeHtml(formatCurrency(revenue.violationRevenue || violationSummary.pendingAmount || 0))}</strong></div>
+            </section>
+            ${renderReportTable({
+              title: "Doanh thu theo nguồn",
+              rows: sourceRows,
+              columns: [
+                { header: "Nguồn", key: "sourceType" },
+                { header: "Trạng thái", key: "status" },
+                { header: "Số lần", key: "paymentCount" },
+                { header: "Tổng tiền", render: (row) => formatCurrency(row.totalAmount || 0) },
+              ],
+            })}
+            ${renderReportTable({
+              title: "Thanh toán theo phương thức",
+              rows: paymentRows,
+              columns: [
+                { header: "Phương thức", key: "provider" },
+                { header: "Trạng thái", key: "status" },
+                { header: "Số lần", key: "paymentCount" },
+                { header: "Tổng tiền", render: (row) => formatCurrency(row.totalAmount || 0) },
+              ],
+            })}
+            ${renderReportTable({
+              title: "Khách gửi lẻ đã hoàn tất",
+              rows: sessionRows,
+              columns: [
+                { header: "Loại xe", key: "vehicleType" },
+                { header: "Cách tính", key: "pricingType" },
+                { header: "Số lượt", key: "sessionCount" },
+                { header: "Tiền gửi", render: (row) => formatCurrency(row.baseFeeTotal || 0) },
+                { header: "Phí vi phạm", render: (row) => formatCurrency(row.violationFeeTotal || 0) },
+                { header: "Tổng", render: (row) => formatCurrency(row.totalAmount || 0) },
+              ],
+            })}
+            ${renderReportTable({
+              title: "Sức chứa xe máy",
+              rows: motorbikeRows,
+              columns: [
+                { header: "Tòa", key: "buildingName" },
+                { header: "Tầng", key: "floorName" },
+                { header: "Sức chứa", key: "capacity" },
+                { header: "Đang gửi", key: "currentCount" },
+                { header: "Còn trống", key: "remainingCapacity" },
+              ],
+            })}
+            ${renderReportTable({
+              title: "Ô đỗ ô tô",
+              rows: carSlotRows,
+              columns: [
+                { header: "Tòa", key: "buildingName" },
+                { header: "Tầng", key: "floorName" },
+                { header: "Trạng thái", key: "status" },
+                { header: "Số ô", key: "total" },
+              ],
+            })}
+            ${renderReportTable({
+              title: "Mã QR gói tháng",
+              rows: qrStatusRows,
+              columns: [
+                { header: "Loại", key: "passType" },
+                { header: "Trạng thái", key: "status" },
+                { header: "Số lượng", key: "total" },
+              ],
+            })}
+            ${renderReportTable({
+              title: "Vi phạm",
+              rows: violations.items,
+              columns: [
+                { header: "Biển số", key: "plateNumber" },
+                { header: "Nội dung", render: (row) => row.type || row.violationType },
+                { header: "Trạng thái", key: "status" },
+                { header: "Phí", render: (row) => formatCurrency(row.penaltyFee || row.fine || 0) },
+              ],
+            })}
+          </main>
+        </body>
+      </html>
+    `;
+
+    reportWindow.document.open();
+    reportWindow.document.write(html);
+    reportWindow.document.close();
+    reportWindow.focus();
+    setTimeout(() => {
+      reportWindow.print();
+      setExporting(false);
+    }, 500);
   };
 
   const trafficIn = trafficRows.length > 0

@@ -147,6 +147,20 @@ const initialState = {
     notifications: {
         mine: [],
         loading: false,
+        preferences: {
+            emailNotificationsEnabled: true,
+            loading: false,
+            saving: false,
+            error: null,
+        },
+        error: null,
+    },
+
+    staffAssignments: {
+        building: null,
+        items: [],
+        loading: false,
+        assigningId: null,
         error: null,
     },
 
@@ -267,6 +281,8 @@ const parkingSlice = createSlice({
             state.qrPasses.error = null;
             state.slotRegistrations.error = null;
             state.notifications.error = null;
+            state.notifications.preferences.error = null;
+            state.staffAssignments.error = null;
             state.wrongSlotCases.error = null;
             state.parkingSessions.error = null;
             state.violations.error = null;
@@ -533,8 +549,17 @@ const parkingSlice = createSlice({
         },
         createTempQrCardSuccess: (state, action) => {
             state.tempQrCards.saving = false;
-            state.tempQrCards.items = upsertById(state.tempQrCards.items, action.payload);
-            state.notice = "Đã thêm thẻ QR tạm.";
+            const createdCards = Array.isArray(action.payload)
+                ? action.payload
+                : [action.payload].filter(Boolean);
+
+            createdCards.forEach((card) => {
+                state.tempQrCards.items = upsertById(state.tempQrCards.items, card);
+            });
+            state.notice =
+                createdCards.length > 1
+                    ? `Đã tạo ${createdCards.length} thẻ QR tạm.`
+                    : "Đã thêm thẻ QR tạm.";
         },
         createTempQrCardFailure: (state, action) => {
             state.tempQrCards.saving = false;
@@ -656,6 +681,68 @@ const parkingSlice = createSlice({
         fetchMyNotificationsFailure: (state, action) => {
             state.notifications.loading = false;
             state.notifications.error = action.payload;
+        },
+        fetchNotificationPreferencesRequest: (state) => {
+            state.notifications.preferences.loading = true;
+            state.notifications.preferences.error = null;
+        },
+        fetchNotificationPreferencesSuccess: (state, action) => {
+            state.notifications.preferences.loading = false;
+            state.notifications.preferences.emailNotificationsEnabled =
+                action.payload?.emailNotificationsEnabled !== false;
+        },
+        fetchNotificationPreferencesFailure: (state, action) => {
+            state.notifications.preferences.loading = false;
+            state.notifications.preferences.error = action.payload;
+        },
+        updateNotificationPreferencesRequest: (state, action) => {
+            state.notifications.preferences.saving = true;
+            state.notifications.preferences.error = null;
+            state.notifications.preferences.emailNotificationsEnabled =
+                action.payload?.emailNotificationsEnabled !== false;
+        },
+        updateNotificationPreferencesSuccess: (state, action) => {
+            state.notifications.preferences.saving = false;
+            state.notifications.preferences.emailNotificationsEnabled =
+                action.payload?.emailNotificationsEnabled !== false;
+        },
+        updateNotificationPreferencesFailure: (state, action) => {
+            state.notifications.preferences.saving = false;
+            state.notifications.preferences.error = action.payload;
+        },
+
+        fetchStaffAssignmentsRequest: (state) => {
+            state.staffAssignments.loading = true;
+            state.staffAssignments.error = null;
+        },
+        fetchStaffAssignmentsSuccess: (state, action) => {
+            const payload = action.payload || {};
+
+            state.staffAssignments.loading = false;
+            state.staffAssignments.building = payload.building || null;
+            state.staffAssignments.items =
+                payload.staff || payload.users || (Array.isArray(payload) ? payload : []);
+        },
+        fetchStaffAssignmentsFailure: (state, action) => {
+            state.staffAssignments.loading = false;
+            state.staffAssignments.error = action.payload;
+        },
+        assignStaffToBuildingRequest: (state, action) => {
+            state.staffAssignments.assigningId = action.payload.id;
+            state.staffAssignments.error = null;
+            state.notice = null;
+        },
+        assignStaffToBuildingSuccess: (state, action) => {
+            state.staffAssignments.assigningId = null;
+            state.staffAssignments.items = upsertById(
+                state.staffAssignments.items,
+                action.payload
+            );
+            state.notice = "Đã gán nhân viên vào tòa nhà.";
+        },
+        assignStaffToBuildingFailure: (state, action) => {
+            state.staffAssignments.assigningId = null;
+            state.staffAssignments.error = action.payload;
         },
 
         fetchWrongSlotCasesRequest: (state) => {
@@ -858,6 +945,9 @@ export const {
     approveVehicleFailure,
     approveVehicleRequest,
     approveVehicleSuccess,
+    assignStaffToBuildingFailure,
+    assignStaffToBuildingRequest,
+    assignStaffToBuildingSuccess,
     buyPackagePlanFailure,
     buyPackagePlanRequest,
     buyPackagePlanSuccess,
@@ -904,6 +994,9 @@ export const {
     fetchMyNotificationsFailure,
     fetchMyNotificationsRequest,
     fetchMyNotificationsSuccess,
+    fetchNotificationPreferencesFailure,
+    fetchNotificationPreferencesRequest,
+    fetchNotificationPreferencesSuccess,
     fetchAllVehiclesFailure,
     fetchAllVehiclesRequest,
     fetchAllVehiclesSuccess,
@@ -937,6 +1030,9 @@ export const {
     fetchReportsFailure,
     fetchReportsRequest,
     fetchReportsSuccess,
+    fetchStaffAssignmentsFailure,
+    fetchStaffAssignmentsRequest,
+    fetchStaffAssignmentsSuccess,
     fetchTempQrCardsFailure,
     fetchTempQrCardsRequest,
     fetchTempQrCardsSuccess,
@@ -961,6 +1057,9 @@ export const {
     updateQrPassStatusFailure,
     updateQrPassStatusRequest,
     updateQrPassStatusSuccess,
+    updateNotificationPreferencesFailure,
+    updateNotificationPreferencesRequest,
+    updateNotificationPreferencesSuccess,
     updateTempQrCardStatusFailure,
     updateTempQrCardStatusRequest,
     updateTempQrCardStatusSuccess,
