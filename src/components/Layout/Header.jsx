@@ -153,7 +153,16 @@ const Header = ({ toggleSidebar, sidebarHidden, toggleSidebarHidden }) => {
         {loggedIn && user && (
           <div className="header-user-profile">
             {avatarUrl ? (
-              <img src={avatarUrl} alt={user.name} className="user-profile-avatar" />
+              <span className="user-profile-avatar user-profile-avatar-crop">
+                <img
+                  src={avatarUrl}
+                  alt={user.name}
+                  style={{
+                    objectPosition: `${Number(user.avatarCropX ?? 50)}% ${Number(user.avatarCropY ?? 50)}%`,
+                    transform: `scale(${Number(user.avatarCropZoom ?? 1)})`,
+                  }}
+                />
+              </span>
             ) : (
               <div className="user-profile-avatar avatar-fallback">{initials}</div>
             )}
