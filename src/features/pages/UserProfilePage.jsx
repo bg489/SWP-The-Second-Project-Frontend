@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Car, Plus, Save, User } from "lucide-react";
+import { Car, KeyRound, MailCheck, Plus, Save, User } from "lucide-react";
 
 import Button from "../../components/Button/Button";
 import StatusBanner from "../../components/Feedback/StatusBanner";
@@ -9,7 +9,10 @@ import Input from "../../components/Form/Input";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
 import { useMockAuth } from "../../context/MockAuthContext";
-import { updateProfileRequest } from "../backend/auth/authSlice";
+import {
+  confirmProfileUpdateRequest,
+  requestProfileUpdateOtpRequest,
+} from "../backend/auth/authSlice";
 import {
   clearParkingNotice,
   createVehicleRequest,
@@ -20,7 +23,14 @@ import { formatDate, getStatusLabel, getStatusTone, getVehicleTypeLabel } from "
 const UserProfilePage = () => {
   const dispatch = useDispatch();
   const { user: mockUser } = useMockAuth();
-  const { error: authError, frontendRole, loading: authLoading, user: authUser } = useSelector((state) => state.auth);
+  const {
+    error: authError,
+    frontendRole,
+    loading: authLoading,
+    profileUpdateNotice,
+    profileUpdateRequestId,
+    user: authUser,
+  } = useSelector((state) => state.auth);
   const user = authUser || mockUser;
   const { vehicles, notice } = useSelector((state) => state.parking);
   const isResident = (frontendRole || user?.role || "USER") === "USER";
@@ -29,6 +39,7 @@ const UserProfilePage = () => {
     phone: user?.phone || "",
     avatarUrl: user?.avatarUrl || user?.avatar || "",
   });
+  const [profileOtp, setProfileOtp] = useState("");
   const displayAvatar = profileForm.avatarUrl || user?.avatarUrl || user?.avatar || "";
 
   const [form, setForm] = useState({
@@ -92,10 +103,20 @@ const UserProfilePage = () => {
     event.preventDefault();
 
     dispatch(
-      updateProfileRequest({
+      requestProfileUpdateOtpRequest({
         name: profileForm.name.trim(),
         phone: profileForm.phone.trim() || undefined,
         avatarUrl: profileForm.avatarUrl.trim() || undefined,
+      })
+    );
+    setProfileOtp("");
+  };
+
+  const handleConfirmProfileUpdate = () => {
+    dispatch(
+      confirmProfileUpdateRequest({
+        requestId: profileUpdateRequestId,
+        otp: profileOtp.trim(),
       })
     );
   };
@@ -129,7 +150,7 @@ const UserProfilePage = () => {
         </div>
       </section>
 
-      <StatusBanner success={notice} errors={[vehicles.error, authError]} />
+      <StatusBanner success={[notice, profileUpdateNotice]} errors={[vehicles.error, authError]} />
 
       <div className={isResident ? "two-column-grid" : "dashboard-grid"}>
         <section className="card section-card">
@@ -178,9 +199,31 @@ const UserProfilePage = () => {
             <div className="data-row"><span>Email</span><strong>{user.email}</strong></div>
             <div className="data-row"><span>Tòa nhà</span><strong>{user.buildingName || "Chưa có tòa nhà"}</strong></div>
             <div className="data-row"><span>Ngày tham gia</span><strong>{formatDate(user.createdAt || "2026-06-01")}</strong></div>
-            <Button type="submit" variant="primary" icon={Save} loading={authLoading}>
-              Lưu hồ sơ
+            <Button type="submit" variant="primary" icon={MailCheck} loading={authLoading}>
+              Gửi mã xác minh
             </Button>
+            {profileUpdateRequestId && (
+              <div className="soft-panel">
+                <FormField label="Mã xác minh email" required>
+                  <Input
+                    value={profileOtp}
+                    onChange={(event) => setProfileOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="Nhập 6 số trong email"
+                    icon={KeyRound}
+                  />
+                </FormField>
+                <Button
+                  type="button"
+                  variant="primary"
+                  icon={Save}
+                  loading={authLoading}
+                  disabled={profileOtp.length !== 6}
+                  onClick={handleConfirmProfileUpdate}
+                >
+                  Xác nhận lưu hồ sơ
+                </Button>
+              </div>
+            )}
           </form>
         </section>
 

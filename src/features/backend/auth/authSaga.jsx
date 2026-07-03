@@ -4,6 +4,9 @@ import {
     fetchRegisterBuildingsFailure,
     fetchRegisterBuildingsRequest,
     fetchRegisterBuildingsSuccess,
+    confirmProfileUpdateFailure,
+    confirmProfileUpdateRequest,
+    confirmProfileUpdateSuccess,
     loginFailure,
     loginRequest,
     loginSuccess,
@@ -14,6 +17,9 @@ import {
     requestPasswordResetFailure,
     requestPasswordResetRequest,
     requestPasswordResetSuccess,
+    requestProfileUpdateOtpFailure,
+    requestProfileUpdateOtpRequest,
+    requestProfileUpdateOtpSuccess,
     resetPasswordFailure,
     resetPasswordRequest,
     resetPasswordSuccess,
@@ -248,6 +254,43 @@ function* handleUpdateProfile(action) {
     }
 }
 
+function* handleRequestProfileUpdateOtp(action) {
+    try {
+        const response = yield call([api, api.post], "/users/me/update-request", action.payload);
+        const data = response?.data?.data || response?.data || {};
+
+        yield put(
+            requestProfileUpdateOtpSuccess({
+                requestId: data.requestId,
+                message: response?.data?.message || "Đã gửi mã xác minh tới email của bạn.",
+            })
+        );
+    } catch (error) {
+        yield put(
+            requestProfileUpdateOtpFailure(
+                getErrorMessage(error, "Không gửi được mã xác minh hồ sơ.")
+            )
+        );
+    }
+}
+
+function* handleConfirmProfileUpdate(action) {
+    try {
+        const response = yield call([api, api.patch], "/users/me/confirm-update", action.payload);
+        const user = response?.data?.data || response?.data;
+
+        localStorage.setItem("auth_user", JSON.stringify(user));
+
+        yield put(confirmProfileUpdateSuccess(user));
+    } catch (error) {
+        yield put(
+            confirmProfileUpdateFailure(
+                getErrorMessage(error, "Không xác minh được cập nhật hồ sơ.")
+            )
+        );
+    }
+}
+
 function* handleLogout() {
     yield call(() => {
         localStorage.removeItem("access_token");
@@ -266,6 +309,8 @@ export default function* authSaga() {
     yield takeLatest(refreshSessionRequest.type, handleRefreshSession);
     yield takeLatest(updateAvatarRequest.type, handleUpdateAvatar);
     yield takeLatest(updateProfileRequest.type, handleUpdateProfile);
+    yield takeLatest(requestProfileUpdateOtpRequest.type, handleRequestProfileUpdateOtp);
+    yield takeLatest(confirmProfileUpdateRequest.type, handleConfirmProfileUpdate);
     yield takeLatest(fetchRegisterBuildingsRequest.type, handleFetchRegisterBuildings);
     yield takeEvery(logout.type, handleLogout);
 }

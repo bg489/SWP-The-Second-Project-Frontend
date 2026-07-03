@@ -36,6 +36,9 @@ const getInitialState = () => {
         passwordResetError: null,
         passwordResetNotice: null,
         passwordResetVerified: false,
+
+        profileUpdateRequestId: null,
+        profileUpdateNotice: null,
     };
 };
 
@@ -180,6 +183,48 @@ const authSlice = createSlice({
             state.error = action.payload;
         },
 
+        requestProfileUpdateOtpRequest: (state) => {
+            state.loading = true;
+            state.error = null;
+            state.profileUpdateNotice = null;
+            state.profileUpdateRequestId = null;
+        },
+
+        requestProfileUpdateOtpSuccess: (state, action) => {
+            state.loading = false;
+            state.error = null;
+            state.profileUpdateNotice = action.payload?.message;
+            state.profileUpdateRequestId = action.payload?.requestId || null;
+        },
+
+        requestProfileUpdateOtpFailure: (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        },
+
+        confirmProfileUpdateRequest: (state) => {
+            state.loading = true;
+            state.error = null;
+        },
+
+        confirmProfileUpdateSuccess: (state, action) => {
+            state.loading = false;
+            state.error = null;
+            state.user = action.payload?.user || action.payload;
+            state.profileUpdateNotice = "Cập nhật hồ sơ thành công.";
+            state.profileUpdateRequestId = null;
+        },
+
+        confirmProfileUpdateFailure: (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        },
+
+        clearProfileUpdateState: (state) => {
+            state.profileUpdateNotice = null;
+            state.profileUpdateRequestId = null;
+        },
+
         requestPasswordResetRequest: (state) => {
             state.passwordResetLoading = true;
             state.passwordResetError = null;
@@ -266,6 +311,13 @@ export const {
     updateProfileRequest,
     updateProfileSuccess,
     updateProfileFailure,
+    requestProfileUpdateOtpRequest,
+    requestProfileUpdateOtpSuccess,
+    requestProfileUpdateOtpFailure,
+    confirmProfileUpdateRequest,
+    confirmProfileUpdateSuccess,
+    confirmProfileUpdateFailure,
+    clearProfileUpdateState,
     requestPasswordResetRequest,
     requestPasswordResetSuccess,
     requestPasswordResetFailure,
