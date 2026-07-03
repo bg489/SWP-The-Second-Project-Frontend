@@ -37,6 +37,9 @@ import {
     checkOutFailure,
     checkOutRequest,
     checkOutSuccess,
+    confirmFloorMismatchFailure,
+    confirmFloorMismatchRequest,
+    confirmFloorMismatchSuccess,
     confirmWrongSlotFailure,
     confirmWrongSlotRequest,
     confirmWrongSlotSuccess,
@@ -76,6 +79,9 @@ import {
     fetchAllVehiclesFailure,
     fetchAllVehiclesRequest,
     fetchAllVehiclesSuccess,
+    fetchFloorMismatchCasesFailure,
+    fetchFloorMismatchCasesRequest,
+    fetchFloorMismatchCasesSuccess,
     fetchHealthFailure,
     fetchHealthRequest,
     fetchHealthSuccess,
@@ -121,6 +127,9 @@ import {
     rejectVehicleFailure,
     rejectVehicleRequest,
     rejectVehicleSuccess,
+    reportFloorMismatchFailure,
+    reportFloorMismatchRequest,
+    reportFloorMismatchSuccess,
     reportWrongSlotFailure,
     reportWrongSlotRequest,
     reportWrongSlotSuccess,
@@ -869,6 +878,59 @@ function* handleConfirmWrongSlot(action) {
     }
 }
 
+function* handleFetchFloorMismatchCases(action) {
+    try {
+        const response = yield call([api, api.get], "/floor-mismatch-cases", {
+            params: action.payload,
+        });
+        yield put(
+            fetchFloorMismatchCasesSuccess(
+                extractList(response, ["floorMismatchCases", "cases"])
+            )
+        );
+    } catch (error) {
+        yield put(
+            fetchFloorMismatchCasesFailure(
+                getErrorMessage(error, "Không lấy được danh sách xe đậu sai khu.")
+            )
+        );
+    }
+}
+
+function* handleReportFloorMismatch(action) {
+    try {
+        const { buildingId, ...payload } = action.payload || {};
+        const response = yield call([api, api.post], "/floor-mismatch-cases/report", payload);
+        yield put(reportFloorMismatchSuccess(extractData(response)));
+        yield put(fetchFloorMismatchCasesRequest(buildingId ? { buildingId } : undefined));
+        yield put(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
+        yield put(fetchViolationsRequest());
+    } catch (error) {
+        yield put(
+            reportFloorMismatchFailure(
+                getErrorMessage(error, "Ghi nhận xe đậu sai khu thất bại.")
+            )
+        );
+    }
+}
+
+function* handleConfirmFloorMismatch(action) {
+    try {
+        const { buildingId, id, ...payload } = action.payload;
+        const response = yield call([api, api.post], `/floor-mismatch-cases/${id}/confirm`, payload);
+        yield put(confirmFloorMismatchSuccess(extractData(response)));
+        yield put(fetchFloorMismatchCasesRequest(buildingId ? { buildingId } : undefined));
+        yield put(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
+        yield put(fetchViolationsRequest());
+    } catch (error) {
+        yield put(
+            confirmFloorMismatchFailure(
+                getErrorMessage(error, "Xác nhận xe đậu sai khu thất bại.")
+            )
+        );
+    }
+}
+
 function* handleFetchActiveParkingSessions(action) {
     try {
         const response = yield call([api, api.get], "/parking-sessions/active", {
@@ -1186,6 +1248,9 @@ export default function* parkingSaga() {
     yield takeLatest(fetchWrongSlotCasesRequest.type, handleFetchWrongSlotCases);
     yield takeEvery(reportWrongSlotRequest.type, handleReportWrongSlot);
     yield takeEvery(confirmWrongSlotRequest.type, handleConfirmWrongSlot);
+    yield takeLatest(fetchFloorMismatchCasesRequest.type, handleFetchFloorMismatchCases);
+    yield takeEvery(reportFloorMismatchRequest.type, handleReportFloorMismatch);
+    yield takeEvery(confirmFloorMismatchRequest.type, handleConfirmFloorMismatch);
 
     yield takeLatest(fetchActiveParkingSessionsRequest.type, handleFetchActiveParkingSessions);
     yield takeLatest(fetchMyActiveParkingSessionsRequest.type, handleFetchMyActiveParkingSessions);
