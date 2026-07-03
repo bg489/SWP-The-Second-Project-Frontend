@@ -295,6 +295,19 @@
   font-size: 13px;
 }
 
+.data-row-button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.data-row-button:hover {
+  color: var(--primary);
+}
+
 .data-row:last-child {
   padding-bottom: 0;
   border-bottom: 0;
