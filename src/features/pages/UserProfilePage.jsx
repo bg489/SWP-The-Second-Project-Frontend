@@ -35,6 +35,9 @@ const UserProfilePage = () => {
   const { vehicles, notice } = useSelector((state) => state.parking);
   const isResident = (frontendRole || user?.role || "USER") === "USER";
   const [profileForm, setProfileForm] = useState({
+    avatarCropX: Number(user?.avatarCropX ?? 50),
+    avatarCropY: Number(user?.avatarCropY ?? 50),
+    avatarCropZoom: Number(user?.avatarCropZoom ?? 1),
     name: user?.name || "",
     phone: user?.phone || "",
     avatarUrl: user?.avatarUrl || user?.avatar || "",
@@ -58,6 +61,9 @@ const UserProfilePage = () => {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setProfileForm({
+        avatarCropX: Number(user?.avatarCropX ?? 50),
+        avatarCropY: Number(user?.avatarCropY ?? 50),
+        avatarCropZoom: Number(user?.avatarCropZoom ?? 1),
         name: user?.name || "",
         phone: user?.phone || "",
         avatarUrl: user?.avatarUrl || user?.avatar || "",
@@ -65,7 +71,7 @@ const UserProfilePage = () => {
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [user?.avatar, user?.avatarUrl, user?.name, user?.phone]);
+  }, [user?.avatar, user?.avatarCropX, user?.avatarCropY, user?.avatarCropZoom, user?.avatarUrl, user?.name, user?.phone]);
 
   const updateForm = (field, value) => {
     dispatch(clearParkingNotice());
@@ -107,6 +113,9 @@ const UserProfilePage = () => {
         name: profileForm.name.trim(),
         phone: profileForm.phone.trim() || undefined,
         avatarUrl: profileForm.avatarUrl.trim() || undefined,
+        avatarCropX: Number(profileForm.avatarCropX),
+        avatarCropY: Number(profileForm.avatarCropY),
+        avatarCropZoom: Number(profileForm.avatarCropZoom),
       })
     );
     setProfileOtp("");
@@ -163,7 +172,16 @@ const UserProfilePage = () => {
           <form className="data-list" onSubmit={handleProfileSubmit}>
             <div className="profile-avatar-panel">
               {displayAvatar ? (
-                <img src={displayAvatar} alt={user.name} className="profile-avatar-large" />
+                <span className="profile-avatar-large profile-avatar-crop-frame">
+                  <img
+                    src={displayAvatar}
+                    alt={user.name}
+                    style={{
+                      objectPosition: `${profileForm.avatarCropX}% ${profileForm.avatarCropY}%`,
+                      transform: `scale(${profileForm.avatarCropZoom})`,
+                    }}
+                  />
+                </span>
               ) : (
                 <div className="profile-avatar-large profile-avatar-placeholder">
                   {String(user?.name || "U").slice(0, 1).toUpperCase()}
@@ -196,6 +214,38 @@ const UserProfilePage = () => {
                 placeholder="https://..."
               />
             </FormField>
+            {displayAvatar && (
+              <div className="avatar-crop-controls">
+                <FormField label="Dịch ngang ảnh">
+                  <Input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={profileForm.avatarCropX}
+                    onChange={(event) => updateProfileForm("avatarCropX", event.target.value)}
+                  />
+                </FormField>
+                <FormField label="Dịch dọc ảnh">
+                  <Input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={profileForm.avatarCropY}
+                    onChange={(event) => updateProfileForm("avatarCropY", event.target.value)}
+                  />
+                </FormField>
+                <FormField label="Phóng ảnh">
+                  <Input
+                    type="range"
+                    min="1"
+                    max="3"
+                    step="0.05"
+                    value={profileForm.avatarCropZoom}
+                    onChange={(event) => updateProfileForm("avatarCropZoom", event.target.value)}
+                  />
+                </FormField>
+              </div>
+            )}
             <div className="data-row"><span>Email</span><strong>{user.email}</strong></div>
             <div className="data-row"><span>Tòa nhà</span><strong>{user.buildingName || "Chưa có tòa nhà"}</strong></div>
             <div className="data-row"><span>Ngày tham gia</span><strong>{formatDate(user.createdAt || "2026-06-01")}</strong></div>

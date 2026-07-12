@@ -168,6 +168,27 @@ const ManagerDashboard = () => {
     { header: "Số khoản", key: "count", render: (row) => row.count || 0 },
     { header: "Tổng tiền", key: "totalAmount", render: (row) => formatCurrency(row.totalAmount || 0) },
   ];
+  const revenueUsageRows = [
+    {
+      id: "monthly",
+      label: "Gói tháng xe máy và ô tô",
+      totalAmount: monthlyPassRevenue,
+    },
+    {
+      id: "walk-in",
+      label: "Khách gửi lẻ xe máy và ô tô",
+      totalAmount: Number(revenue.walkInRevenue || 0),
+    },
+    {
+      id: "violation",
+      label: "Phí vi phạm đã ghi nhận",
+      totalAmount: Number(revenue.violationRevenue || violationAmount || 0),
+    },
+  ];
+  const revenueUsageColumns = [
+    { header: "Khoản tiền", key: "label" },
+    { header: "Số tiền", key: "totalAmount", render: (row) => formatCurrency(row.totalAmount || 0) },
+  ];
 
   const floorColumns = [
     { header: "Tầng", key: "name" },
@@ -275,6 +296,12 @@ const ManagerDashboard = () => {
               <p className="section-copy">
                 Bao gồm gói tháng xe máy và đăng ký ô đỗ ô tô đã thanh toán thành công.
               </p>
+              <Table
+                columns={revenueUsageColumns}
+                data={revenueUsageRows}
+                emptyMessage="Chưa có dữ liệu doanh thu."
+                pageSize={5}
+              />
               <Table
                 columns={monthlyRevenueColumns}
                 data={monthlyRevenueRows}

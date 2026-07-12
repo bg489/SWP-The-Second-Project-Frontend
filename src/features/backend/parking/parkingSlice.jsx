@@ -173,6 +173,15 @@ const initialState = {
         error: null,
     },
 
+    floorMismatchCases: {
+        items: [],
+        loading: false,
+        reporting: false,
+        confirmingId: null,
+        lastCase: null,
+        error: null,
+    },
+
     parkingSessions: {
         active: parkingSessions.filter((session) =>
             ["ACTIVE", "PENDING_PAYMENT"].includes(session.status)
@@ -284,6 +293,7 @@ const parkingSlice = createSlice({
             state.notifications.preferences.error = null;
             state.staffAssignments.error = null;
             state.wrongSlotCases.error = null;
+            state.floorMismatchCases.error = null;
             state.parkingSessions.error = null;
             state.violations.error = null;
             state.payments.error = null;
@@ -791,6 +801,58 @@ const parkingSlice = createSlice({
             state.wrongSlotCases.error = action.payload;
         },
 
+        fetchFloorMismatchCasesRequest: (state) => {
+            state.floorMismatchCases.loading = true;
+            state.floorMismatchCases.error = null;
+        },
+        fetchFloorMismatchCasesSuccess: (state, action) => {
+            state.floorMismatchCases.loading = false;
+            state.floorMismatchCases.items = action.payload || [];
+        },
+        fetchFloorMismatchCasesFailure: (state, action) => {
+            state.floorMismatchCases.loading = false;
+            state.floorMismatchCases.error = action.payload;
+        },
+        reportFloorMismatchRequest: (state) => {
+            state.floorMismatchCases.reporting = true;
+            state.floorMismatchCases.error = null;
+            state.floorMismatchCases.lastCase = null;
+            state.notice = null;
+        },
+        reportFloorMismatchSuccess: (state, action) => {
+            state.floorMismatchCases.reporting = false;
+            state.floorMismatchCases.lastCase = action.payload;
+            state.floorMismatchCases.items = upsertById(
+                state.floorMismatchCases.items,
+                action.payload
+            );
+            state.notice =
+                action.payload?.status === "LOCKED_AND_PENALIZED"
+                    ? "Đã ghi nhận xe máy vào sai khu, khóa xe và cộng phí vi phạm."
+                    : "Đã gửi thông báo yêu cầu dời ô tô trong 15 phút.";
+        },
+        reportFloorMismatchFailure: (state, action) => {
+            state.floorMismatchCases.reporting = false;
+            state.floorMismatchCases.error = action.payload;
+        },
+        confirmFloorMismatchRequest: (state, action) => {
+            state.floorMismatchCases.confirmingId = action.payload.id;
+            state.floorMismatchCases.error = null;
+            state.notice = null;
+        },
+        confirmFloorMismatchSuccess: (state, action) => {
+            state.floorMismatchCases.confirmingId = null;
+            state.floorMismatchCases.items = upsertById(
+                state.floorMismatchCases.items,
+                action.payload
+            );
+            state.notice = "Đã xác nhận quá hạn và cộng chi phí xử lý.";
+        },
+        confirmFloorMismatchFailure: (state, action) => {
+            state.floorMismatchCases.confirmingId = null;
+            state.floorMismatchCases.error = action.payload;
+        },
+
         fetchActiveParkingSessionsRequest: (state) => {
             state.parkingSessions.loading = true;
             state.parkingSessions.error = null;
@@ -961,6 +1023,9 @@ export const {
     checkOutRequest,
     checkOutSuccess,
     clearParkingNotice,
+    confirmFloorMismatchFailure,
+    confirmFloorMismatchRequest,
+    confirmFloorMismatchSuccess,
     confirmWrongSlotFailure,
     confirmWrongSlotRequest,
     confirmWrongSlotSuccess,
@@ -1000,6 +1065,9 @@ export const {
     fetchAllVehiclesFailure,
     fetchAllVehiclesRequest,
     fetchAllVehiclesSuccess,
+    fetchFloorMismatchCasesFailure,
+    fetchFloorMismatchCasesRequest,
+    fetchFloorMismatchCasesSuccess,
     fetchHealthFailure,
     fetchHealthRequest,
     fetchHealthSuccess,
@@ -1045,6 +1113,9 @@ export const {
     rejectVehicleFailure,
     rejectVehicleRequest,
     rejectVehicleSuccess,
+    reportFloorMismatchFailure,
+    reportFloorMismatchRequest,
+    reportFloorMismatchSuccess,
     reportWrongSlotFailure,
     reportWrongSlotRequest,
     reportWrongSlotSuccess,
