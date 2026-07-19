@@ -24,6 +24,7 @@ import {
 import { fetchFloorsRequest } from "../backend/floors/floorSlice";
 import { fetchSlotsByFloorRequest } from "../backend/slots/slotSlice";
 import { formatCurrency, formatDateTime, getStatusLabel, getVehicleTypeLabel } from "../../services/mockParkingData";
+import { compressImageFile } from "../../utils/imageFile";
 
 const slotClassName = (status) => String(status || "AVAILABLE").toLowerCase();
 
@@ -147,6 +148,20 @@ const StaffViolationsPage = () => {
     setPenaltyFee("");
   };
 
+  const handleFloorMismatchSessionChange = (event) => {
+    const sessionId = event.target.value;
+    const session = activeSessions.find((item) => String(item.id) === String(sessionId));
+
+    setFloorMismatchSessionId(sessionId);
+    setObservedFloorId("");
+    setTargetCarFloorId(
+      session?.vehicleType === "CAR" && session.floorId ? String(session.floorId) : ""
+    );
+    setTargetSlotId(
+      session?.vehicleType === "CAR" && session.slotId ? String(session.slotId) : ""
+    );
+  };
+
   const handleRecordViolation = (event) => {
     event.preventDefault();
     if (!selectedSessionId || !penaltyFee) return;
@@ -170,38 +185,34 @@ const StaffViolationsPage = () => {
     setNote("");
   };
 
-  const handleEvidenceFile = (event) => {
+  const handleEvidenceFile = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      setFormError("Vui lòng chọn hình ảnh bằng chứng.");
-      return;
-    }
+    setEvidenceUrl("");
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setEvidenceUrl(String(reader.result || ""));
+    try {
+      setEvidenceUrl(await compressImageFile(file));
       setFormError("");
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      setFormError(error.message || "Không xử lý được ảnh bằng chứng đã chọn.");
+      event.target.value = "";
+    }
   };
 
-  const handleFloorEvidenceFile = (event) => {
+  const handleFloorEvidenceFile = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      setFormError("Vui lòng chọn hình ảnh bằng chứng.");
-      return;
-    }
+    setFloorEvidenceUrl("");
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setFloorEvidenceUrl(String(reader.result || ""));
+    try {
+      setFloorEvidenceUrl(await compressImageFile(file));
       setFormError("");
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      setFormError(error.message || "Không xử lý được ảnh bằng chứng đã chọn.");
+      event.target.value = "";
+    }
   };
 
   const handleReportWrongSlot = (event) => {
@@ -502,11 +513,7 @@ const StaffViolationsPage = () => {
             <FormField label="Xe đang trong bãi" required>
               <Select
                 value={floorMismatchSessionId}
-                onChange={(event) => {
-                  setFloorMismatchSessionId(event.target.value);
-                  setObservedFloorId("");
-                  setTargetSlotId("");
-                }}
+                onChange={handleFloorMismatchSessionChange}
                 options={sessionOptions}
                 placeholder="Chọn xe đậu sai khu"
               />
@@ -542,23 +549,30 @@ const StaffViolationsPage = () => {
               <div className="car-slot-grid">
                 {targetCarSlots.map((slot) => {
                   const isSelected = String(targetSlotId) === String(slot.id);
-                  const disabled = slot.status !== "AVAILABLE";
+                  const isAssignedSlot =
+                    String(selectedFloorMismatchSession?.slotId || "") === String(slot.id);
+                  const disabled = slot.status !== "AVAILABLE" && !isAssignedSlot;
 
                   return (
                     <button
                       type="button"
                       key={slot.id}
-                      className={`car-slot-card ${slotClassName(slot.status)} ${isSelected ? "selected wrong-slot-selected" : ""}`}
+                      className={`car-slot-card ${slotClassName(slot.status)} ${isAssignedSlot ? "assigned-to-session" : ""} ${isSelected ? "selected wrong-slot-selected" : ""}`}
                       disabled={disabled}
                       onClick={() => setTargetSlotId(String(slot.id))}
+                      title={isAssignedSlot ? "Ô đã được gán cho xe này" : undefined}
                     >
                       <span className="car-slot-code">{slot.slotCode}</span>
-                      <span className="car-slot-status">{getStatusLabel(slot.status)}</span>
+                      <span className="car-slot-status">
+                        {isAssignedSlot ? "Ô đã gán" : getStatusLabel(slot.status)}
+                      </span>
                     </button>
                   );
                 })}
               </div>
-              <p className="section-copy">Nếu không chọn ô, hệ thống sẽ tự lấy ô trống đầu tiên trong tòa nhà.</p>
+              <p className="section-copy">
+                Ô đã gán cho xe được ưu tiên tự động. Nhân viên vẫn có thể chọn một ô trống khác khi cần.
+              </p>
             </div>
           )}
 

@@ -29,9 +29,12 @@ const customerLabels = {
 };
 
 const violationLabels = {
+  "Do sai slot": "Ô tô đậu sai ô",
+  "Keo oto do sai khu": "Ô tô đậu sai khu",
   LOST_QR_CARD: "Mất thẻ QR",
   WRONG_FLOOR: "Đỗ sai tầng",
   WRONG_SLOT: "Đỗ sai ô",
+  "Xe may vao khu oto": "Xe máy đậu sai khu",
 };
 
 const statusLabels = {
