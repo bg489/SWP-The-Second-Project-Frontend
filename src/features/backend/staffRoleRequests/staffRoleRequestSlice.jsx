@@ -4,6 +4,7 @@ const initialState = {
   building: null,
   candidates: [],
   candidatesLoading: false,
+  candidateRequestType: "PROMOTE",
   managerRequests: [],
   managerLoading: false,
   adminRequests: [],
@@ -11,6 +12,11 @@ const initialState = {
   submitting: false,
   actionId: null,
   actionType: null,
+  staffProfiles: [],
+  profilesBuilding: null,
+  profilesLoading: false,
+  profile: null,
+  profileLoading: false,
   error: null,
   notice: null,
 };
@@ -19,18 +25,26 @@ const staffRoleRequestSlice = createSlice({
   name: "staffRoleRequests",
   initialState,
   reducers: {
-    fetchStaffRoleCandidatesRequest: (state) => {
+    fetchStaffRoleCandidatesRequest: (state, action) => {
       state.candidatesLoading = true;
       state.error = null;
+      state.candidates = [];
+      state.candidateRequestType = action.payload?.requestType || "PROMOTE";
     },
     fetchStaffRoleCandidatesSuccess: (state, action) => {
       state.candidatesLoading = false;
       state.building = action.payload?.building || null;
       state.candidates = action.payload?.users || [];
+      state.candidateRequestType = action.payload?.requestType || "PROMOTE";
     },
     fetchStaffRoleCandidatesFailure: (state, action) => {
       state.candidatesLoading = false;
       state.error = action.payload;
+    },
+    clearStaffRoleCandidates: (state) => {
+      state.building = null;
+      state.candidates = [];
+      state.candidatesLoading = false;
     },
 
     fetchManagerStaffRoleRequestsRequest: (state) => {
@@ -53,7 +67,9 @@ const staffRoleRequestSlice = createSlice({
     },
     submitStaffRoleRequestSuccess: (state, action) => {
       state.submitting = false;
-      state.notice = "Đã gửi hồ sơ đề nghị nhân viên đến quản trị viên.";
+      state.notice = action.payload?.requestType === "DEMOTE"
+        ? "Đã gửi đề nghị hủy quyền nhân viên đến quản trị viên."
+        : "Đã gửi hồ sơ bổ nhiệm nhân viên đến quản trị viên.";
       state.managerRequests = [action.payload, ...state.managerRequests];
       state.candidates = state.candidates.filter(
         (candidate) => Number(candidate.id) !== Number(action.payload?.userId)
@@ -92,9 +108,13 @@ const staffRoleRequestSlice = createSlice({
     staffRoleRequestActionSuccess: (state, action) => {
       state.actionId = null;
       state.actionType = null;
-      state.notice = action.payload?.status === "APPROVED"
-        ? "Đã duyệt và cấp quyền nhân viên thành công."
-        : "Đã từ chối hồ sơ đề nghị nhân viên.";
+      if (action.payload?.status === "APPROVED") {
+        state.notice = action.payload?.requestType === "DEMOTE"
+          ? "Đã duyệt hủy quyền và chuyển nhân viên về cư dân."
+          : "Đã duyệt và cấp quyền nhân viên thành công.";
+      } else {
+        state.notice = "Đã từ chối hồ sơ điều chỉnh quyền nhân viên.";
+      }
       state.adminRequests = state.adminRequests
         .map((request) =>
           Number(request.id) === Number(action.payload?.id) ? action.payload : request
@@ -107,6 +127,38 @@ const staffRoleRequestSlice = createSlice({
       state.error = action.payload;
     },
 
+    fetchStaffProfilesRequest: (state) => {
+      state.profilesLoading = true;
+      state.error = null;
+    },
+    fetchStaffProfilesSuccess: (state, action) => {
+      state.profilesLoading = false;
+      state.profilesBuilding = action.payload?.building || null;
+      state.staffProfiles = action.payload?.profiles || [];
+    },
+    fetchStaffProfilesFailure: (state, action) => {
+      state.profilesLoading = false;
+      state.error = action.payload;
+    },
+
+    fetchStaffProfileRequest: (state) => {
+      state.profileLoading = true;
+      state.error = null;
+    },
+    fetchStaffProfileSuccess: (state, action) => {
+      state.profileLoading = false;
+      state.profile = action.payload || null;
+    },
+    fetchStaffProfileFailure: (state, action) => {
+      state.profileLoading = false;
+      state.profile = null;
+      state.error = action.payload;
+    },
+    clearStaffProfile: (state) => {
+      state.profile = null;
+      state.error = null;
+    },
+
     clearStaffRoleRequestNotice: (state) => {
       state.error = null;
       state.notice = null;
@@ -116,6 +168,8 @@ const staffRoleRequestSlice = createSlice({
 
 export const {
   approveStaffRoleRequest,
+  clearStaffProfile,
+  clearStaffRoleCandidates,
   clearStaffRoleRequestNotice,
   fetchAdminStaffRoleRequestsFailure,
   fetchAdminStaffRoleRequestsRequest,
@@ -126,6 +180,12 @@ export const {
   fetchStaffRoleCandidatesFailure,
   fetchStaffRoleCandidatesRequest,
   fetchStaffRoleCandidatesSuccess,
+  fetchStaffProfileFailure,
+  fetchStaffProfileRequest,
+  fetchStaffProfileSuccess,
+  fetchStaffProfilesFailure,
+  fetchStaffProfilesRequest,
+  fetchStaffProfilesSuccess,
   rejectStaffRoleRequest,
   staffRoleRequestActionFailure,
   staffRoleRequestActionSuccess,

@@ -1463,6 +1463,94 @@ body.dark-theme .login-panel-wrap .section-card {
   border-left: 4px solid var(--accent);
 }
 
+.manager-staff-scope-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(280px, 1.1fr);
+  align-items: end;
+  gap: 16px;
+}
+
+.manager-selected-building {
+  display: grid;
+  min-height: 58px;
+  align-content: center;
+  gap: 3px;
+  padding: 10px 13px;
+  border: 1px solid rgba(237, 153, 81, 0.35);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--accent-light), var(--primary-light));
+}
+
+.manager-selected-building strong {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.manager-selected-building span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.staff-request-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.staff-request-mode-switch > button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 76px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.staff-request-mode-switch > button:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.staff-request-mode-switch > button.active {
+  border-color: #16a36a;
+  background: rgba(22, 163, 106, 0.09);
+  box-shadow: inset 4px 0 #16a36a, 0 8px 22px rgba(22, 163, 106, 0.1);
+  color: #0d8655;
+}
+
+.staff-request-mode-switch > button.active.danger {
+  border-color: #e5484d;
+  background: rgba(229, 72, 77, 0.09);
+  box-shadow: inset 4px 0 #e5484d, 0 8px 22px rgba(229, 72, 77, 0.1);
+  color: #c82f37;
+}
+
+.staff-request-mode-switch > button > svg {
+  flex: 0 0 auto;
+}
+
+.staff-request-mode-switch > button > span {
+  display: grid;
+  gap: 3px;
+}
+
+.staff-request-mode-switch strong {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.staff-request-mode-switch small {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
 .staff-request-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(330px, 0.8fr);
@@ -1604,6 +1692,37 @@ body.dark-theme .login-panel-wrap .section-card {
   line-height: 1.45;
 }
 
+.staff-demotion-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 13px;
+  border: 1px solid rgba(229, 72, 77, 0.28);
+  border-radius: var(--radius-sm);
+  background: rgba(229, 72, 77, 0.08);
+  color: #c82f37;
+}
+
+.staff-demotion-warning svg {
+  flex: 0 0 auto;
+}
+
+.staff-demotion-warning div {
+  display: grid;
+  gap: 4px;
+}
+
+.staff-demotion-warning strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.staff-demotion-warning span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .staff-role-portrait-button {
   display: grid;
   width: 104px;
@@ -1628,6 +1747,17 @@ body.dark-theme .login-panel-wrap .section-card {
   height: 86px;
   object-fit: cover;
   object-position: center top;
+}
+
+.staff-role-portrait-button .staff-role-portrait-placeholder {
+  display: grid;
+  width: 100%;
+  height: 86px;
+  place-items: center;
+  padding: 0;
+  background: linear-gradient(145deg, var(--primary-light), var(--accent-light));
+  color: var(--text-primary);
+  font-size: 28px;
 }
 
 .staff-role-portrait-button span {
@@ -1717,6 +1847,23 @@ body.dark-theme .login-panel-wrap .section-card {
   background: var(--surface-soft);
   box-shadow: var(--shadow-md);
   object-fit: contain;
+}
+
+.staff-role-review-photo-empty {
+  display: grid;
+  min-height: 340px;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  color: var(--text-muted);
+}
+
+.staff-role-review-photo-empty > span {
+  padding: 0;
+  background: transparent;
 }
 
 .staff-role-review-photo span {
@@ -1830,6 +1977,11 @@ body.dark-theme .login-panel-wrap .section-card {
 }
 
 @media (max-width: 640px) {
+  .manager-staff-scope-grid,
+  .staff-request-mode-switch {
+    grid-template-columns: 1fr;
+  }
+
   .staff-request-workspace {
     gap: 12px;
   }

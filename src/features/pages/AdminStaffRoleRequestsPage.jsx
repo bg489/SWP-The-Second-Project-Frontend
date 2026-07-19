@@ -11,6 +11,7 @@ import {
   RefreshCcw,
   Search,
   UserCheck,
+  UserMinus,
   X,
   XCircle,
 } from "lucide-react";
@@ -33,6 +34,17 @@ const statusOptions = [
   { value: "REJECTED", label: "Đã từ chối" },
   { value: "", label: "Tất cả hồ sơ" },
 ];
+
+const requestTypeOptions = [
+  { value: "", label: "Tất cả loại đề nghị" },
+  { value: "PROMOTE", label: "Bổ nhiệm nhân viên" },
+  { value: "DEMOTE", label: "Hủy quyền nhân viên" },
+];
+
+const requestTypeMeta = {
+  PROMOTE: { label: "Bổ nhiệm", className: "success" },
+  DEMOTE: { label: "Hủy quyền", className: "danger" },
+};
 
 const statusMeta = {
   PENDING: { label: "Đang chờ duyệt", className: "warning" },
@@ -66,14 +78,18 @@ const AdminStaffRoleRequestsPage = () => {
     notice,
   } = useSelector((state) => state.staffRoleRequests);
   const [status, setStatus] = useState("PENDING");
+  const [requestType, setRequestType] = useState("");
   const [keyword, setKeyword] = useState("");
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [adminNote, setAdminNote] = useState("");
   const [dialogError, setDialogError] = useState("");
 
   useEffect(() => {
-    dispatch(fetchAdminStaffRoleRequestsRequest(status ? { status } : {}));
-  }, [dispatch, status]);
+    dispatch(fetchAdminStaffRoleRequestsRequest({
+      status: status || undefined,
+      requestType: requestType || undefined,
+    }));
+  }, [dispatch, requestType, status]);
 
   const rows = useMemo(() => {
     const q = normalizeText(keyword.trim());
@@ -87,6 +103,7 @@ const AdminStaffRoleRequestsPage = () => {
         request.managerName,
         request.managerEmail,
         request.buildingName,
+        request.requestType,
       ].some((value) => normalizeText(value).includes(q))
     );
   }, [adminRequests, keyword]);
@@ -125,20 +142,36 @@ const AdminStaffRoleRequestsPage = () => {
 
   const columns = [
     {
+      header: "Loại đề nghị",
+      key: "requestType",
+      minWidth: "135px",
+      render: (request) => {
+        const meta = requestTypeMeta[request.requestType] || requestTypeMeta.PROMOTE;
+        return <span className={`pill ${meta.className}`}>{meta.label}</span>;
+      },
+    },
+    {
       header: "Ảnh chân dung",
       key: "portraitImageUrl",
       minWidth: "125px",
-      render: (request) => (
-        <button
-          type="button"
-          className="staff-role-portrait-button"
-          onClick={() => openReview(request)}
-          aria-label={`Xem ảnh chân dung của ${request.userName}`}
-        >
-          <img src={request.portraitImageUrl} alt={`Chân dung ${request.userName}`} />
-          <span><Eye size={14} /> Xem ảnh</span>
-        </button>
-      ),
+      render: (request) => {
+        const portrait = request.portraitImageUrl
+          || request.staffPortraitImageUrl
+          || request.userAvatarUrl;
+        return (
+          <button
+            type="button"
+            className="staff-role-portrait-button"
+            onClick={() => openReview(request)}
+            aria-label={`Xem hồ sơ chân dung của ${request.userName}`}
+          >
+            {portrait
+              ? <img src={portrait} alt={`Chân dung ${request.userName}`} />
+              : <span className="staff-role-portrait-placeholder">{String(request.userName || "N").charAt(0)}</span>}
+            <span><Eye size={14} /> Xem hồ sơ</span>
+          </button>
+        );
+      },
     },
     {
       header: "Người được đề nghị",
@@ -208,9 +241,9 @@ const AdminStaffRoleRequestsPage = () => {
       <section className="page-hero">
         <div className="page-hero-content">
           <div className="page-eyebrow"><UserCheck size={16} /> Duyệt nhân viên</div>
-          <h1 className="page-title">Kiểm tra hồ sơ đề nghị nhân viên</h1>
+          <h1 className="page-title">Kiểm tra thay đổi quyền nhân viên</h1>
           <p className="page-subtitle">
-            Đối chiếu ảnh chân dung, thông tin cá nhân, tài khoản, tòa nhà và người quản lý gửi đề nghị trước khi cấp quyền.
+            Xét duyệt cả hồ sơ bổ nhiệm và hủy quyền dựa trên thông tin người dùng, tòa nhà và quản lý gửi đề nghị.
           </p>
         </div>
         <div className="page-hero-aside">
@@ -232,7 +265,10 @@ const AdminStaffRoleRequestsPage = () => {
             variant="outline"
             icon={RefreshCcw}
             loading={adminLoading}
-            onClick={() => dispatch(fetchAdminStaffRoleRequestsRequest(status ? { status } : {}))}
+            onClick={() => dispatch(fetchAdminStaffRoleRequestsRequest({
+              status: status || undefined,
+              requestType: requestType || undefined,
+            }))}
           >
             Làm mới
           </Button>
@@ -244,6 +280,14 @@ const AdminStaffRoleRequestsPage = () => {
               value={status}
               onChange={(event) => setStatus(event.target.value)}
               options={statusOptions}
+              placeholder={null}
+            />
+          </FormField>
+          <FormField label="Loại đề nghị">
+            <Select
+              value={requestType}
+              onChange={(event) => setRequestType(event.target.value)}
+              options={requestTypeOptions}
               placeholder={null}
             />
           </FormField>
@@ -283,7 +327,7 @@ const AdminStaffRoleRequestsPage = () => {
             className="staff-role-review-dialog"
             role="dialog"
             aria-modal="true"
-            aria-label={`Hồ sơ đề nghị nhân viên ${selectedRequest.userName}`}
+            aria-label={`Hồ sơ điều chỉnh quyền của ${selectedRequest.userName}`}
             onMouseDown={(event) => event.stopPropagation()}
           >
             <button
@@ -298,9 +342,16 @@ const AdminStaffRoleRequestsPage = () => {
 
             <header className="staff-role-review-header">
               <div>
-                <span className="page-eyebrow"><Camera size={15} /> Hồ sơ chân dung</span>
+                <span className="page-eyebrow">
+                  {selectedRequest.requestType === "DEMOTE" ? <UserMinus size={15} /> : <Camera size={15} />}
+                  {selectedRequest.requestType === "DEMOTE" ? "Đề nghị hủy quyền" : "Hồ sơ bổ nhiệm"}
+                </span>
                 <h2>{selectedRequest.userName}</h2>
-                <p>Đề nghị làm nhân viên tại {selectedRequest.buildingName}</p>
+                <p>
+                  {selectedRequest.requestType === "DEMOTE"
+                    ? `Đề nghị chuyển nhân viên về cư dân tại ${selectedRequest.buildingName}`
+                    : `Đề nghị làm nhân viên tại ${selectedRequest.buildingName}`}
+                </p>
               </div>
               <span className={`pill ${(statusMeta[selectedRequest.status] || statusMeta.PENDING).className}`}>
                 {(statusMeta[selectedRequest.status] || statusMeta.PENDING).label}
@@ -309,11 +360,26 @@ const AdminStaffRoleRequestsPage = () => {
 
             <div className="staff-role-review-grid">
               <div className="staff-role-review-photo">
-                <img
-                  src={selectedRequest.portraitImageUrl}
-                  alt={`Ảnh chân dung ${selectedRequest.userName}`}
-                />
-                <span>Ảnh này sẽ trở thành ảnh đại diện sau khi duyệt</span>
+                {(selectedRequest.portraitImageUrl
+                  || selectedRequest.staffPortraitImageUrl
+                  || selectedRequest.userAvatarUrl) ? (
+                    <img
+                      src={selectedRequest.portraitImageUrl
+                        || selectedRequest.staffPortraitImageUrl
+                        || selectedRequest.userAvatarUrl}
+                      alt={`Ảnh chân dung ${selectedRequest.userName}`}
+                    />
+                  ) : (
+                    <div className="staff-role-review-photo-empty">
+                      <Camera size={38} />
+                      <span>Chưa có ảnh hồ sơ nhân viên</span>
+                    </div>
+                  )}
+                <span>
+                  {selectedRequest.requestType === "DEMOTE"
+                    ? "Ảnh hồ sơ nghề nghiệp hiện tại của nhân viên"
+                    : "Ảnh sẽ được lưu trong hồ sơ nhân viên, tách biệt ảnh đại diện cá nhân"}
+                </span>
               </div>
 
               <div className="staff-role-review-details">
@@ -377,12 +443,15 @@ const AdminStaffRoleRequestsPage = () => {
                     Từ chối hồ sơ
                   </Button>
                   <Button
+                    variant={selectedRequest.requestType === "DEMOTE" ? "danger" : "primary"}
                     icon={CheckCircle2}
                     loading={actionId === selectedRequest.id && actionType === "APPROVE"}
                     disabled={Boolean(actionId)}
                     onClick={approve}
                   >
-                    Duyệt thành nhân viên
+                    {selectedRequest.requestType === "DEMOTE"
+                      ? "Duyệt hủy quyền"
+                      : "Duyệt thành nhân viên"}
                   </Button>
                 </div>
               </footer>

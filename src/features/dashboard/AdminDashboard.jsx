@@ -254,15 +254,29 @@ const AdminDashboard = () => {
 
   const staffRoleColumns = [
     {
+      header: "Loại đề nghị",
+      key: "requestType",
+      render: (row) => (
+        <span className={`pill ${row.requestType === "DEMOTE" ? "danger" : "success"}`}>
+          {row.requestType === "DEMOTE" ? "Hủy quyền" : "Bổ nhiệm"}
+        </span>
+      ),
+    },
+    {
       header: "Ảnh chân dung",
       key: "portraitImageUrl",
-      render: (row) => (
-        <img
-          className="evidence-thumb"
-          src={row.portraitImageUrl}
-          alt={`Chân dung ${row.userName}`}
-        />
-      ),
+      render: (row) => {
+        const portrait = row.portraitImageUrl
+          || row.staffPortraitImageUrl
+          || row.userAvatarUrl;
+        return portrait ? (
+          <img
+            className="evidence-thumb"
+            src={portrait}
+            alt={`Chân dung ${row.userName}`}
+          />
+        ) : <span className="metric-note">Chưa có ảnh</span>;
+      },
     },
     {
       header: "Người được đề nghị",
@@ -355,9 +369,9 @@ const AdminDashboard = () => {
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><Camera size={22} /></div>
-          <div className="metric-label">Đề nghị nhân viên</div>
+          <div className="metric-label">Thay đổi quyền nhân viên</div>
           <div className="metric-value">{pendingStaffRoles.length}</div>
-          <div className="metric-note">Đối chiếu chân dung, tài khoản và tòa nhà</div>
+          <div className="metric-note">Bổ nhiệm hoặc hủy quyền theo đề nghị của Manager</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><Users size={22} /></div>
@@ -390,8 +404,8 @@ const AdminDashboard = () => {
       <section className="card section-card">
         <div className="section-header">
           <div>
-            <h2 className="section-title"><UserCheck size={19} /> Đề nghị cấp quyền nhân viên</h2>
-            <p className="section-copy">Kiểm tra ảnh chân dung và thông tin do quản lý tòa nhà gửi.</p>
+            <h2 className="section-title"><UserCheck size={19} /> Đề nghị thay đổi quyền nhân viên</h2>
+            <p className="section-copy">Kiểm tra hồ sơ bổ nhiệm và hủy quyền do Manager gửi theo từng tòa nhà.</p>
           </div>
           <Button
             variant="outline"
@@ -408,7 +422,7 @@ const AdminDashboard = () => {
           loading={staffRoleLoading}
           pageSize={5}
           className="approval-overview-table"
-          emptyMessage="Không có đề nghị cấp quyền nhân viên đang chờ duyệt."
+          emptyMessage="Không có đề nghị thay đổi quyền nhân viên đang chờ duyệt."
         />
       </section>
 
