@@ -979,6 +979,17 @@ body.dark-theme .login-panel-wrap .section-card {
   border-color: rgba(100, 116, 139, 0.38);
 }
 
+.car-slot-card.assigned-to-session {
+  border: 2px dashed var(--primary);
+  background: rgba(237, 153, 81, 0.16);
+  opacity: 1;
+}
+
+.car-slot-card.assigned-to-session .car-slot-status {
+  color: var(--orange-strong);
+  font-weight: 900;
+}
+
 .car-slot-code {
   font-weight: 800;
   font-size: 0.95rem;
