@@ -27,23 +27,10 @@ import {
   getStatusTone,
   getVehicleTypeLabel,
 } from "../../services/mockParkingData";
-
-const getPaymentReturnFromUrl = () => {
-  const params = new URLSearchParams(window.location.search);
-  const paymentStatus = params.get("paymentStatus");
-
-  if (!paymentStatus) return null;
-
-  const isSuccess = paymentStatus === "SUCCESS";
-
-  return {
-    tone: isSuccess ? "success" : "warning",
-    message: isSuccess
-      ? "Thanh toán thành công. Gói tháng của bạn đang được cập nhật."
-      : "Thanh toán chưa hoàn tất. Bạn có thể gửi lại yêu cầu khi cần.",
-    transactionRef: params.get("transactionRef"),
-  };
-};
+import {
+  clearPaymentReturnState,
+  getPaymentReturnFromUrl,
+} from "../../utils/paymentReturn";
 
 const normalizePlateQrValue = (value) =>
   String(value || "")
@@ -74,11 +61,26 @@ const MyQRPassPage = () => {
     notice,
   } = useSelector((state) => state.parking);
   const { user } = useSelector((state) => state.auth);
-  const { floors } = useSelector((state) => state.floors);
-  const { slotsByFloor, loading: slotsLoading } = useSelector((state) => state.slots);
+  const {
+    floors,
+    loading: floorsLoading,
+    error: floorsError,
+  } = useSelector((state) => state.floors);
+  const {
+    slotsByFloor,
+    activeFloorId,
+    loading: slotsLoading,
+    error: slotsError,
+  } = useSelector((state) => state.slots);
+  const userBuildingId = user?.buildingId || user?.building_id;
 
   const [selectedPass, setSelectedPass] = useState(null);
-  const [paymentReturn] = useState(getPaymentReturnFromUrl);
+  const [paymentReturn] = useState(() =>
+    getPaymentReturnFromUrl({
+      successMessage: "Thanh toán thành công. Gói tháng của bạn đang được cập nhật.",
+      failureMessage: "Thanh toán chưa hoàn tất. Bạn có thể gửi lại yêu cầu khi cần.",
+    })
+  );
   const [purchaseForm, setPurchaseForm] = useState({
     packagePlanId: "",
     vehicleId: "",
@@ -89,15 +91,20 @@ const MyQRPassPage = () => {
   useEffect(() => {
     dispatch(fetchMyQrPassesRequest());
     dispatch(fetchMyMonthlyPassesRequest());
-    dispatch(fetchPackagePlansRequest({ status: "ACTIVE", buildingId: user?.buildingId }));
+    dispatch(fetchPackagePlansRequest({ status: "ACTIVE", buildingId: userBuildingId }));
     dispatch(fetchMyVehiclesRequest());
     dispatch(fetchMySlotRegistrationsRequest());
-  }, [dispatch, user?.buildingId]);
+  }, [dispatch, userBuildingId]);
 
   useEffect(() => {
-    if (!user?.buildingId) return;
-    dispatch(fetchFloorsRequest({ buildingId: user.buildingId, status: "ACTIVE", limit: 100 }));
-  }, [dispatch, user?.buildingId]);
+    if (!userBuildingId) return;
+    dispatch(fetchFloorsRequest({
+      buildingId: userBuildingId,
+      floorType: "CAR",
+      status: "ACTIVE",
+      limit: 100,
+    }));
+  }, [dispatch, userBuildingId]);
 
   useEffect(() => {
     if (!paymentReturn) return;
@@ -105,7 +112,7 @@ const MyQRPassPage = () => {
     dispatch(fetchMyQrPassesRequest());
     dispatch(fetchMyMonthlyPassesRequest());
     dispatch(fetchMySlotRegistrationsRequest());
-    window.history.replaceState({}, "", window.location.pathname);
+    clearPaymentReturnState();
   }, [dispatch, paymentReturn]);
 
   const approvedVehicles = useMemo(() => {
@@ -137,18 +144,32 @@ const MyQRPassPage = () => {
   const carFloors = useMemo(() => {
     return floors.filter(
       (floor) =>
-        Number(floor.buildingId) === Number(user?.buildingId) &&
-        floor.floorType === "CAR" &&
-        floor.status === "ACTIVE"
+        Number(floor.buildingId || floor.building_id) === Number(userBuildingId) &&
+        String(floor.floorType || floor.floor_type).toUpperCase() === "CAR" &&
+        String(floor.status).toUpperCase() === "ACTIVE"
     );
-  }, [floors, user?.buildingId]);
+  }, [floors, userBuildingId]);
 
-  const effectiveCarFloorId = purchaseForm.carFloorId || (carFloors[0]?.id ? String(carFloors[0].id) : "");
+  const effectiveCarFloorId =
+    purchaseForm.carFloorId &&
+    carFloors.some((floor) => String(floor.id) === String(purchaseForm.carFloorId))
+      ? purchaseForm.carFloorId
+      : (carFloors[0]?.id ? String(carFloors[0].id) : "");
+  const selectedCarFloor = carFloors.find(
+    (floor) => String(floor.id) === String(effectiveCarFloorId)
+  );
   const carSlotsInFloor = useMemo(() => {
-    return effectiveCarFloorId ? slotsByFloor[effectiveCarFloorId] || [] : [];
-  }, [effectiveCarFloorId, slotsByFloor]);
+    if (!effectiveCarFloorId) return [];
+
+    const fetchedSlots = slotsByFloor[effectiveCarFloorId];
+    if (Array.isArray(fetchedSlots) && fetchedSlots.length > 0) return fetchedSlots;
+
+    return Array.isArray(selectedCarFloor?.slots) ? selectedCarFloor.slots : [];
+  }, [effectiveCarFloorId, selectedCarFloor, slotsByFloor]);
   const availableCarSlots = useMemo(
-    () => carSlotsInFloor.filter((slot) => slot.status === "AVAILABLE"),
+    () => carSlotsInFloor.filter(
+      (slot) => String(slot.status).toUpperCase() === "AVAILABLE"
+    ),
     [carSlotsInFloor]
   );
   const effectiveSlotId =
@@ -237,6 +258,8 @@ const MyQRPassPage = () => {
           monthlyPasses.error,
           qrPasses.error,
           slotRegistrations.error,
+          floorsError,
+          slotsError,
         ]}
       />
       {selectedPass && (
@@ -357,7 +380,7 @@ const MyQRPassPage = () => {
             {selectedVehicle?.vehicleType === "CAR" && (
               <FormField label="Ô đỗ ô tô">
                 <div style={{ display: "grid", gap: 12 }}>
-                  {carFloors.length > 1 && (
+                  {carFloors.length > 0 && (
                     <Select
                       value={effectiveCarFloorId}
                       onChange={(event) => {
@@ -371,7 +394,7 @@ const MyQRPassPage = () => {
 
                   <div className="car-slot-grid">
                     {carSlotsInFloor.map((slot) => {
-                      const isAvailable = slot.status === "AVAILABLE";
+                      const isAvailable = String(slot.status).toUpperCase() === "AVAILABLE";
                       const isSelected = String(effectiveSlotId) === String(slot.id);
 
                       return (
@@ -389,9 +412,14 @@ const MyQRPassPage = () => {
                     })}
                   </div>
 
-                  {slotsLoading && <p className="section-copy">Đang tải ô đỗ...</p>}
-                  {!slotsLoading && carSlotsInFloor.length === 0 && (
+                  {(floorsLoading || (slotsLoading && String(activeFloorId) === String(effectiveCarFloorId))) && (
+                    <p className="section-copy">Đang tải tầng và ô đỗ...</p>
+                  )}
+                  {!floorsLoading && !slotsLoading && !floorsError && !slotsError && carFloors.length === 0 && (
                     <p className="section-copy">Tòa nhà của bạn chưa có ô ô tô còn hoạt động.</p>
+                  )}
+                  {!floorsLoading && !slotsLoading && carFloors.length > 0 && carSlotsInFloor.length === 0 && (
+                    <p className="section-copy">Tầng đã chọn chưa có ô đỗ ô tô.</p>
                   )}
                 </div>
               </FormField>
