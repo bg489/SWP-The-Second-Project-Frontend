@@ -65,6 +65,7 @@ const menus = {
     { path: "/admin/dashboard", label: "Tổng quan duyệt", icon: ShieldCheck },
     { path: "/admin/users", label: "Duyệt tài khoản", icon: UserCheck },
     { path: "/admin/vehicles", label: "Duyệt xe", icon: Car },
+    { path: "/admin/staff-role-requests", label: "Duyệt nhân viên", icon: Users },
     { path: "/admin/building-change-requests", label: "Duyệt đổi tòa nhà", icon: Building2 },
   ],
 };

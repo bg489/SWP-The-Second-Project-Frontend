@@ -47,12 +47,17 @@ function* handleUpdateAdminUserStatus(action) {
             {
                 role,
                 status,
-            }
+            },
+            { timeout: 15000 }
         );
 
         const updatedUser = extractData(response);
 
         yield put(updateAdminUserStatusSuccess(updatedUser));
+
+        if (action.payload.refreshParams) {
+            yield put(fetchAdminUsersRequest(action.payload.refreshParams));
+        }
     } catch (error) {
         const message =
             error?.response?.data?.message ||

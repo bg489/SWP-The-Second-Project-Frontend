@@ -351,7 +351,12 @@ function* handleCreateVehicle(action) {
 function* handleApproveVehicle(action) {
     try {
         const { id } = action.payload;
-        const response = yield call([api, api.patch], `/vehicles/${id}/approve`);
+        const response = yield call(
+            [api, api.patch],
+            `/vehicles/${id}/approve`,
+            undefined,
+            { timeout: 15000 }
+        );
         yield put(approveVehicleSuccess(extractData(response)));
         yield put(fetchAllVehiclesRequest());
     } catch (error) {
@@ -367,7 +372,12 @@ function* handleApproveVehicle(action) {
 function* handleRejectVehicle(action) {
     try {
         const { id } = action.payload;
-        const response = yield call([api, api.patch], `/vehicles/${id}/reject`);
+        const response = yield call(
+            [api, api.patch],
+            `/vehicles/${id}/reject`,
+            undefined,
+            { timeout: 15000 }
+        );
         yield put(rejectVehicleSuccess(extractData(response)));
         yield put(fetchAllVehiclesRequest());
     } catch (error) {

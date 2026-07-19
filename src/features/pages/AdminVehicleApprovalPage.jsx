@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Car, CheckCircle2, RefreshCcw, Search, XCircle } from "lucide-react";
+import { Camera, Car, CheckCircle2, RefreshCcw, Search, X, XCircle } from "lucide-react";
 
 import Button from "../../components/Button/Button";
 import StatusBanner from "../../components/Feedback/StatusBanner";
@@ -33,10 +34,28 @@ const AdminVehicleApprovalPage = () => {
     status: "PENDING",
     q: "",
   });
+  const [selectedReviewImage, setSelectedReviewImage] = useState(null);
 
   useEffect(() => {
     dispatch(fetchAllVehiclesRequest({ status: filters.status || undefined }));
   }, [dispatch, filters.status]);
+
+  useEffect(() => {
+    if (!selectedReviewImage) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setSelectedReviewImage(null);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [selectedReviewImage]);
 
   const rows = useMemo(() => {
     const search = filters.q.trim().toLowerCase();
@@ -92,6 +111,45 @@ const AdminVehicleApprovalPage = () => {
     { header: "Loại xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
     { header: "Thông tin xe", key: "brand", render: (row) => `${row.brand || "-"}${row.color ? `, ${row.color}` : ""}` },
     {
+      header: "Bộ ảnh xác minh",
+      key: "vehicleImages",
+      minWidth: "350px",
+      render: (row) => {
+        const reviewImages = [
+          { label: "Biển số", src: row.plateImageUrl },
+          { label: "Dọc thân xe", src: row.vehiclePortraitImageUrl },
+          { label: "Ngang thân xe", src: row.vehicleLandscapeImageUrl },
+        ];
+
+        return (
+          <div className="vehicle-review-gallery">
+            {reviewImages.map((image) => image.src ? (
+              <button
+                key={image.label}
+                type="button"
+                className="vehicle-plate-review-button"
+                onClick={() => setSelectedReviewImage({
+                  ...image,
+                  plateNumber: row.plateNumber,
+                  ownerName: row.ownerName || row.owner || "Chưa rõ chủ xe",
+                })}
+                aria-label={`Xem ${image.label.toLowerCase()} của xe ${row.plateNumber}`}
+              >
+                <img src={image.src} alt={`${image.label} xe ${row.plateNumber}`} />
+                <span><Camera size={13} /> {image.label}</span>
+              </button>
+            ) : (
+              <div className="vehicle-review-missing" key={image.label}>
+                <Camera size={18} />
+                <strong>{image.label}</strong>
+                <small>Chưa có ảnh</small>
+              </div>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
       header: "Trạng thái",
       key: "status",
       render: (row) => <span className={`pill ${getStatusTone(row.status)}`}>{getStatusLabel(row.status)}</span>,
@@ -131,7 +189,7 @@ const AdminVehicleApprovalPage = () => {
           <div className="page-eyebrow"><Car size={16} /> Duyệt xe</div>
           <h1 className="page-title">Kiểm tra hồ sơ xe trước khi cho dùng gói tháng</h1>
           <p className="page-subtitle">
-            Xe cần được duyệt trước khi cư dân mua gói tháng hoặc dùng mã QR để ra vào bãi.
+            Đối chiếu ảnh biển số, ảnh chụp dọc thân xe và ảnh chụp ngang thân xe trước khi quyết định duyệt.
           </p>
         </div>
         <div className="page-hero-aside">
@@ -184,6 +242,44 @@ const AdminVehicleApprovalPage = () => {
 
         <Table columns={columns} data={rows} loading={vehicles.loading} />
       </section>
+
+      {selectedReviewImage && createPortal(
+        <div
+          className="image-review-backdrop"
+          role="presentation"
+          onMouseDown={() => setSelectedReviewImage(null)}
+        >
+          <section
+            className="image-review-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${selectedReviewImage.label} xe ${selectedReviewImage.plateNumber}`}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="image-review-close"
+              onClick={() => setSelectedReviewImage(null)}
+              aria-label="Đóng ảnh"
+            >
+              <X size={22} />
+            </button>
+            <div className="image-review-heading">
+              <Camera size={20} />
+              <div>
+                <strong>{selectedReviewImage.label}: {selectedReviewImage.plateNumber}</strong>
+                <span>{selectedReviewImage.ownerName}</span>
+              </div>
+            </div>
+            <img
+              className="image-review-large"
+              src={selectedReviewImage.src}
+              alt={`${selectedReviewImage.label} xe ${selectedReviewImage.plateNumber}`}
+            />
+          </section>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

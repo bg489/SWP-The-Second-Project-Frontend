@@ -32,6 +32,7 @@ import AdminUserApprovalPage from "../features/backend/pages/AdminUserApprovalPa
 import UserBuildingChangeRequestPage from "../features/backend/pages/UserBuildingChangeRequestPage";
 import AdminBuildingChangeRequestsPage from "../features/backend/pages/AdminBuildingChangeRequestsPage";
 import ManagerViolationTypesPage from "../features/pages/ManagerViolationTypesPage";
+import AdminStaffRoleRequestsPage from "../features/pages/AdminStaffRoleRequestsPage";
 
 const DefaultRedirect = () => {
   const { isAuthenticated: contextAuthenticated, role: contextRole } = useMockAuth();
@@ -94,6 +95,7 @@ const AppRoutes = () => {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUserApprovalPage />} />
           <Route path="/admin/vehicles" element={<AdminVehicleApprovalPage />} />
+          <Route path="/admin/staff-role-requests" element={<AdminStaffRoleRequestsPage />} />
           <Route
             path="/admin/building-change-requests"
             element={<AdminBuildingChangeRequestsPage />}

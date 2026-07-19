@@ -8,6 +8,7 @@ import buildingSaga from "../features/backend/buildings/buildingSaga";
 import floorSaga from "../features/backend/floors/floorSaga";
 import slotSaga from "../features/backend/slots/slotSaga";
 import parkingSaga from "../features/backend/parking/parkingSaga";
+import staffRoleRequestSaga from "../features/backend/staffRoleRequests/staffRoleRequestSaga";
 
 export default function* rootSaga() {
     yield all([
@@ -18,5 +19,6 @@ export default function* rootSaga() {
         floorSaga(),
         slotSaga(),
         parkingSaga(),
+        staffRoleRequestSaga(),
     ]);
 }
