@@ -130,6 +130,8 @@ const staffRoleRequestSlice = createSlice({
     fetchStaffProfilesRequest: (state) => {
       state.profilesLoading = true;
       state.error = null;
+      state.staffProfiles = [];
+      state.profilesBuilding = null;
     },
     fetchStaffProfilesSuccess: (state, action) => {
       state.profilesLoading = false;
@@ -138,12 +140,20 @@ const staffRoleRequestSlice = createSlice({
     },
     fetchStaffProfilesFailure: (state, action) => {
       state.profilesLoading = false;
+      state.staffProfiles = [];
+      state.profilesBuilding = null;
       state.error = action.payload;
+    },
+    clearStaffProfiles: (state) => {
+      state.staffProfiles = [];
+      state.profilesBuilding = null;
+      state.profilesLoading = false;
     },
 
     fetchStaffProfileRequest: (state) => {
       state.profileLoading = true;
       state.error = null;
+      state.profile = null;
     },
     fetchStaffProfileSuccess: (state, action) => {
       state.profileLoading = false;
@@ -169,6 +179,7 @@ const staffRoleRequestSlice = createSlice({
 export const {
   approveStaffRoleRequest,
   clearStaffProfile,
+  clearStaffProfiles,
   clearStaffRoleCandidates,
   clearStaffRoleRequestNotice,
   fetchAdminStaffRoleRequestsFailure,

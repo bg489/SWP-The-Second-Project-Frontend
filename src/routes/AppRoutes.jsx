@@ -33,6 +33,8 @@ import UserBuildingChangeRequestPage from "../features/backend/pages/UserBuildin
 import AdminBuildingChangeRequestsPage from "../features/backend/pages/AdminBuildingChangeRequestsPage";
 import ManagerViolationTypesPage from "../features/pages/ManagerViolationTypesPage";
 import AdminStaffRoleRequestsPage from "../features/pages/AdminStaffRoleRequestsPage";
+import ManagerStaffProfilesPage from "../features/pages/ManagerStaffProfilesPage";
+import StaffWorkProfilePage from "../features/pages/StaffWorkProfilePage";
 
 const DefaultRedirect = () => {
   const { isAuthenticated: contextAuthenticated, role: contextRole } = useMockAuth();
@@ -69,6 +71,7 @@ const AppRoutes = () => {
 
         <Route element={<RoleProtectedRoute allowedRoles={["PARKING_STAFF"]} />}>
           <Route path="/staff/dashboard" element={<StaffDashboard />} />
+          <Route path="/staff/work-profile" element={<StaffWorkProfilePage />} />
           <Route path="/staff/check-in" element={<CheckInQRPage />} />
           <Route path="/staff/check-out" element={<CheckOutQRPage />} />
           <Route path="/staff/temp-qr-cards" element={<TempQrCardsPage />} />
@@ -86,6 +89,7 @@ const AppRoutes = () => {
           <Route path="/manager/monthly-passes" element={<ManagerMonthlyPassesPage />} />
           <Route path="/manager/temp-qr-cards" element={<TempQrCardsPage />} />
           <Route path="/manager/staff" element={<ManagerStaffAssignmentPage />} />
+          <Route path="/manager/staff-profiles" element={<ManagerStaffProfilesPage />} />
           <Route path="/manager/reports" element={<ReportsPage />} />
           <Route path="/manager/violation-types" element={<ManagerViolationTypesPage />} />
 
