@@ -28,14 +28,30 @@ const roleOptions = [
     { label: "Quản trị viên", value: "ADMIN" },
 ];
 
-const directRoleValues = new Set(["ADMIN", "MANAGER"]);
-
 const getDirectRoleOptions = (user) => {
     const currentRole = user.role || "USER";
 
-    return roleOptions.filter(
-        (option) => option.value === currentRole || directRoleValues.has(option.value)
-    );
+    if (currentRole === "STAFF") {
+        return roleOptions.filter((option) => option.value === "STAFF");
+    }
+
+    if (["USER", "MANAGER"].includes(currentRole)) {
+        return roleOptions.filter((option) => ["USER", "MANAGER", "ADMIN"].includes(option.value));
+    }
+
+    return roleOptions.filter((option) => ["MANAGER", "ADMIN"].includes(option.value));
+};
+
+const getRoleCaption = (role) => {
+    if (role === "STAFF") {
+        return "Quyền Staff chỉ thay đổi qua hồ sơ do Manager gửi";
+    }
+
+    if (["USER", "MANAGER"].includes(role)) {
+        return "Admin có thể chuyển trực tiếp giữa User và Manager";
+    }
+
+    return "Tài khoản Admin có thể chuyển sang Manager";
 };
 
 const statusLabels = {
@@ -252,11 +268,7 @@ const AdminUserApprovalPage = () => {
                             </option>
                         ))}
                     </select>
-                    <span className="admin-role-caption">
-                        {user.role === "STAFF" || user.role === "USER"
-                            ? "STAFF và USER chỉ đổi qua hồ sơ do Manager gửi"
-                            : "Admin có thể phân quyền ADMIN hoặc MANAGER ngay"}
-                    </span>
+                    <span className="admin-role-caption">{getRoleCaption(user.role)}</span>
                 </div>
             ),
         },
@@ -355,7 +367,7 @@ const AdminUserApprovalPage = () => {
                     </div>
                     <h1 className="page-title">Duyệt và quản lý tài khoản</h1>
                     <p className="page-subtitle">
-                        Duyệt tài khoản, mở khóa và phân quyền trực tiếp cho Admin hoặc Manager. Việc đổi giữa cư dân và nhân viên đi qua hồ sơ của Manager.
+                        Duyệt tài khoản, mở khóa và chuyển trực tiếp giữa cư dân với quản lý. Mọi thay đổi có liên quan tới nhân viên bãi xe phải đi qua hồ sơ của Manager.
                     </p>
                 </div>
 

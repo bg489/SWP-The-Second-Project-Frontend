@@ -1,4 +1,4 @@
-import { all, call, put, takeEvery, takeLatest } from "redux-saga/effects";
+import { call, put, takeEvery, takeLatest } from "redux-saga/effects";
 import api from "../../../services/api";
 import {
     monthlyPackages,
@@ -1133,33 +1133,13 @@ function* handleUpdateViolationStatus(action) {
 function* handleFetchReports(action) {
     try {
         const params = action.payload;
-        const [
-            traffic,
-            motorbikeCapacity,
-            carSlots,
-            revenue,
-            qrPasses,
-            violationReport,
-            fullReport,
-        ] = yield all([
-            call([api, api.get], "/reports/traffic", { params }),
-            call([api, api.get], "/reports/motorbike-capacity", { params }),
-            call([api, api.get], "/reports/car-slots", { params }),
-            call([api, api.get], "/reports/revenue", { params }),
-            call([api, api.get], "/reports/qr-passes", { params }),
-            call([api, api.get], "/reports/violations", { params }),
-            call([api, api.get], "/reports/full", { params }),
-        ]);
+        const response = yield call([api, api.get], "/reports/full", { params });
+        const fullReport = extractData(response);
 
         yield put(
             fetchReportsSuccess({
-                traffic: extractData(traffic),
-                motorbikeCapacity: extractData(motorbikeCapacity),
-                carSlots: extractData(carSlots),
-                revenue: extractData(revenue),
-                qrPasses: extractData(qrPasses),
-                violations: extractData(violationReport),
-                full: extractData(fullReport),
+                ...fullReport,
+                full: fullReport,
             })
         );
     } catch (error) {

@@ -1,642 +1,360 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AlertTriangle, BarChart3, Car, Download, FileText, Layers, QrCode, RefreshCcw, TrendingUp } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  BarChart3,
+  Building2,
+  Car,
+  CircleDollarSign,
+  Download,
+  FileCheck2,
+  FileText,
+  Layers3,
+  RefreshCcw,
+  TicketCheck,
+  Users,
+} from "lucide-react";
 
 import Button from "../../components/Button/Button";
 import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import Table from "../../components/Table/Table";
-import { clearParkingNotice, fetchReportsRequest, fetchViolationsRequest } from "../backend/parking/parkingSlice";
-import { formatCurrency, formatDateTime, getStatusLabel, getStatusTone, revenueSeries } from "../../services/mockParkingData";
+import { formatCurrency, formatDateTime, getStatusLabel, getStatusTone } from "../../services/mockParkingData";
+import { clearParkingNotice, fetchReportsRequest } from "../backend/parking/parkingSlice";
+import { exportSystemReportPdf } from "./reports/exportSystemReportPdf";
+import "./reports/ReportsPage.css";
 
-const asArray = (value) => {
-  if (Array.isArray(value)) return value;
-  if (Array.isArray(value?.items)) return value.items;
-  if (Array.isArray(value?.rows)) return value.rows;
-  if (Array.isArray(value?.data)) return value.data;
-  if (Array.isArray(value?.byStatus)) return value.byStatus;
-  return [];
+const vehicleLabels = {
+  CAR: "Ô tô",
+  MOTORBIKE: "Xe máy",
 };
 
-const escapeHtml = (value) =>
-  String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-
-const renderTableRows = (rows, columns) => {
-  if (!rows.length) {
-    return `<tr><td colspan="${columns.length}">Chưa có dữ liệu.</td></tr>`;
-  }
-
-  return rows
-    .map(
-      (row) => `
-        <tr>
-          ${columns
-            .map((column) => `<td>${escapeHtml(column.render ? column.render(row) : row[column.key])}</td>`)
-            .join("")}
-        </tr>
-      `
-    )
-    .join("");
+const pricingLabels = {
+  HOURLY: "Vé giờ",
+  MONTHLY_PASS: "Gói tháng",
+  TURN: "Vé lượt",
 };
 
-const renderReportTable = ({ columns, rows, title }) => `
-  <section class="report-section">
-    <h2>${escapeHtml(title)}</h2>
-    <table>
-      <thead>
-        <tr>${columns.map((column) => `<th>${escapeHtml(column.header)}</th>`).join("")}</tr>
-      </thead>
-      <tbody>${renderTableRows(rows, columns)}</tbody>
-    </table>
-  </section>
-`;
+const customerLabels = {
+  REGISTERED_USER: "Người dùng hệ thống",
+  WALK_IN_GUEST: "Khách vãng lai",
+};
+
+const violationLabels = {
+  LOST_QR_CARD: "Mất thẻ QR",
+  WRONG_FLOOR: "Đỗ sai tầng",
+  WRONG_SLOT: "Đỗ sai ô",
+};
+
+const asRows = (value) => (Array.isArray(value) ? value : []);
+const toNumber = (value) => Number(value || 0);
+const labelOf = (labels, value) => labels[value] || value || "Chưa có";
+const percentageLabel = (value) => `${toNumber(value).toLocaleString("vi-VN", { maximumFractionDigits: 2 })}%`;
 
 const ReportsPage = () => {
   const dispatch = useDispatch();
-  const { reports, violations } = useSelector((state) => state.parking);
-  const { user } = useSelector((state) => state.auth);
-
+  const { reports } = useSelector((state) => state.parking);
   const [filters, setFilters] = useState({
     from: "2026-06-01",
     to: "2026-06-30",
   });
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(null);
+  const [exportNotice, setExportNotice] = useState(null);
+  const dateRangeError = filters.from && filters.to && filters.from > filters.to
+    ? "Ngày bắt đầu phải trước hoặc trùng ngày kết thúc."
+    : null;
   const reportParams = useMemo(
-    () => ({
-      ...filters,
-      ...(user?.buildingId ? { buildingId: user.buildingId } : {}),
-    }),
-    [filters, user?.buildingId]
+    () => ({ from: filters.from, to: filters.to }),
+    [filters.from, filters.to]
   );
 
   useEffect(() => {
-    dispatch(fetchReportsRequest(reportParams));
-    dispatch(fetchViolationsRequest());
-  }, [dispatch, reportParams]);
+    if (!dateRangeError) {
+      dispatch(fetchReportsRequest(reportParams));
+    }
+  }, [dateRangeError, dispatch, reportParams]);
 
-  const data = reports.data || {};
-  const fullReport = data.full || {};
-  const revenue = data.revenue || {};
-  const traffic = data.traffic || {};
-  const motorbikeCapacity = data.motorbikeCapacity || {};
-  const carSlots = data.carSlots || {};
-  const qrPasses = data.qrPasses || {};
-  const violationSummary = data.violations || {};
-  const trafficRows = asArray(traffic);
-  const motorbikeRows = asArray(motorbikeCapacity);
-  const carSlotRows = asArray(carSlots);
-  const qrStatusRows = asArray(qrPasses.byStatus || qrPasses);
-  const qrExpiringRows = asArray(qrPasses.expiringSoon);
-  const violationRows = asArray(violationSummary);
+  const reportData = reports.data || {};
+  const fullReport = reportData.full || reportData;
+  const revenue = fullReport.revenue || {};
+  const operations = fullReport.operations || {};
+  const totals = operations.totals || {};
+  const customerMix = operations.customerMix || {};
+  const revenueRows = asRows(revenue.breakdown);
+  const operationRows = asRows(operations.byBuilding);
+  const ticketRows = asRows(fullReport.tickets?.rows);
+  const monthlyRows = asRows(fullReport.monthlyPasses?.rows);
+  const violationRows = asRows(fullReport.violations?.rows);
+  const capacityRows = asRows(fullReport.capacity);
+  const buildingCount = toNumber(fullReport.scope?.buildingCount || capacityRows.length);
+  const totalRevenue = toNumber(revenue.totalRevenue || revenue.paidRevenue);
+  const maxRevenue = Math.max(...revenueRows.map((row) => toNumber(row.amount)), 1);
+  const registeredMix = customerMix.registeredUser || {};
+  const walkInMix = customerMix.walkInGuest || {};
+  const violationRevenueRow = revenueRows.find((row) => row.key === "VIOLATION_FEE") || {};
 
-  const currentMotorbike = motorbikeRows.length > 0
-    ? motorbikeRows.reduce((sum, row) => sum + Number(row.currentCount || 0), 0)
-    : Number(motorbikeCapacity.current || motorbikeCapacity.currentCount || 0);
-  const totalMotorbike = motorbikeRows.length > 0
-    ? motorbikeRows.reduce((sum, row) => sum + Number(row.capacity || 0), 0)
-    : Number(motorbikeCapacity.total || motorbikeCapacity.capacity || 1);
-  const occupiedSlots = carSlotRows.length > 0
-    ? carSlotRows
-      .filter((row) => row.status === "OCCUPIED")
-      .reduce((sum, row) => sum + Number(row.total || 0), 0)
-    : Number(carSlots.occupied || carSlots.occupiedSlots || 0);
-  const totalSlots = carSlotRows.length > 0
-    ? carSlotRows.reduce((sum, row) => sum + Number(row.total || 0), 0)
-    : Number(carSlots.total || carSlots.totalSlots || 1);
-
-  const violationColumns = [
-    { header: "Mã", key: "id" },
-    { header: "Biển số", key: "plateNumber" },
-    { header: "Nội dung", key: "type", render: (row) => row.type || row.violationType },
-    { header: "Ghi nhận", key: "detectedAt", render: (row) => formatDateTime(row.detectedAt || row.createdAt) },
-    { header: "Phí", key: "fine", render: (row) => formatCurrency(row.penaltyFee || row.fine || 0) },
+  const revenueColumns = [
+    { header: "Nội dung thu", key: "label", minWidth: 190 },
+    { header: "Số khoản đã thu", key: "completedCount" },
     {
-      header: "Trạng thái",
-      key: "status",
-      render: (row) => <span className={`pill ${getStatusTone(row.status)}`}>{getStatusLabel(row.status)}</span>,
+      header: "Tỷ trọng",
+      key: "percentage",
+      render: (row) => percentageLabel(totalRevenue > 0 ? (toNumber(row.amount) / totalRevenue) * 100 : 0),
+    },
+    { header: "Số tiền", key: "amount", render: (row) => formatCurrency(row.amount) },
+  ];
+
+  const operationColumns = [
+    { header: "Tòa nhà", key: "buildingName", minWidth: 180 },
+    { header: "Xe vào", key: "entryCount" },
+    { header: "Xe ra", key: "exitCount" },
+    { header: "Đang gửi", key: "activeSessions" },
+    {
+      header: "Xe máy vào / ra",
+      key: "motorbike",
+      minWidth: 130,
+      render: (row) => `${toNumber(row.motorbikeEntries)} / ${toNumber(row.motorbikeExits)}`,
+    },
+    {
+      header: "Ô tô vào / ra",
+      key: "car",
+      minWidth: 120,
+      render: (row) => `${toNumber(row.carEntries)} / ${toNumber(row.carExits)}`,
+    },
+    {
+      header: "Vé lượt / giờ",
+      key: "tickets",
+      minWidth: 120,
+      render: (row) => toNumber(row.turnTicketsCompleted) + toNumber(row.hourlyTicketsCompleted),
+    },
+    { header: "Lượt dùng gói tháng", key: "monthlyPassSessionsCompleted", minWidth: 150 },
+    {
+      header: "Người dùng / khách",
+      key: "customerMix",
+      minWidth: 160,
+      render: (row) => `${percentageLabel(row.registeredUserPercentage)} / ${percentageLabel(row.walkInGuestPercentage)}`,
     },
   ];
 
+  const ticketColumns = [
+    { header: "Loại xe", key: "vehicleType", render: (row) => labelOf(vehicleLabels, row.vehicleType) },
+    { header: "Loại vé", key: "pricingType", render: (row) => labelOf(pricingLabels, row.pricingType) },
+    { header: "Nhóm khách", key: "customerType", minWidth: 170, render: (row) => labelOf(customerLabels, row.customerType) },
+    { header: "Đã hoàn tất", key: "completedCount" },
+    { header: "Đã thanh toán", key: "paidCount" },
+    { header: "Tiền gửi xe", key: "parkingFeeTotal", render: (row) => formatCurrency(row.parkingFeeTotal) },
+    { header: "Phí vi phạm", key: "violationFeeTotal", render: (row) => formatCurrency(row.violationFeeTotal) },
+    { header: "Tổng đã thu", key: "totalAmount", render: (row) => formatCurrency(row.totalAmount) },
+  ];
+
+  const monthlyColumns = [
+    { header: "Người đăng ký", key: "ownerName", minWidth: 150 },
+    { header: "Biển số", key: "plateNumber", minWidth: 120 },
+    { header: "Tòa nhà", key: "buildingName", minWidth: 180 },
+    { header: "Loại xe", key: "vehicleType", render: (row) => labelOf(vehicleLabels, row.vehicleType) },
+    { header: "Tên gói", key: "packageName", minWidth: 190 },
+    {
+      header: "Trạng thái gói",
+      key: "status",
+      minWidth: 140,
+      render: (row) => <span className={`pill ${getStatusTone(row.status)}`}>{getStatusLabel(row.status)}</span>,
+    },
+    {
+      header: "Thanh toán",
+      key: "paymentStatus",
+      minWidth: 135,
+      render: (row) => <span className={`pill ${getStatusTone(row.paymentStatus)}`}>{getStatusLabel(row.paymentStatus || "PENDING")}</span>,
+    },
+    { header: "Bắt đầu", key: "startDate", minWidth: 145, render: (row) => formatDateTime(row.startDate) },
+    { header: "Hết hạn", key: "endDate", minWidth: 145, render: (row) => formatDateTime(row.endDate) },
+    { header: "Số tiền", key: "amount", render: (row) => formatCurrency(row.amount) },
+  ];
+
+  const violationColumns = [
+    { header: "Lỗi vi phạm", key: "violationName", minWidth: 190, render: (row) => labelOf(violationLabels, row.violationName) },
+    { header: "Tòa nhà", key: "buildingNames", minWidth: 180 },
+    { header: "Số lần", key: "violationCount" },
+    { header: "Người liên quan", key: "userNames", minWidth: 190 },
+    { header: "Xe liên quan", key: "plateNumbers", minWidth: 170 },
+    { header: "Đã thu", key: "paidPenalty", render: (row) => formatCurrency(row.paidPenalty) },
+  ];
+
+  const capacityColumns = [
+    { header: "Tòa nhà", key: "buildingName", minWidth: 180 },
+    { header: "Xe máy đang gửi", key: "motorbikeCurrent" },
+    { header: "Sức chứa xe máy", key: "motorbikeCapacity" },
+    { header: "Gói tháng xe máy", key: "motorbikeMonthlyPasses" },
+    { header: "Xe máy còn nhận", key: "effectiveMotorbikeRemaining" },
+    { header: "Ô tô đang đỗ", key: "carOccupiedSlots" },
+    { header: "Ô đã đăng ký tháng", key: "carMonthlySlots" },
+    { header: "Tổng ô ô tô", key: "carTotalSlots" },
+  ];
+
   const refresh = () => {
+    if (dateRangeError) return;
+    setExportError(null);
+    setExportNotice(null);
     dispatch(clearParkingNotice());
     dispatch(fetchReportsRequest(reportParams));
-    dispatch(fetchViolationsRequest());
-  };
-
-  const handleExport = () => {
-    setExporting(true);
-    const reportWindow = window.open("", "_blank", "width=1100,height=800");
-
-    if (!reportWindow) {
-      setExporting(false);
-      return;
-    }
-
-    const sourceRows = asArray(revenue.paymentSources);
-    const paymentRows = asArray(revenue.payments);
-    const sessionRows = asArray(revenue.sessions);
-    const html = `
-      <!doctype html>
-      <html lang="vi">
-        <head>
-          <meta charset="utf-8" />
-          <title>Báo cáo Sunrise Parking</title>
-          <style>
-            @page { size: A4; margin: 14mm; }
-            * { box-sizing: border-box; }
-            body { margin: 0; font-family: Arial, sans-serif; color: #241122; background: #fff7fb; }
-            .report-shell { max-width: 1080px; margin: 0 auto; padding: 24px; }
-            .report-hero { border-radius: 18px; padding: 26px; background: linear-gradient(135deg,#FFB8F5,#ED9951); color: #241122; }
-            .eyebrow { display: inline-block; padding: 7px 12px; border-radius: 999px; background: rgba(255,255,255,.42); font-weight: 800; }
-            h1 { margin: 16px 0 8px; font-size: 30px; line-height: 1.15; }
-            h2 { margin: 0 0 12px; font-size: 18px; }
-            .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0; }
-            .summary-card, .report-section { border: 1px solid #f2d5e7; border-radius: 14px; background: #fff; box-shadow: 0 12px 26px rgba(237,153,81,.12); }
-            .summary-card { padding: 16px; }
-            .summary-card span { display: block; color: #77566f; font-size: 12px; font-weight: 800; text-transform: uppercase; }
-            .summary-card strong { display: block; margin-top: 8px; font-size: 22px; }
-            .report-section { margin-top: 16px; padding: 16px; break-inside: avoid; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 10px 9px; border-bottom: 1px solid #f1ddea; text-align: left; font-size: 12px; vertical-align: top; }
-            th { background: #fff1fb; color: #6f526b; text-transform: uppercase; letter-spacing: .04em; }
-            tr:last-child td { border-bottom: 0; }
-            .print-actions { display: flex; justify-content: flex-end; margin: 18px 0; }
-            button { border: 0; border-radius: 12px; padding: 12px 18px; background: linear-gradient(135deg,#ED9951,#FF6FD8); color: #fff; font-weight: 800; cursor: pointer; }
-            @media print { body { background: #fff; } .print-actions { display: none; } .report-shell { padding: 0; } }
-          </style>
-        </head>
-        <body>
-          <main class="report-shell">
-            <section class="report-hero">
-              <span class="eyebrow">Sunrise Parking</span>
-              <h1>Báo cáo vận hành bãi xe</h1>
-              <p>Từ ${escapeHtml(filters.from)} đến ${escapeHtml(filters.to)}</p>
-            </section>
-            <div class="print-actions"><button onclick="window.print()">Lưu thành PDF</button></div>
-            <section class="summary-grid">
-              <div class="summary-card"><span>Doanh thu đã thanh toán</span><strong>${escapeHtml(formatCurrency(revenue.totalRevenue || revenue.paidRevenue || 0))}</strong></div>
-              <div class="summary-card"><span>Gói tháng</span><strong>${escapeHtml(formatCurrency(revenue.monthlyPassRevenue || 0))}</strong></div>
-              <div class="summary-card"><span>Khách gửi lẻ</span><strong>${escapeHtml(formatCurrency(revenue.walkInRevenue || 0))}</strong></div>
-              <div class="summary-card"><span>Phí vi phạm</span><strong>${escapeHtml(formatCurrency(revenue.violationRevenue || violationSummary.pendingAmount || 0))}</strong></div>
-            </section>
-            ${renderReportTable({
-              title: "Doanh thu theo nguồn",
-              rows: sourceRows,
-              columns: [
-                { header: "Nguồn", key: "sourceType" },
-                { header: "Trạng thái", key: "status" },
-                { header: "Số lần", key: "paymentCount" },
-                { header: "Tổng tiền", render: (row) => formatCurrency(row.totalAmount || 0) },
-              ],
-            })}
-            ${renderReportTable({
-              title: "Thanh toán theo phương thức",
-              rows: paymentRows,
-              columns: [
-                { header: "Phương thức", key: "provider" },
-                { header: "Trạng thái", key: "status" },
-                { header: "Số lần", key: "paymentCount" },
-                { header: "Tổng tiền", render: (row) => formatCurrency(row.totalAmount || 0) },
-              ],
-            })}
-            ${renderReportTable({
-              title: "Khách gửi lẻ đã hoàn tất",
-              rows: sessionRows,
-              columns: [
-                { header: "Loại xe", key: "vehicleType" },
-                { header: "Cách tính", key: "pricingType" },
-                { header: "Số lượt", key: "sessionCount" },
-                { header: "Tiền gửi", render: (row) => formatCurrency(row.baseFeeTotal || 0) },
-                { header: "Phí vi phạm", render: (row) => formatCurrency(row.violationFeeTotal || 0) },
-                { header: "Tổng", render: (row) => formatCurrency(row.totalAmount || 0) },
-              ],
-            })}
-            ${renderReportTable({
-              title: "Sức chứa xe máy",
-              rows: motorbikeRows,
-              columns: [
-                { header: "Tòa", key: "buildingName" },
-                { header: "Tầng", key: "floorName" },
-                { header: "Sức chứa", key: "capacity" },
-                { header: "Đang gửi", key: "currentCount" },
-                { header: "Còn trống", key: "remainingCapacity" },
-              ],
-            })}
-            ${renderReportTable({
-              title: "Ô đỗ ô tô",
-              rows: carSlotRows,
-              columns: [
-                { header: "Tòa", key: "buildingName" },
-                { header: "Tầng", key: "floorName" },
-                { header: "Trạng thái", key: "status" },
-                { header: "Số ô", key: "total" },
-              ],
-            })}
-            ${renderReportTable({
-              title: "Mã QR gói tháng",
-              rows: qrStatusRows,
-              columns: [
-                { header: "Loại", key: "passType" },
-                { header: "Trạng thái", key: "status" },
-                { header: "Số lượng", key: "total" },
-              ],
-            })}
-            ${renderReportTable({
-              title: "Vi phạm",
-              rows: violations.items,
-              columns: [
-                { header: "Biển số", key: "plateNumber" },
-                { header: "Nội dung", render: (row) => row.type || row.violationType },
-                { header: "Trạng thái", key: "status" },
-                { header: "Phí", render: (row) => formatCurrency(row.penaltyFee || row.fine || 0) },
-              ],
-            })}
-          </main>
-        </body>
-      </html>
-    `;
-
-    reportWindow.document.open();
-    reportWindow.document.write(html);
-    reportWindow.document.close();
-    reportWindow.focus();
-    setTimeout(() => {
-      reportWindow.print();
-      setExporting(false);
-    }, 500);
   };
 
   const handleExportPdf = async () => {
+    if (dateRangeError || !fullReport.scope) return;
     setExporting(true);
+    setExportError(null);
+    setExportNotice(null);
 
     try {
-      const html2pdfModule = await import("html2pdf.js");
-      const html2pdf = html2pdfModule.default || html2pdfModule;
-      const monthlyRows = asArray(fullReport.monthlyPasses?.rows);
-      const walkInRows = asArray(fullReport.walkIns?.rows);
-      const violationDetailRows = asArray(fullReport.violations?.rows);
-      const capacityRows = asArray(fullReport.capacity);
-      const sourceRows = asArray(revenue.paymentSources);
-      const createdAt = new Date().toLocaleString("vi-VN");
-      const reportNode = document.createElement("div");
-
-      reportNode.className = "pdf-report-root";
-      reportNode.innerHTML = `
-        <style>
-          .pdf-report-root {
-            width: 1120px;
-            padding: 28px;
-            background: #fff7fb;
-            color: #241122;
-            font-family: Arial, sans-serif;
-          }
-          .pdf-hero {
-            border-radius: 22px;
-            padding: 30px;
-            background: linear-gradient(135deg,#FFB8F5,#ED9951);
-            box-shadow: 0 20px 50px rgba(237,153,81,.20);
-          }
-          .pdf-eyebrow {
-            display: inline-block;
-            padding: 8px 14px;
-            border-radius: 999px;
-            background: rgba(255,255,255,.48);
-            font-size: 13px;
-            font-weight: 900;
-            letter-spacing: .04em;
-            text-transform: uppercase;
-          }
-          .pdf-hero h1 {
-            margin: 18px 0 8px;
-            font-size: 34px;
-            line-height: 1.15;
-          }
-          .pdf-hero p {
-            margin: 0;
-            color: #5d3f58;
-            font-size: 15px;
-            font-weight: 700;
-          }
-          .pdf-summary {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
-            margin: 20px 0;
-          }
-          .pdf-card,
-          .pdf-section,
-          .report-section {
-            border: 1px solid #f2d5e7;
-            border-radius: 16px;
-            background: #fff;
-            box-shadow: 0 12px 26px rgba(237,153,81,.12);
-          }
-          .pdf-card {
-            padding: 16px;
-          }
-          .pdf-card span {
-            display: block;
-            color: #79536f;
-            font-size: 12px;
-            font-weight: 900;
-            text-transform: uppercase;
-          }
-          .pdf-card strong {
-            display: block;
-            margin-top: 8px;
-            font-size: 22px;
-          }
-          .pdf-section,
-          .report-section {
-            margin-top: 16px;
-            padding: 16px;
-            break-inside: avoid;
-          }
-          .pdf-section h2,
-          .report-section h2 {
-            margin: 0 0 12px;
-            font-size: 18px;
-          }
-          .pdf-section p,
-          .report-section p {
-            margin: -4px 0 12px;
-            color: #77566f;
-            font-size: 12px;
-            font-weight: 700;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-          }
-          th,
-          td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #f1ddea;
-            text-align: left;
-            vertical-align: top;
-            font-size: 12px;
-            line-height: 1.35;
-          }
-          th {
-            background: #fff1fb;
-            color: #6f526b;
-            font-size: 11px;
-            font-weight: 900;
-            letter-spacing: .04em;
-            text-transform: uppercase;
-          }
-          tr:last-child td {
-            border-bottom: 0;
-          }
-        </style>
-        <section class="pdf-hero">
-          <span class="pdf-eyebrow">Sunrise Parking</span>
-          <h1>Báo cáo vận hành bãi xe</h1>
-          <p>${escapeHtml(user?.buildingName || "Tất cả tòa nhà")} • Từ ${escapeHtml(filters.from)} đến ${escapeHtml(filters.to)} • Xuất lúc ${escapeHtml(createdAt)}</p>
-        </section>
-        <section class="pdf-summary">
-          <div class="pdf-card"><span>Doanh thu đã thanh toán</span><strong>${escapeHtml(formatCurrency(revenue.totalRevenue || revenue.paidRevenue || 0))}</strong></div>
-          <div class="pdf-card"><span>Gói tháng</span><strong>${escapeHtml(formatCurrency(fullReport.monthlyPasses?.totalPaid || revenue.monthlyPassRevenue || 0))}</strong></div>
-          <div class="pdf-card"><span>Khách gửi lẻ</span><strong>${escapeHtml(formatCurrency(fullReport.walkIns?.totalAmount || revenue.walkInRevenue || 0))}</strong></div>
-          <div class="pdf-card"><span>Phí vi phạm đã trả</span><strong>${escapeHtml(formatCurrency(fullReport.violations?.paidPenalty || 0))}</strong></div>
-        </section>
-        ${renderReportTable({
-          title: "Cơ cấu doanh thu",
-          rows: sourceRows,
-          columns: [
-            { header: "Nguồn", key: "sourceType" },
-            { header: "Trạng thái", key: "status" },
-            { header: "Số khoản", key: "paymentCount" },
-            { header: "Tổng tiền", render: (row) => formatCurrency(row.totalAmount || 0) },
-          ],
-        })}
-        ${renderReportTable({
-          title: "Gói tháng xe máy và ô tô",
-          rows: monthlyRows,
-          columns: [
-            { header: "Người đăng ký", key: "ownerName" },
-            { header: "Biển số", key: "plateNumber" },
-            { header: "Loại xe", key: "vehicleType" },
-            { header: "Gói", key: "packageName" },
-            { header: "Trạng thái gói", key: "status" },
-            { header: "Thanh toán", key: "paymentStatus" },
-            { header: "Ngày hết hạn", render: (row) => formatDateTime(row.endDate) },
-            { header: "Số tiền", render: (row) => formatCurrency(row.amount || 0) },
-          ],
-        })}
-        ${renderReportTable({
-          title: "Khách gửi lẻ đã check out",
-          rows: walkInRows,
-          columns: [
-            { header: "Loại xe", key: "vehicleType" },
-            { header: "Số lượt thành công", key: "completedCount" },
-            { header: "Tiền gửi xe", render: (row) => formatCurrency(row.parkingFeeTotal || 0) },
-            { header: "Phí vi phạm", render: (row) => formatCurrency(row.violationFeeTotal || 0) },
-            { header: "Tổng tiền", render: (row) => formatCurrency(row.totalAmount || 0) },
-          ],
-        })}
-        ${renderReportTable({
-          title: "Phí vi phạm đã gộp theo lỗi",
-          rows: violationDetailRows,
-          columns: [
-            { header: "Lỗi vi phạm", key: "violationName" },
-            { header: "Số lần", key: "violationCount" },
-            { header: "User vi phạm", key: "userNames" },
-            { header: "Xe vi phạm", key: "plateNumbers" },
-            { header: "Tổng phạt", render: (row) => formatCurrency(row.totalPenalty || 0) },
-            { header: "Đã trả", render: (row) => formatCurrency(row.paidPenalty || 0) },
-          ],
-        })}
-        ${renderReportTable({
-          title: "Sức chứa theo tòa nhà",
-          rows: capacityRows,
-          columns: [
-            { header: "Tòa nhà", key: "buildingName" },
-            { header: "Xe máy đang gửi", key: "motorbikeCurrent" },
-            { header: "Sức chứa xe máy", key: "motorbikeCapacity" },
-            { header: "Xe máy đã đăng ký gói", key: "motorbikeMonthlyPasses" },
-            { header: "Xe máy còn nhận", key: "effectiveMotorbikeRemaining" },
-            { header: "Slot ô tô đang dùng", key: "carOccupiedSlots" },
-            { header: "Slot ô tô đã đăng ký gói", key: "carMonthlySlots" },
-            { header: "Tổng slot ô tô", key: "carTotalSlots" },
-          ],
-        })}
-      `;
-
-      document.body.appendChild(reportNode);
-
-      await html2pdf()
-        .set({
-          filename: `sunrise-parking-report-${filters.from || "from"}-${filters.to || "to"}.pdf`,
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: "#fff7fb",
-          },
-          jsPDF: {
-            unit: "mm",
-            format: "a4",
-            orientation: "portrait",
-          },
-          margin: [8, 8, 8, 8],
-          pagebreak: {
-            mode: ["css", "legacy"],
-            avoid: [".pdf-card", ".pdf-section", ".report-section"],
-          },
-        })
-        .from(reportNode)
-        .save();
-
-      reportNode.remove();
+      await exportSystemReportPdf({ filters, report: fullReport });
+      setExportNotice("Đã tạo tệp báo cáo PDF đầy đủ cho toàn hệ thống.");
     } catch (error) {
       console.error("[report:pdf]", error);
+      setExportError("Không thể tạo tệp PDF. Vui lòng tải lại dữ liệu và thử lần nữa.");
     } finally {
       setExporting(false);
     }
   };
 
-  const trafficIn = trafficRows.length > 0
-    ? trafficRows.reduce((sum, row) => sum + Number(row.entryCount || 0), 0)
-    : Number(traffic.trafficIn || traffic.inCount || 0);
-  const trafficOut = trafficRows.length > 0
-    ? trafficRows.reduce((sum, row) => sum + Number(row.exitCount || 0), 0)
-    : Number(traffic.trafficOut || traffic.outCount || 0);
-  const trafficTotal = trafficIn + trafficOut;
-  const activeQr = qrStatusRows.length > 0
-    ? qrStatusRows
-      .filter((row) => row.status === "ACTIVE")
-      .reduce((sum, row) => sum + Number(row.total || 0), 0)
-    : Number(qrPasses.active || qrPasses.activeQrPasses || 0);
-  const expiringQr = qrExpiringRows.length > 0
-    ? qrExpiringRows.reduce((sum, row) => sum + Number(row.expiringSoon || 0), 0)
-    : Number(qrPasses.expiring || qrPasses.expiringQrPasses || 0);
-  const violationTotal = violationRows.length > 0
-    ? violationRows.reduce((sum, row) => sum + Number(row.total || 0), 0)
-    : Number(violationSummary.total || violations.items.length);
-  const motorbikeCapacityTotal = Math.max(totalMotorbike, 1);
-  const carSlotTotal = Math.max(totalSlots, 1);
-
-  const barMax = useMemo(() => {
-    return Math.max(...revenueSeries.map((item) => item.value), 1);
-  }, []);
-
   return (
-    <div className="parking-page">
-      <section className="page-hero">
+    <div className="parking-page reports-page">
+      <section className="page-hero reports-hero">
         <div className="page-hero-content">
-          <div className="page-eyebrow"><FileText size={16} /> Báo cáo</div>
-          <h1 className="page-title">Doanh thu, lượt xe, sức chứa, mã QR và vi phạm</h1>
+          <div className="page-eyebrow"><FileText size={16} /> Báo cáo toàn hệ thống</div>
+          <h1 className="page-title">Tổng hợp vận hành của tất cả tòa nhà</h1>
           <p className="page-subtitle">
-            Quản lý theo dõi tình hình vận hành tòa giữ xe trong một khoảng thời gian rõ ràng.
+            Doanh thu, xe vào ra, vé đã hoàn tất, nhóm khách, vi phạm và sức chứa được lấy trực tiếp từ dữ liệu vận hành.
           </p>
         </div>
         <div className="page-hero-aside">
-          <span className="page-hero-label">Doanh thu tháng</span>
-          <span className="page-hero-number">{Math.round(Number(revenue.revenueMonth || revenue.totalRevenue || 0) / 1000000)}M</span>
-          <span className="page-hero-label">đồng</span>
+          <span className="page-hero-label">Đang tổng hợp</span>
+          <span className="page-hero-number">{buildingCount}</span>
+          <span className="page-hero-label">tòa nhà</span>
         </div>
       </section>
 
-      <StatusBanner errors={reports.error} />
+      <StatusBanner
+        errors={[reports.error, dateRangeError, exportError].filter(Boolean)}
+        success={exportNotice}
+      />
 
-      <section className="card section-card">
+      <section className="card section-card reports-filter-card">
         <div className="section-header">
           <div>
-            <h2 className="section-title"><BarChart3 size={19} /> Khoảng thời gian</h2>
-            <p className="section-copy">Chọn ngày để làm mới các chỉ số vận hành.</p>
+            <h2 className="section-title"><BarChart3 size={19} /> Khoảng thời gian báo cáo</h2>
+            <p className="section-copy">Phạm vi ngày áp dụng cho toàn bộ tòa nhà, không giới hạn theo hồ sơ của quản lý.</p>
           </div>
           <div className="action-row">
-            <Button variant="outline" icon={RefreshCcw} loading={reports.loading} onClick={refresh}>
+            <Button variant="outline" icon={RefreshCcw} loading={reports.loading} onClick={refresh} disabled={Boolean(dateRangeError)}>
               Làm mới
             </Button>
-            <Button variant="primary" icon={Download} loading={exporting} onClick={handleExportPdf}>
-              {exporting ? "Đang chuẩn bị" : "Xuất báo cáo"}
+            <Button variant="primary" icon={Download} loading={exporting} onClick={handleExportPdf} disabled={Boolean(dateRangeError) || reports.loading || !fullReport.scope}>
+              {exporting ? "Đang tạo PDF" : "Xuất báo cáo PDF"}
             </Button>
           </div>
         </div>
-        <div className="filter-grid">
+        <div className="filter-grid reports-date-grid">
           <FormField label="Từ ngày">
-            <Input type="date" value={filters.from} onChange={(event) => setFilters((prev) => ({ ...prev, from: event.target.value }))} />
+            <Input type="date" value={filters.from} onChange={(event) => setFilters((previous) => ({ ...previous, from: event.target.value }))} />
           </FormField>
           <FormField label="Đến ngày">
-            <Input type="date" value={filters.to} onChange={(event) => setFilters((prev) => ({ ...prev, to: event.target.value }))} />
+            <Input type="date" value={filters.to} onChange={(event) => setFilters((previous) => ({ ...previous, to: event.target.value }))} />
           </FormField>
         </div>
       </section>
 
-      <div className="dashboard-grid">
+      <div className="dashboard-grid reports-metrics">
         <div className="card metric-card">
-          <div className="metric-icon"><TrendingUp size={22} /></div>
-          <div className="metric-label">Doanh thu đã thanh toán</div>
-          <div className="metric-value">{formatCurrency(revenue.totalRevenue || revenue.paidRevenue || 0)}</div>
-          <div className="metric-note">Gồm gửi lẻ, gói tháng và phí vi phạm</div>
+          <div className="metric-icon"><CircleDollarSign size={22} /></div>
+          <div className="metric-label">Doanh thu đã thu</div>
+          <div className="metric-value">{formatCurrency(totalRevenue)}</div>
+          <div className="metric-note">Chỉ tính giao dịch thành công trong kỳ</div>
         </div>
         <div className="card metric-card">
-          <div className="metric-icon"><Car size={22} /></div>
-          <div className="metric-label">Lượt xe vào/ra</div>
-          <div className="metric-value">{trafficIn}/{trafficOut}</div>
-          <div className="metric-note">{trafficTotal} lượt trong kỳ</div>
+          <div className="metric-icon"><ArrowDownToLine size={22} /></div>
+          <div className="metric-label">Xe vào</div>
+          <div className="metric-value">{toNumber(totals.entryCount).toLocaleString("vi-VN")}</div>
+          <div className="metric-note">Xe máy {toNumber(totals.motorbikeEntries)} • Ô tô {toNumber(totals.carEntries)}</div>
         </div>
         <div className="card metric-card">
-          <div className="metric-icon"><QrCode size={22} /></div>
-          <div className="metric-label">Mã QR còn hạn</div>
-          <div className="metric-value">{activeQr}</div>
-          <div className="metric-note">{expiringQr} mã sắp hết hạn</div>
+          <div className="metric-icon"><ArrowUpFromLine size={22} /></div>
+          <div className="metric-label">Xe ra</div>
+          <div className="metric-value">{toNumber(totals.exitCount).toLocaleString("vi-VN")}</div>
+          <div className="metric-note">Còn {toNumber(totals.activeSessions)} xe đang gửi</div>
+        </div>
+        <div className="card metric-card">
+          <div className="metric-icon"><TicketCheck size={22} /></div>
+          <div className="metric-label">Vé lượt/giờ hoàn tất</div>
+          <div className="metric-value">{toNumber(totals.ticketSessionsCompleted).toLocaleString("vi-VN")}</div>
+          <div className="metric-note">{toNumber(fullReport.tickets?.paidCount)} lượt đã thanh toán</div>
+        </div>
+        <div className="card metric-card">
+          <div className="metric-icon"><FileCheck2 size={22} /></div>
+          <div className="metric-label">Gói tháng đã thanh toán</div>
+          <div className="metric-value">{toNumber(revenue.completedMonthlyPayments).toLocaleString("vi-VN")}</div>
+          <div className="metric-note">{toNumber(totals.monthlyPassSessionsCompleted)} lượt ra bằng gói tháng</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><AlertTriangle size={22} /></div>
-          <div className="metric-label">Vi phạm</div>
-          <div className="metric-value">{violationTotal}</div>
-          <div className="metric-note">Nhân viên ghi nhận tại bãi</div>
+          <div className="metric-label">Phí vi phạm đã thu</div>
+          <div className="metric-value">{formatCurrency(revenue.violationRevenue)}</div>
+          <div className="metric-note">{toNumber(violationRevenueRow.completedCount)} khoản đã thanh toán</div>
         </div>
       </div>
 
-      <div className="two-column-grid">
+      <div className="two-column-grid reports-overview-grid">
         <section className="card section-card">
           <div className="section-header">
             <div>
               <h2 className="section-title"><BarChart3 size={19} /> Cơ cấu doanh thu</h2>
-              <p className="section-copy">Gói tháng, gửi lẻ và phí vi phạm.</p>
+              <p className="section-copy">Mỗi nhóm thể hiện số tiền đã thu và tỷ lệ trong tổng doanh thu.</p>
             </div>
           </div>
-          <div className="data-list">
-            <div className="data-row"><span>Gói tháng</span><strong>{formatCurrency(revenue.monthlyPassRevenue || 0)}</strong></div>
-            <div className="data-row"><span>Khách gửi lẻ</span><strong>{formatCurrency(revenue.walkInRevenue || 0)}</strong></div>
-            <div className="data-row"><span>Phí vi phạm</span><strong>{formatCurrency(revenue.violationRevenue || violationSummary.pendingAmount || 0)}</strong></div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${revenueSeries.length}, 1fr)`, gap: 12, alignItems: "end", marginTop: 20, minHeight: 180 }}>
-            {revenueSeries.map((item) => (
-              <div key={item.label} style={{ display: "grid", gap: 8, alignItems: "end" }}>
-                <div style={{ height: `${Math.max(20, (item.value / barMax) * 150)}px`, borderRadius: "8px 8px 0 0", background: "linear-gradient(180deg, var(--pink), var(--orange))" }} />
-                <strong style={{ textAlign: "center", fontSize: 12 }}>{item.label}</strong>
-              </div>
-            ))}
+          <div className="reports-revenue-chart">
+            {revenueRows.map((row) => {
+              const amount = toNumber(row.amount);
+              const width = amount > 0 ? Math.max(2, (amount / maxRevenue) * 100) : 0;
+              return (
+                <div className="reports-revenue-row" key={row.key}>
+                  <div className="reports-revenue-label">
+                    <span>{row.label}</span>
+                    <strong>{formatCurrency(amount)}</strong>
+                  </div>
+                  <div className="reports-revenue-track" aria-hidden="true">
+                    <div className="reports-revenue-fill" style={{ width: `${width}%` }} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 
         <section className="card section-card">
           <div className="section-header">
             <div>
-              <h2 className="section-title"><Layers size={19} /> Sức chứa bãi</h2>
-              <p className="section-copy">Xe máy theo sức chứa, ô tô theo từng ô đỗ.</p>
+              <h2 className="section-title"><Users size={19} /> Nhóm người gửi xe</h2>
+              <p className="section-copy">Tỷ lệ được tính theo tổng số xe vào trong khoảng đã chọn.</p>
             </div>
           </div>
-          <div className="data-list">
-            <div className="soft-panel">
-              <strong>Xe máy</strong>
-              <p className="section-copy">{currentMotorbike}/{totalMotorbike} xe đang gửi</p>
-              <div className="progress-track"><div className="progress-fill" style={{ width: `${Math.min(100, (currentMotorbike / motorbikeCapacityTotal) * 100)}%` }} /></div>
+          <div className="reports-customer-list">
+            <div className="reports-customer-item registered">
+              <div className="reports-customer-heading">
+                <span>Người dùng hệ thống</span>
+                <strong>{percentageLabel(registeredMix.percentage)}</strong>
+              </div>
+              <div className="reports-customer-track"><div style={{ width: `${Math.min(100, toNumber(registeredMix.percentage))}%` }} /></div>
+              <small>{toNumber(registeredMix.count).toLocaleString("vi-VN")} lượt xe vào</small>
             </div>
-            <div className="soft-panel">
-              <strong>Ô tô</strong>
-              <p className="section-copy">{occupiedSlots}/{totalSlots} ô đang dùng</p>
-              <div className="progress-track"><div className="progress-fill" style={{ width: `${Math.min(100, (occupiedSlots / carSlotTotal) * 100)}%` }} /></div>
+            <div className="reports-customer-item walk-in">
+              <div className="reports-customer-heading">
+                <span>Khách vãng lai</span>
+                <strong>{percentageLabel(walkInMix.percentage)}</strong>
+              </div>
+              <div className="reports-customer-track"><div style={{ width: `${Math.min(100, toNumber(walkInMix.percentage))}%` }} /></div>
+              <small>{toNumber(walkInMix.count).toLocaleString("vi-VN")} lượt xe vào</small>
             </div>
           </div>
         </section>
@@ -645,11 +363,68 @@ const ReportsPage = () => {
       <section className="card section-card">
         <div className="section-header">
           <div>
-            <h2 className="section-title"><AlertTriangle size={19} /> Danh sách vi phạm</h2>
-            <p className="section-copy">Các khoản chưa thu sẽ cộng vào hóa đơn khi xe ra bãi.</p>
+            <h2 className="section-title"><CircleDollarSign size={19} /> Doanh thu theo nội dung</h2>
+            <p className="section-copy">Tổng của các dòng bên dưới luôn bằng doanh thu đã thu ở phần tổng quan.</p>
           </div>
         </div>
-        <Table columns={violationColumns} data={violations.items} loading={violations.loading} />
+        <Table columns={revenueColumns} data={revenueRows} loading={reports.loading} pageSize={10} />
+      </section>
+
+      <section className="card section-card">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title"><Building2 size={19} /> Lượt xe của từng tòa nhà</h2>
+            <p className="section-copy">So sánh xe vào, xe ra, số xe đang gửi và loại vé đã hoàn tất tại toàn bộ cơ sở.</p>
+          </div>
+        </div>
+        <Table columns={operationColumns} data={operationRows} loading={reports.loading} pageSize={10} />
+      </section>
+
+      <section className="card section-card">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title"><TicketCheck size={19} /> Vé lượt và vé giờ đã hoàn tất</h2>
+            <p className="section-copy">Tách rõ theo loại xe và nhóm khách, gồm tiền gửi xe và phí vi phạm đã thanh toán.</p>
+          </div>
+        </div>
+        <Table columns={ticketColumns} data={ticketRows} loading={reports.loading} pageSize={10} />
+      </section>
+
+      <section className="card section-card">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title"><FileCheck2 size={19} /> Gói tháng xe máy và ô tô</h2>
+            <p className="section-copy">
+              {toNumber(fullReport.monthlyPasses?.paidCount)} gói đã thanh toán, tổng {formatCurrency(fullReport.monthlyPasses?.totalPaid)}.
+            </p>
+          </div>
+        </div>
+        <Table columns={monthlyColumns} data={monthlyRows} loading={reports.loading} pageSize={10} />
+      </section>
+
+      <section className="card section-card">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title"><AlertTriangle size={19} /> Phí vi phạm đã thu</h2>
+            <p className="section-copy">Các lỗi trùng tên được gộp lại nhưng vẫn giữ người, xe và tòa nhà liên quan.</p>
+          </div>
+        </div>
+        <Table columns={violationColumns} data={violationRows} loading={reports.loading} pageSize={10} />
+      </section>
+
+      <section className="card section-card">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title"><Layers3 size={19} /> Sức chứa từng tòa nhà</h2>
+            <p className="section-copy">Xe máy được tính theo sức chứa; ô tô được tính theo các ô đỗ có thật.</p>
+          </div>
+        </div>
+        <Table columns={capacityColumns} data={capacityRows} loading={reports.loading} pageSize={10} />
+      </section>
+
+      <section className="reports-footnote" aria-label="Phạm vi báo cáo">
+        <Car size={17} />
+        <span>Dữ liệu trên màn hình và trong PDF cùng lấy từ một báo cáo của {buildingCount} tòa nhà.</span>
       </section>
     </div>
   );
