@@ -25,20 +25,6 @@
   background: currentColor;
 }
 
-.status-banner::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 5px;
-  background: currentColor;
-}
-.status-banner::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 5px;
-  background: currentColor;
-}
 .status-banner::after {
   content: "";
   position: absolute;
@@ -48,15 +34,6 @@
   border-radius: 50%;
   background: currentColor;
   opacity: 0.08;
-}
-
-.status-banner.success {
-  color: var(--success);
-  border-color: rgba(22, 166, 103, 0.28);
-  background:
-    radial-gradient(circle at 100% 0%, rgba(22, 166, 103, 0.12), transparent 34%),
-    linear-gradient(135deg, rgba(22, 166, 103, 0.12), rgba(255, 184, 245, 0.08), rgba(237, 153, 81, 0.08)),
-    var(--card-bg);
 }
 
 .status-banner.error {
