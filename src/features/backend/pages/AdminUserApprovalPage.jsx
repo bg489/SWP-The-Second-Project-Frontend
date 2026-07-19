@@ -28,6 +28,16 @@ const roleOptions = [
     { label: "Quản trị viên", value: "ADMIN" },
 ];
 
+const directRoleValues = new Set(["ADMIN", "MANAGER"]);
+
+const getDirectRoleOptions = (user) => {
+    const currentRole = user.role || "USER";
+
+    return roleOptions.filter(
+        (option) => option.value === currentRole || directRoleValues.has(option.value)
+    );
+};
+
 const statusLabels = {
     PENDING: "Chờ duyệt",
     ACTIVE: "Đã duyệt",
@@ -236,20 +246,16 @@ const AdminUserApprovalPage = () => {
                         disabled={updatingId === user.id}
                         aria-label={`Quyền sử dụng của ${user.name}`}
                     >
-                        {roleOptions.map((option) => (
+                        {getDirectRoleOptions(user).map((option) => (
                             <option key={option.value} value={option.value}>
                                 {option.label}
                             </option>
                         ))}
                     </select>
                     <span className="admin-role-caption">
-                        {user.status === "ACTIVE"
-                            ? "Có thể thay đổi và lưu lại"
-                            : user.status === "INACTIVE"
-                                ? "Chọn trước khi duyệt lại"
-                                : user.status === "LOCKED"
-                                    ? "Chọn quyền khi mở khóa"
-                                    : "Chọn trước khi duyệt"}
+                        {user.role === "STAFF" || user.role === "USER"
+                            ? "STAFF và USER chỉ đổi qua hồ sơ do Manager gửi"
+                            : "Admin có thể phân quyền ADMIN hoặc MANAGER ngay"}
                     </span>
                 </div>
             ),
@@ -349,7 +355,7 @@ const AdminUserApprovalPage = () => {
                     </div>
                     <h1 className="page-title">Duyệt và quản lý tài khoản</h1>
                     <p className="page-subtitle">
-                        Duyệt tài khoản mới, duyệt lại tài khoản không hoạt động, mở khóa và cập nhật quyền sử dụng.
+                        Duyệt tài khoản, mở khóa và phân quyền trực tiếp cho Admin hoặc Manager. Việc đổi giữa cư dân và nhân viên đi qua hồ sơ của Manager.
                     </p>
                 </div>
 

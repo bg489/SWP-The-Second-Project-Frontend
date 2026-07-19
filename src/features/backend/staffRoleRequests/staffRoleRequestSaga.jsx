@@ -12,6 +12,12 @@ import {
   fetchStaffRoleCandidatesFailure,
   fetchStaffRoleCandidatesRequest,
   fetchStaffRoleCandidatesSuccess,
+  fetchStaffProfileFailure,
+  fetchStaffProfileRequest,
+  fetchStaffProfileSuccess,
+  fetchStaffProfilesFailure,
+  fetchStaffProfilesRequest,
+  fetchStaffProfilesSuccess,
   rejectStaffRoleRequest,
   staffRoleRequestActionFailure,
   staffRoleRequestActionSuccess,
@@ -35,7 +41,11 @@ const getErrorMessage = (error, fallback) =>
 function* handleFetchCandidates(action) {
   try {
     const response = yield call([api, api.get], "/staff-role-requests/candidates", {
-      params: { q: action.payload?.q || undefined },
+      params: {
+        buildingId: action.payload?.buildingId,
+        requestType: action.payload?.requestType || "PROMOTE",
+        q: action.payload?.q || undefined,
+      },
     });
     yield put(fetchStaffRoleCandidatesSuccess(extractData(response)));
   } catch (error) {
@@ -47,9 +57,11 @@ function* handleFetchCandidates(action) {
   }
 }
 
-function* handleFetchManagerRequests() {
+function* handleFetchManagerRequests(action) {
   try {
-    const response = yield call([api, api.get], "/staff-role-requests/my");
+    const response = yield call([api, api.get], "/staff-role-requests/my", {
+      params: action.payload || undefined,
+    });
     yield put(fetchManagerStaffRoleRequestsSuccess(extractList(response)));
   } catch (error) {
     yield put(
@@ -62,15 +74,20 @@ function* handleFetchManagerRequests() {
 
 function* handleSubmitRequest(action) {
   try {
+    const { refreshParams, ...payload } = action.payload || {};
     const response = yield call(
       [api, api.post],
       "/staff-role-requests",
-      action.payload,
+      payload,
       { timeout: 30000 }
     );
     yield put(submitStaffRoleRequestSuccess(extractData(response)));
-    yield put(fetchManagerStaffRoleRequestsRequest());
-    yield put(fetchStaffRoleCandidatesRequest());
+    yield put(fetchManagerStaffRoleRequestsRequest(
+      refreshParams?.buildingId ? { buildingId: refreshParams.buildingId } : undefined
+    ));
+    if (refreshParams?.buildingId) {
+      yield put(fetchStaffRoleCandidatesRequest(refreshParams));
+    }
   } catch (error) {
     yield put(
       submitStaffRoleRequestFailure(
@@ -90,6 +107,37 @@ function* handleFetchAdminRequests(action) {
     yield put(
       fetchAdminStaffRoleRequestsFailure(
         getErrorMessage(error, "Không lấy được hồ sơ đề nghị nhân viên.")
+      )
+    );
+  }
+}
+
+function* handleFetchStaffProfiles(action) {
+  try {
+    const response = yield call([api, api.get], "/staff-role-requests/profiles", {
+      params: action.payload,
+    });
+    yield put(fetchStaffProfilesSuccess(extractData(response)));
+  } catch (error) {
+    yield put(
+      fetchStaffProfilesFailure(
+        getErrorMessage(error, "Không lấy được danh sách hồ sơ nhân viên.")
+      )
+    );
+  }
+}
+
+function* handleFetchStaffProfile(action) {
+  try {
+    const path = action.payload?.userId
+      ? `/staff-role-requests/profiles/${action.payload.userId}`
+      : "/staff-role-requests/profiles/me";
+    const response = yield call([api, api.get], path);
+    yield put(fetchStaffProfileSuccess(extractData(response)));
+  } catch (error) {
+    yield put(
+      fetchStaffProfileFailure(
+        getErrorMessage(error, "Không lấy được hồ sơ nhân viên.")
       )
     );
   }
@@ -138,6 +186,8 @@ export default function* staffRoleRequestSaga() {
   yield takeLatest(fetchManagerStaffRoleRequestsRequest.type, handleFetchManagerRequests);
   yield takeLatest(submitStaffRoleRequest.type, handleSubmitRequest);
   yield takeLatest(fetchAdminStaffRoleRequestsRequest.type, handleFetchAdminRequests);
+  yield takeLatest(fetchStaffProfilesRequest.type, handleFetchStaffProfiles);
+  yield takeLatest(fetchStaffProfileRequest.type, handleFetchStaffProfile);
   yield takeLatest(approveStaffRoleRequest.type, handleApproveRequest);
   yield takeLatest(rejectStaffRoleRequest.type, handleRejectRequest);
 }

@@ -10,6 +10,8 @@ import {
   RefreshCcw,
   Search,
   Send,
+  ShieldMinus,
+  UserMinus,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -18,26 +20,22 @@ import Button from "../../components/Button/Button";
 import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
+import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
 import { compressImageFile } from "../../utils/imageFile";
+import { fetchBuildingsRequest } from "../backend/buildings/buildingSlice";
 import {
-  assignStaffToBuildingRequest,
-  clearParkingNotice,
-  fetchStaffAssignmentsRequest,
-} from "../backend/parking/parkingSlice";
-import {
+  clearStaffRoleCandidates,
   clearStaffRoleRequestNotice,
   fetchManagerStaffRoleRequestsRequest,
   fetchStaffRoleCandidatesRequest,
   submitStaffRoleRequest,
 } from "../backend/staffRoleRequests/staffRoleRequestSlice";
 
-const normalizeText = (value) =>
-  String(value || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[\s.-]/g, "");
+const REQUEST_TYPES = {
+  PROMOTE: "PROMOTE",
+  DEMOTE: "DEMOTE",
+};
 
 const formatDate = (value) => {
   if (!value) return "-";
@@ -62,12 +60,19 @@ const requestStatus = {
   CANCELLED: { label: "Đã hủy", className: "neutral" },
 };
 
+const requestTypeMeta = {
+  PROMOTE: { label: "Bổ nhiệm nhân viên", className: "success" },
+  DEMOTE: { label: "Hủy quyền nhân viên", className: "danger" },
+};
+
 const ManagerStaffAssignmentPage = () => {
   const dispatch = useDispatch();
-  const { staffAssignments, notice: parkingNotice } = useSelector((state) => state.parking);
-  const { user } = useSelector((state) => state.auth);
+  const { buildings, loading: buildingsLoading, error: buildingsError } = useSelector(
+    (state) => state.buildings
+  );
   const staffRole = useSelector((state) => state.staffRoleRequests);
-  const [staffKeyword, setStaffKeyword] = useState("");
+  const [selectedBuildingId, setSelectedBuildingId] = useState("");
+  const [requestType, setRequestType] = useState(REQUEST_TYPES.PROMOTE);
   const [candidateKeyword, setCandidateKeyword] = useState("");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [portraitImageUrl, setPortraitImageUrl] = useState("");
@@ -75,56 +80,89 @@ const ManagerStaffAssignmentPage = () => {
   const [imageError, setImageError] = useState("");
   const [processingImage, setProcessingImage] = useState(false);
 
-  useEffect(() => {
-    dispatch(fetchStaffAssignmentsRequest());
-    dispatch(fetchManagerStaffRoleRequestsRequest());
-  }, [dispatch]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      dispatch(fetchStaffRoleCandidatesRequest({ q: candidateKeyword.trim() }));
-    }, 320);
-
-    return () => window.clearTimeout(timer);
-  }, [candidateKeyword, dispatch]);
-
-  const building = staffRole.building || staffAssignments.building || {
-    id: user?.buildingId,
-    name: user?.buildingName,
-    address: user?.buildingAddress,
-  };
-
-  const filteredStaff = useMemo(() => {
-    const normalizedKeyword = normalizeText(staffKeyword);
-
-    if (!normalizedKeyword) return staffAssignments.items || [];
-
-    return (staffAssignments.items || []).filter((staff) =>
-      [staff.name, staff.email, staff.phone, staff.buildingName]
-        .some((value) => normalizeText(value).includes(normalizedKeyword))
-    );
-  }, [staffAssignments.items, staffKeyword]);
-
-  const assignedCount = (staffAssignments.items || []).filter(
-    (staff) => String(staff.buildingId || "") === String(building?.id || "")
-  ).length;
-  const pendingCount = staffRole.managerRequests.filter(
-    (request) => request.status === "PENDING"
-  ).length;
-  const activeCandidate = selectedCandidate && !staffRole.managerRequests.some(
-    (request) =>
-      Number(request.userId) === Number(selectedCandidate.id)
-      && request.status === "PENDING"
+  const activeBuildingId = selectedBuildingId || String(buildings[0]?.id || "");
+  const selectedBuilding = buildings.find(
+    (building) => Number(building.id) === Number(activeBuildingId)
+  ) || null;
+  const activeCandidate = selectedCandidate && staffRole.candidates.some(
+    (candidate) => Number(candidate.id) === Number(selectedCandidate.id)
   )
     ? selectedCandidate
     : null;
 
-  const refresh = () => {
-    dispatch(clearParkingNotice());
+  useEffect(() => {
+    dispatch(fetchBuildingsRequest());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!activeBuildingId) {
+      dispatch(clearStaffRoleCandidates());
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      const params = {
+        buildingId: Number(activeBuildingId),
+        requestType,
+        q: candidateKeyword.trim() || undefined,
+      };
+      dispatch(fetchStaffRoleCandidatesRequest(params));
+      dispatch(fetchManagerStaffRoleRequestsRequest({
+        buildingId: Number(activeBuildingId),
+      }));
+    }, 320);
+
+    return () => window.clearTimeout(timer);
+  }, [activeBuildingId, candidateKeyword, dispatch, requestType]);
+
+  const buildingOptions = useMemo(
+    () => buildings.map((building) => ({
+      value: String(building.id),
+      label: `${building.name}${building.address ? ` - ${building.address}` : ""}`,
+    })),
+    [buildings]
+  );
+  const pendingCount = staffRole.managerRequests.filter(
+    (request) => request.status === "PENDING"
+  ).length;
+
+  const resetForm = () => {
+    setSelectedCandidate(null);
+    setPortraitImageUrl("");
+    setManagerNote("");
+    setImageError("");
+  };
+
+  const changeBuilding = (value) => {
+    setSelectedBuildingId(value);
+    setCandidateKeyword("");
+    resetForm();
+    dispatch(clearStaffRoleCandidates());
     dispatch(clearStaffRoleRequestNotice());
-    dispatch(fetchStaffAssignmentsRequest());
-    dispatch(fetchManagerStaffRoleRequestsRequest());
-    dispatch(fetchStaffRoleCandidatesRequest({ q: candidateKeyword.trim() }));
+  };
+
+  const changeRequestType = (value) => {
+    setRequestType(value);
+    setCandidateKeyword("");
+    resetForm();
+    dispatch(clearStaffRoleCandidates());
+    dispatch(clearStaffRoleRequestNotice());
+  };
+
+  const refresh = () => {
+    dispatch(clearStaffRoleRequestNotice());
+    dispatch(fetchBuildingsRequest());
+
+    if (activeBuildingId) {
+      dispatch(fetchStaffRoleCandidatesRequest({
+        buildingId: Number(activeBuildingId),
+        requestType,
+        q: candidateKeyword.trim() || undefined,
+      }));
+      dispatch(fetchManagerStaffRoleRequestsRequest({
+        buildingId: Number(activeBuildingId),
+      }));
+    }
   };
 
   const handlePortraitChange = async (event) => {
@@ -155,40 +193,57 @@ const ManagerStaffAssignmentPage = () => {
     event.preventDefault();
     setImageError("");
 
-    if (!activeCandidate) return;
-    if (!portraitImageUrl) {
+    if (!activeCandidate || !activeBuildingId) return;
+    if (requestType === REQUEST_TYPES.PROMOTE && !portraitImageUrl) {
       setImageError("Vui lòng gửi ảnh chân dung rõ khuôn mặt của người được đề nghị.");
       return;
     }
 
+    const refreshParams = {
+      buildingId: Number(activeBuildingId),
+      requestType,
+      q: candidateKeyword.trim() || undefined,
+    };
+
     dispatch(submitStaffRoleRequest({
+      buildingId: Number(activeBuildingId),
       userId: activeCandidate.id,
-      portraitImageUrl,
+      requestType,
+      portraitImageUrl: requestType === REQUEST_TYPES.PROMOTE
+        ? portraitImageUrl
+        : undefined,
       managerNote: managerNote.trim(),
+      refreshParams,
     }));
   };
 
   const candidateColumns = [
     {
-      header: "Người dùng",
+      header: requestType === REQUEST_TYPES.PROMOTE ? "Cư dân" : "Nhân viên",
       key: "name",
-      minWidth: "210px",
-      render: (row) => (
-        <div className="request-person">
-          <span className="request-person-avatar">
-            {row.avatarUrl ? <img src={row.avatarUrl} alt="" /> : String(row.name || "U").charAt(0)}
-          </span>
-          <span className="request-person-copy">
-            <strong>{row.name || "Chưa cập nhật họ tên"}</strong>
-            <small>Tham gia từ {formatDate(row.createdAt)}</small>
-          </span>
-        </div>
-      ),
+      minWidth: "220px",
+      render: (row) => {
+        const photo = requestType === REQUEST_TYPES.DEMOTE
+          ? row.staffPortraitImageUrl || row.avatarUrl
+          : row.avatarUrl;
+
+        return (
+          <div className="request-person">
+            <span className="request-person-avatar">
+              {photo ? <img src={photo} alt="" /> : String(row.name || "U").charAt(0)}
+            </span>
+            <span className="request-person-copy">
+              <strong>{row.name || "Chưa cập nhật họ tên"}</strong>
+              <small>Tham gia từ {formatDate(row.createdAt)}</small>
+            </span>
+          </div>
+        );
+      },
     },
     {
       header: "Liên hệ",
       key: "contact",
-      minWidth: "210px",
+      minWidth: "220px",
       render: (row) => (
         <div className="request-contact-list">
           <span><Mail size={14} /> {row.email || "Chưa có email"}</span>
@@ -204,41 +259,66 @@ const ManagerStaffAssignmentPage = () => {
     {
       header: "Thao tác",
       key: "action",
-      minWidth: "150px",
-      render: (row) => (
-        <Button
-          size="sm"
-          variant={Number(selectedCandidate?.id) === Number(row.id) ? "outline" : "primary"}
-          icon={FileCheck2}
-          onClick={() => {
-            setSelectedCandidate(row);
-            setPortraitImageUrl("");
-            setManagerNote("");
-            setImageError("");
-          }}
-        >
-          {Number(selectedCandidate?.id) === Number(row.id) ? "Đang chọn" : "Lập hồ sơ"}
-        </Button>
-      ),
+      minWidth: "165px",
+      render: (row) => {
+        const isSelected = Number(activeCandidate?.id) === Number(row.id);
+        return (
+          <Button
+            size="sm"
+            variant={isSelected ? "outline" : requestType === REQUEST_TYPES.DEMOTE ? "danger" : "primary"}
+            icon={requestType === REQUEST_TYPES.DEMOTE ? UserMinus : FileCheck2}
+            onClick={() => {
+              setSelectedCandidate(row);
+              setPortraitImageUrl("");
+              setManagerNote("");
+              setImageError("");
+            }}
+          >
+            {isSelected
+              ? "Đang chọn"
+              : requestType === REQUEST_TYPES.DEMOTE
+                ? "Lập đề nghị"
+                : "Lập hồ sơ"}
+          </Button>
+        );
+      },
     },
   ];
 
   const historyColumns = [
     {
+      header: "Loại đề nghị",
+      key: "requestType",
+      minWidth: "170px",
+      render: (row) => {
+        const meta = requestTypeMeta[row.requestType] || requestTypeMeta.PROMOTE;
+        return <span className={`pill ${meta.className}`}>{meta.label}</span>;
+      },
+    },
+    {
       header: "Người được đề nghị",
       key: "userName",
-      minWidth: "210px",
-      render: (row) => (
-        <div className="request-person">
-          <span className="request-person-avatar">
-            <img src={row.portraitImageUrl} alt={`Chân dung ${row.userName}`} />
-          </span>
-          <span className="request-person-copy">
-            <strong>{row.userName}</strong>
-            <small>{row.userEmail}</small>
-          </span>
-        </div>
-      ),
+      minWidth: "220px",
+      render: (row) => {
+        const photo = row.portraitImageUrl || row.staffPortraitImageUrl || row.userAvatarUrl;
+        return (
+          <div className="request-person">
+            <span className="request-person-avatar">
+              {photo ? <img src={photo} alt={`Hồ sơ ${row.userName}`} /> : String(row.userName || "U").charAt(0)}
+            </span>
+            <span className="request-person-copy">
+              <strong>{row.userName}</strong>
+              <small>{row.userEmail}</small>
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      header: "Tòa nhà",
+      key: "buildingName",
+      minWidth: "190px",
+      render: (row) => row.buildingName,
     },
     {
       header: "Ngày gửi",
@@ -256,101 +336,96 @@ const ManagerStaffAssignmentPage = () => {
     {
       header: "Phản hồi",
       key: "adminNote",
-      minWidth: "210px",
+      minWidth: "220px",
       render: (row) => row.adminNote || "Chưa có phản hồi",
     },
   ];
 
-  const staffColumns = [
-    {
-      header: "Nhân viên",
-      key: "name",
-      minWidth: "210px",
-      render: (row) => (
-        <div className="table-person">
-          <strong>{row.name || "Chưa có tên"}</strong>
-          <p className="section-copy">{row.email || "-"}</p>
-          <p className="section-copy">{row.phone || "Chưa cập nhật số điện thoại"}</p>
-        </div>
-      ),
-    },
-    {
-      header: "Tòa hiện tại",
-      key: "buildingName",
-      minWidth: "220px",
-      render: (row) => row.buildingName ? (
-        <div>
-          <strong>{row.buildingName}</strong>
-          <p className="section-copy">{row.buildingAddress || "Chưa có địa chỉ"}</p>
-        </div>
-      ) : <span className="pill warning">Chưa gán tòa</span>,
-    },
-    {
-      header: "Ngày cập nhật",
-      key: "updatedAt",
-      render: (row) => formatDate(row.updatedAt || row.createdAt),
-    },
-    {
-      header: "Thao tác",
-      key: "actions",
-      render: (row) => {
-        const isAssigned = String(row.buildingId || "") === String(building?.id || "");
-
-        return (
-          <Button
-            size="sm"
-            variant={isAssigned ? "outline" : "primary"}
-            icon={UserPlus}
-            disabled={isAssigned || !building?.id}
-            loading={staffAssignments.assigningId === row.id}
-            onClick={() => dispatch(assignStaffToBuildingRequest({ id: row.id }))}
-          >
-            {isAssigned ? "Đã ở tòa này" : "Gán vào tòa"}
-          </Button>
-        );
-      },
-    },
-  ];
+  const selectedPhoto = activeCandidate?.staffPortraitImageUrl || activeCandidate?.avatarUrl;
+  const isPromotion = requestType === REQUEST_TYPES.PROMOTE;
 
   return (
     <div className="parking-page">
       <section className="page-hero">
         <div className="page-hero-content">
-          <div className="page-eyebrow"><Users size={16} /> Đội ngũ tòa nhà</div>
-          <h1 className="page-title">Đề nghị và phân công nhân viên</h1>
+          <div className="page-eyebrow"><Users size={16} /> Đội ngũ toàn hệ thống</div>
+          <h1 className="page-title">Bổ nhiệm và quản lý quyền nhân viên</h1>
           <p className="page-subtitle">
-            Tìm cư dân đang ở đúng tòa, gửi hồ sơ chân dung để quản trị viên xét duyệt, sau đó phân công người đã được cấp quyền.
+            Chọn bất kỳ tòa nhà nào, tìm đúng người trong tòa và gửi hồ sơ để quản trị viên duyệt bổ nhiệm hoặc hủy quyền.
           </p>
         </div>
         <div className="page-hero-aside">
           <span className="page-hero-label">Đang chờ duyệt</span>
           <span className="page-hero-number">{pendingCount}</span>
-          <span className="page-hero-label">hồ sơ</span>
+          <span className="page-hero-label">hồ sơ tại tòa đã chọn</span>
         </div>
       </section>
 
       <StatusBanner
-        success={[staffRole.notice, parkingNotice]}
-        errors={[staffRole.error, staffAssignments.error, imageError]}
+        success={staffRole.notice}
+        errors={[staffRole.error, buildingsError, imageError]}
       />
 
       <section className="card section-card manager-building-strip">
         <div className="section-header">
           <div>
-            <h2 className="section-title"><Building2 size={19} /> Tòa đang quản lý</h2>
+            <h2 className="section-title"><Building2 size={19} /> Chọn tòa nhà cần quản lý nhân sự</h2>
             <p className="section-copy">
-              {building?.name || "Tài khoản quản lý chưa được gán tòa nhà"}
-              {building?.address ? ` - ${building.address}` : ""}
+              Manager có thể quản lý đội ngũ của tất cả tòa nhà trong hệ thống.
             </p>
           </div>
           <Button
             variant="outline"
             icon={RefreshCcw}
-            loading={staffAssignments.loading || staffRole.candidatesLoading || staffRole.managerLoading}
+            loading={buildingsLoading || staffRole.candidatesLoading || staffRole.managerLoading}
             onClick={refresh}
           >
             Làm mới
           </Button>
+        </div>
+
+        <div className="manager-staff-scope-grid">
+          <FormField label="Tòa nhà">
+            <Select
+              value={activeBuildingId}
+              onChange={(event) => changeBuilding(event.target.value)}
+              options={buildingOptions}
+              placeholder={buildingsLoading ? "Đang tải tòa nhà..." : "Chọn tòa nhà"}
+              disabled={buildingsLoading || !buildings.length}
+            />
+          </FormField>
+
+          <div className="manager-selected-building">
+            <strong>{selectedBuilding?.name || "Chưa chọn tòa nhà"}</strong>
+            <span>{selectedBuilding?.address || "Chọn tòa để xem người đang thuộc tòa đó."}</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="card section-card">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title"><FileCheck2 size={19} /> Chọn loại đề nghị</h2>
+            <p className="section-copy">Mọi thay đổi giữa cư dân và nhân viên đều cần quản trị viên duyệt.</p>
+          </div>
+        </div>
+        <div className="staff-request-mode-switch" role="group" aria-label="Loại đề nghị nhân viên">
+          <button
+            type="button"
+            className={isPromotion ? "active" : ""}
+            onClick={() => changeRequestType(REQUEST_TYPES.PROMOTE)}
+          >
+            <UserPlus size={18} />
+            <span><strong>Bổ nhiệm nhân viên</strong><small>Tìm cư dân của tòa đã chọn</small></span>
+          </button>
+          <button
+            type="button"
+            className={!isPromotion ? "active danger" : ""}
+            onClick={() => changeRequestType(REQUEST_TYPES.DEMOTE)}
+          >
+            <UserMinus size={18} />
+            <span><strong>Hủy quyền nhân viên</strong><small>Chuyển nhân viên về cư dân</small></span>
+          </button>
         </div>
       </section>
 
@@ -358,8 +433,12 @@ const ManagerStaffAssignmentPage = () => {
         <section className="card section-card">
           <div className="section-header">
             <div>
-              <h2 className="section-title"><Search size={19} /> Tìm người trong tòa</h2>
-              <p className="section-copy">Chỉ hiển thị cư dân đã được duyệt và chưa có hồ sơ đang chờ.</p>
+              <h2 className="section-title"><Search size={19} /> {isPromotion ? "Tìm cư dân trong tòa" : "Chọn nhân viên cần hủy quyền"}</h2>
+              <p className="section-copy">
+                {isPromotion
+                  ? "Chỉ hiển thị cư dân đang hoạt động và chưa có hồ sơ chờ duyệt."
+                  : "Chỉ hiển thị nhân viên đang làm việc tại đúng tòa nhà đã chọn."}
+              </p>
             </div>
           </div>
 
@@ -369,6 +448,7 @@ const ManagerStaffAssignmentPage = () => {
               onChange={(event) => setCandidateKeyword(event.target.value)}
               placeholder="Nhập thông tin cần tìm"
               icon={Search}
+              disabled={!activeBuildingId}
             />
           </FormField>
 
@@ -376,79 +456,104 @@ const ManagerStaffAssignmentPage = () => {
             columns={candidateColumns}
             data={staffRole.candidates}
             loading={staffRole.candidatesLoading}
-            emptyMessage="Không có cư dân phù hợp trong tòa nhà này."
+            emptyMessage={isPromotion
+              ? "Không có cư dân phù hợp trong tòa nhà này."
+              : "Tòa nhà này chưa có nhân viên phù hợp để hủy quyền."}
           />
         </section>
 
         <section className="card section-card staff-request-form-card">
           <div className="section-header">
             <div>
-              <h2 className="section-title"><Camera size={19} /> Hồ sơ đề nghị</h2>
-              <p className="section-copy">Ảnh được duyệt sẽ trở thành ảnh đại diện của nhân viên.</p>
+              <h2 className="section-title">
+                {isPromotion ? <Camera size={19} /> : <ShieldMinus size={19} />}
+                {isPromotion ? "Hồ sơ bổ nhiệm" : "Đề nghị hủy quyền"}
+              </h2>
+              <p className="section-copy">
+                {isPromotion
+                  ? "Ảnh chân dung được lưu riêng trong hồ sơ nhân viên, không thay đổi ảnh đại diện cá nhân."
+                  : "Quản trị viên sẽ kiểm tra thông tin trước khi chuyển người này về quyền cư dân."}
+              </p>
             </div>
           </div>
 
           {!activeCandidate ? (
             <div className="staff-request-empty">
-              <UserPlus size={34} />
-              <strong>Chưa chọn người cần đề nghị</strong>
-              <span>Chọn “Lập hồ sơ” trong danh sách bên cạnh để tiếp tục.</span>
+              {isPromotion ? <UserPlus size={34} /> : <UserMinus size={34} />}
+              <strong>{isPromotion ? "Chưa chọn người cần bổ nhiệm" : "Chưa chọn nhân viên cần hủy quyền"}</strong>
+              <span>Chọn một người trong danh sách bên cạnh để tiếp tục.</span>
             </div>
           ) : (
             <form className="form-stack" onSubmit={handleSubmit}>
               <div className="staff-request-selected">
                 <span className="request-person-avatar">
-                  {activeCandidate.avatarUrl
-                    ? <img src={activeCandidate.avatarUrl} alt="" />
+                  {selectedPhoto
+                    ? <img src={selectedPhoto} alt="" />
                     : String(activeCandidate.name || "U").charAt(0)}
                 </span>
                 <div>
                   <strong>{activeCandidate.name}</strong>
                   <span>{activeCandidate.email}</span>
                   <span>{activeCandidate.phone || "Chưa có số điện thoại"}</span>
+                  <span>{selectedBuilding?.name}</span>
                 </div>
               </div>
 
-              <FormField label="Ảnh chân dung rõ khuôn mặt" required error={imageError || undefined}>
-                <label className="staff-portrait-upload">
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    capture="user"
-                    onChange={handlePortraitChange}
-                    disabled={processingImage || staffRole.submitting}
-                  />
-                  {portraitImageUrl ? (
-                    <img src={portraitImageUrl} alt={`Chân dung ${activeCandidate.name}`} />
-                  ) : (
-                    <span>
-                      <Camera size={26} />
-                      <strong>{processingImage ? "Đang chuẩn bị ảnh..." : "Chụp hoặc chọn ảnh chân dung"}</strong>
-                      <small>Ảnh thẳng mặt, đủ sáng và không bị che khuất.</small>
-                    </span>
-                  )}
-                </label>
-              </FormField>
+              {isPromotion && (
+                <FormField label="Ảnh chân dung hồ sơ nhân viên" required error={imageError || undefined}>
+                  <label className="staff-portrait-upload">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      capture="user"
+                      onChange={handlePortraitChange}
+                      disabled={processingImage || staffRole.submitting}
+                    />
+                    {portraitImageUrl ? (
+                      <img src={portraitImageUrl} alt={`Chân dung ${activeCandidate.name}`} />
+                    ) : (
+                      <span>
+                        <Camera size={26} />
+                        <strong>{processingImage ? "Đang chuẩn bị ảnh..." : "Chụp hoặc chọn ảnh chân dung"}</strong>
+                        <small>Ảnh thẳng mặt, đủ sáng và không bị che khuất.</small>
+                      </span>
+                    )}
+                  </label>
+                </FormField>
+              )}
 
-              <FormField label="Ghi chú cho quản trị viên">
+              {!isPromotion && (
+                <div className="staff-demotion-warning">
+                  <ShieldMinus size={22} />
+                  <div>
+                    <strong>Quyền nhân viên chỉ kết thúc sau khi Admin duyệt</strong>
+                    <span>Người này vẫn làm việc bình thường trong lúc hồ sơ đang chờ xử lý.</span>
+                  </div>
+                </div>
+              )}
+
+              <FormField label={isPromotion ? "Ghi chú cho quản trị viên" : "Lý do đề nghị hủy quyền"}>
                 <textarea
                   className="form-input"
                   rows="4"
                   maxLength="1000"
                   value={managerNote}
                   onChange={(event) => setManagerNote(event.target.value)}
-                  placeholder="Nêu vị trí công việc hoặc thông tin cần lưu ý..."
+                  placeholder={isPromotion
+                    ? "Nêu vị trí công việc hoặc thông tin cần lưu ý..."
+                    : "Nêu lý do để quản trị viên có đủ thông tin xét duyệt..."}
                   disabled={staffRole.submitting}
                 />
               </FormField>
 
               <Button
                 type="submit"
+                variant={isPromotion ? "primary" : "danger"}
                 icon={Send}
                 loading={staffRole.submitting}
-                disabled={processingImage || !portraitImageUrl}
+                disabled={processingImage || (isPromotion && !portraitImageUrl)}
               >
-                Gửi quản trị viên duyệt
+                {isPromotion ? "Gửi hồ sơ bổ nhiệm" : "Gửi đề nghị hủy quyền"}
               </Button>
             </form>
           )}
@@ -458,42 +563,15 @@ const ManagerStaffAssignmentPage = () => {
       <section className="card section-card">
         <div className="section-header">
           <div>
-            <h2 className="section-title"><History size={19} /> Hồ sơ đã gửi</h2>
-            <p className="section-copy">Theo dõi kết quả và phản hồi của quản trị viên.</p>
+            <h2 className="section-title"><History size={19} /> Lịch sử đề nghị tại tòa đã chọn</h2>
+            <p className="section-copy">Theo dõi cả hồ sơ bổ nhiệm và hủy quyền cùng phản hồi của quản trị viên.</p>
           </div>
         </div>
         <Table
           columns={historyColumns}
           data={staffRole.managerRequests}
           loading={staffRole.managerLoading}
-          emptyMessage="Bạn chưa gửi hồ sơ đề nghị nhân viên nào."
-        />
-      </section>
-
-      <section className="card section-card">
-        <div className="section-header">
-          <div>
-            <h2 className="section-title"><Users size={19} /> Nhân viên đã được duyệt</h2>
-            <p className="section-copy">Hiện có {assignedCount} nhân viên đang làm việc tại tòa này.</p>
-          </div>
-        </div>
-
-        <div className="filter-grid">
-          <FormField label="Tìm nhân viên">
-            <Input
-              value={staffKeyword}
-              onChange={(event) => setStaffKeyword(event.target.value)}
-              placeholder="Nhập tên, email hoặc số điện thoại"
-              icon={Search}
-            />
-          </FormField>
-        </div>
-
-        <Table
-          columns={staffColumns}
-          data={filteredStaff}
-          loading={staffAssignments.loading}
-          emptyMessage="Chưa có nhân viên phù hợp để phân công vào tòa này."
+          emptyMessage="Bạn chưa gửi đề nghị nhân viên nào tại tòa nhà này."
         />
       </section>
     </div>
