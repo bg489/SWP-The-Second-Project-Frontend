@@ -1,0 +1,207 @@
+.manager-dashboard-page {
+  display: grid;
+  gap: 20px;
+}
+
+.manager-dashboard-page .page-hero,
+.manager-dashboard-page .section-card,
+.manager-dashboard-page .dashboard-grid,
+.manager-dashboard-page .two-column-grid {
+  margin: 0;
+}
+
+.manager-dashboard-revenue {
+  max-width: 230px;
+  font-size: clamp(20px, 2vw, 30px);
+  overflow-wrap: anywhere;
+}
+
+.manager-dashboard-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.manager-dashboard-toolbar > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.manager-dashboard-toolbar strong {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.manager-dashboard-toolbar span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.manager-dashboard-metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.manager-dashboard-overview {
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+}
+
+.manager-revenue-list,
+.manager-customer-list {
+  display: grid;
+  gap: 14px;
+}
+
+.manager-revenue-item,
+.manager-customer-item {
+  padding: 13px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+}
+
+.manager-revenue-heading,
+.manager-customer-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.manager-revenue-heading span,
+.manager-customer-heading span {
+  min-width: 0;
+  font-weight: 700;
+}
+
+.manager-revenue-heading strong,
+.manager-customer-heading strong {
+  flex: 0 0 auto;
+}
+
+.manager-revenue-track,
+.manager-customer-track {
+  height: 8px;
+  margin: 9px 0 7px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--border-color);
+}
+
+.manager-revenue-track > div,
+.manager-customer-track > div {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--pink), var(--orange));
+}
+
+.manager-customer-item.registered .manager-customer-track > div {
+  background: var(--pink);
+}
+
+.manager-customer-item.walk-in .manager-customer-track > div {
+  background: var(--orange);
+}
+
+.manager-revenue-item small,
+.manager-customer-item small {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.manager-dashboard-live-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.manager-violation-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.manager-violation-summary > div {
+  display: grid;
+  gap: 7px;
+  min-height: 110px;
+  padding: 16px;
+  align-content: center;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(255, 184, 245, 0.16), rgba(237, 153, 81, 0.13));
+}
+
+.manager-violation-summary span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.manager-violation-summary strong {
+  color: var(--text-primary);
+  font-size: 24px;
+  overflow-wrap: anywhere;
+}
+
+.manager-dashboard-note,
+.manager-dashboard-empty {
+  margin: 14px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.manager-building-section {
+  min-width: 0;
+}
+
+@media (max-width: 1180px) {
+  .manager-dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .manager-dashboard-overview,
+  .manager-dashboard-live-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .manager-dashboard-page {
+    gap: 16px;
+  }
+
+  .manager-dashboard-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .manager-dashboard-toolbar .action-row,
+  .manager-dashboard-toolbar .button {
+    width: 100%;
+  }
+
+  .manager-dashboard-metrics,
+  .manager-violation-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-revenue-heading,
+  .manager-customer-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .manager-dashboard-revenue {
+    max-width: 100%;
+  }
+}
