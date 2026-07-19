@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import MainLayout from "../components/Layout/MainLayout";
 import RoleProtectedRoute from "./RoleProtectedRoute";
@@ -35,6 +36,10 @@ import ManagerViolationTypesPage from "../features/pages/ManagerViolationTypesPa
 import AdminStaffRoleRequestsPage from "../features/pages/AdminStaffRoleRequestsPage";
 import ManagerStaffProfilesPage from "../features/pages/ManagerStaffProfilesPage";
 import StaffWorkProfilePage from "../features/pages/StaffWorkProfilePage";
+import {
+  PAYMENT_RETURN_STORAGE_KEY,
+  getStoredPaymentReturnTarget,
+} from "../utils/paymentReturn";
 
 const DefaultRedirect = () => {
   const { isAuthenticated: contextAuthenticated, role: contextRole } = useMockAuth();
@@ -50,6 +55,19 @@ const DefaultRedirect = () => {
 };
 
 const AppRoutes = () => {
+  const location = useLocation();
+  const paymentReturnTarget = getStoredPaymentReturnTarget(location);
+
+  useEffect(() => {
+    if (paymentReturnTarget) {
+      sessionStorage.removeItem(PAYMENT_RETURN_STORAGE_KEY);
+    }
+  }, [paymentReturnTarget]);
+
+  if (paymentReturnTarget) {
+    return <Navigate to={paymentReturnTarget} replace />;
+  }
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />

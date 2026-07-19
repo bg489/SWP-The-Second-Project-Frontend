@@ -20,6 +20,10 @@ import {
   formatDateTime,
   getVehicleTypeLabel,
 } from "../../services/mockParkingData";
+import {
+  clearPaymentReturnState,
+  getPaymentReturnFromUrl,
+} from "../../utils/paymentReturn";
 
 const paymentOptions = [
   { value: "CASH", label: "Tiền mặt" },
@@ -67,12 +71,26 @@ const CheckOutQRPage = () => {
   const [qrCode, setQrCode] = useState("");
   const [checkoutMode, setCheckoutMode] = useState("SESSION");
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [paymentReturn] = useState(() =>
+    getPaymentReturnFromUrl({
+      successMessage: "Thanh toán thành công. Lượt xe ra đã được hoàn tất.",
+      failureMessage: "Thanh toán chưa hoàn tất. Xe vẫn đang chờ xử lý thanh toán.",
+    })
+  );
 
   useEffect(() => {
     dispatch(fetchActiveParkingSessionsRequest(user?.buildingId ? { buildingId: user.buildingId } : undefined));
     dispatch(fetchPricingPoliciesRequest({ status: "ACTIVE" }));
     dispatch(fetchViolationsRequest());
   }, [dispatch, user?.buildingId]);
+
+  useEffect(() => {
+    if (!paymentReturn) return;
+
+    dispatch(fetchActiveParkingSessionsRequest(user?.buildingId ? { buildingId: user.buildingId } : undefined));
+    dispatch(fetchViolationsRequest());
+    clearPaymentReturnState();
+  }, [dispatch, paymentReturn, user?.buildingId]);
 
   const filteredSessions = useMemo(() => {
     const keyword = normalizePlateSearch(sessionSearch);
@@ -205,7 +223,15 @@ const CheckOutQRPage = () => {
         </div>
       </section>
 
-      <StatusBanner success={notice} errors={[parkingSessions.error, violations.error]} />
+      <StatusBanner
+        success={[
+          notice,
+          paymentReturn?.tone === "success" ? paymentReturn.message : null,
+        ]}
+        warning={paymentReturn?.tone === "warning" ? paymentReturn.message : null}
+        info={paymentReturn?.transactionRef ? `Mã giao dịch: ${paymentReturn.transactionRef}` : null}
+        errors={[parkingSessions.error, violations.error]}
+      />
 
       <div className="two-column-grid">
         <section className="card section-card">

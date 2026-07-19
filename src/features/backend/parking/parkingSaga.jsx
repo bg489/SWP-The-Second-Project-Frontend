@@ -1,5 +1,6 @@
 import { call, put, takeEvery, takeLatest } from "redux-saga/effects";
 import api from "../../../services/api";
+import { PAYMENT_RETURN_STORAGE_KEY } from "../../../utils/paymentReturn";
 import {
     monthlyPackages,
     monthlyPasses,
@@ -202,8 +203,6 @@ const getErrorMessage = (error, fallback) =>
 const shouldUseSample = (error) => !error?.response;
 
 const TEMP_QR_STORAGE_KEY = "parking_temp_qr_cards";
-const PAYMENT_RETURN_STORAGE_KEY = "parking_payment_return_path";
-
 const readStoredTempQrCards = () => {
     try {
         const stored = localStorage.getItem(TEMP_QR_STORAGE_KEY);
