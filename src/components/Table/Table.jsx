@@ -11,6 +11,8 @@ const Table = ({
   emptyMessage = "Không có dữ liệu hiển thị",
   pagination = null,
   pageSize = 10,
+  className = "",
+  tableClassName = "",
 }) => {
   const rows = useMemo(() => (Array.isArray(data) ? data : []), [data]);
   const [localPage, setLocalPage] = useState(1);
@@ -48,13 +50,16 @@ const Table = ({
   const showPagination = paginationInfo.totalPages > 1;
 
   return (
-    <div className="table-container">
+    <div className={`table-container ${className}`}>
       <div className="table-wrapper">
-        <table className="custom-table">
+        <table className={`custom-table ${tableClassName}`}>
           <thead>
             <tr>
               {columns.map((col, idx) => (
-                <th key={col.key || idx} style={{ width: col.width }}>
+                <th
+                  key={col.key || idx}
+                  style={{ width: col.width, minWidth: col.minWidth }}
+                >
                   {col.header}
                 </th>
               ))}
@@ -86,7 +91,10 @@ const Table = ({
                 return (
                   <tr key={row.id || absoluteIndex}>
                     {columns.map((col, cIdx) => (
-                      <td key={`${row.id || absoluteIndex}-${col.key || cIdx}`}>
+                      <td
+                        key={`${row.id || absoluteIndex}-${col.key || cIdx}`}
+                        style={{ minWidth: col.minWidth }}
+                      >
                         {col.render ? col.render(row, absoluteIndex) : row[col.key]}
                       </td>
                     ))}

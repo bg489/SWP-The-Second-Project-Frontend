@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { RefreshCcw, Search, ShieldCheck, UserCheck, UserX } from "lucide-react";
+import { RefreshCcw, Save, Search, ShieldCheck, UserCheck, UserX } from "lucide-react";
 
 import Button from "../../../components/Button/Button";
 import StatusBanner from "../../../components/Feedback/StatusBanner";
@@ -14,11 +14,11 @@ import {
 } from "../adminUsers/adminUserSlice";
 
 const statusOptions = [
+    { label: "Tất cả", value: "" },
     { label: "Chờ duyệt", value: "PENDING" },
     { label: "Đang hoạt động", value: "ACTIVE" },
     { label: "Đã khóa", value: "LOCKED" },
     { label: "Không hoạt động", value: "INACTIVE" },
-    { label: "Tất cả", value: "" },
 ];
 
 const roleOptions = [
@@ -56,7 +56,7 @@ const AdminUserApprovalPage = () => {
 
     const [filters, setFilters] = useState({
         q: "",
-        status: "PENDING",
+        status: "",
         role: "",
         page: 1,
         limit: 10,
@@ -130,12 +130,21 @@ const AdminUserApprovalPage = () => {
         }));
     };
 
+    const getRefreshParams = () => ({
+        q: filters.q || undefined,
+        status: filters.status || undefined,
+        role: filters.role || undefined,
+        page: filters.page,
+        limit: filters.limit,
+    });
+
     const approveUser = (user) => {
         dispatch(
             updateAdminUserStatusRequest({
                 id: user.id,
                 role: roleDrafts[user.id] || user.role || "USER",
                 status: "ACTIVE",
+                refreshParams: getRefreshParams(),
             })
         );
     };
@@ -146,6 +155,7 @@ const AdminUserApprovalPage = () => {
                 id: user.id,
                 role: roleDrafts[user.id] || user.role || "USER",
                 status: "INACTIVE",
+                refreshParams: getRefreshParams(),
             })
         );
     };
@@ -156,6 +166,18 @@ const AdminUserApprovalPage = () => {
                 id: user.id,
                 role: roleDrafts[user.id] || user.role || "USER",
                 status: "LOCKED",
+                refreshParams: getRefreshParams(),
+            })
+        );
+    };
+
+    const saveRole = (user) => {
+        dispatch(
+            updateAdminUserStatusRequest({
+                id: user.id,
+                role: roleDrafts[user.id] || user.role || "USER",
+                status: user.status,
+                refreshParams: getRefreshParams(),
             })
         );
     };
@@ -204,19 +226,32 @@ const AdminUserApprovalPage = () => {
         {
             header: "Quyền sử dụng",
             key: "role",
+            minWidth: "210px",
             render: (user) => (
-                <select
-                    className="form-input"
-                    value={roleDrafts[user.id] || user.role || "USER"}
-                    onChange={(event) => handleRoleDraftChange(user.id, event.target.value)}
-                    disabled={updatingId === user.id || user.status === "ACTIVE"}
-                >
-                    {roleOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                            {option.label}
-                        </option>
-                    ))}
-                </select>
+                <div className="admin-role-control">
+                    <select
+                        className="form-input admin-role-select"
+                        value={roleDrafts[user.id] || user.role || "USER"}
+                        onChange={(event) => handleRoleDraftChange(user.id, event.target.value)}
+                        disabled={updatingId === user.id}
+                        aria-label={`Quyền sử dụng của ${user.name}`}
+                    >
+                        {roleOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
+                    <span className="admin-role-caption">
+                        {user.status === "ACTIVE"
+                            ? "Có thể thay đổi và lưu lại"
+                            : user.status === "INACTIVE"
+                                ? "Chọn trước khi duyệt lại"
+                                : user.status === "LOCKED"
+                                    ? "Chọn quyền khi mở khóa"
+                                    : "Chọn trước khi duyệt"}
+                    </span>
+                </div>
             ),
         },
         {
@@ -236,46 +271,72 @@ const AdminUserApprovalPage = () => {
         {
             header: "Thao tác",
             key: "actions",
-            render: (user) => (
-                <div className="action-row">
-                    <Button
-                        type="button"
-                        size="sm"
-                        icon={UserCheck}
-                        loading={updatingId === user.id}
-                        disabled={updatingId === user.id || user.status === "ACTIVE"}
-                        onClick={() => approveUser(user)}
-                    >
-                        Duyệt
-                    </Button>
+            minWidth: "240px",
+            render: (user) => {
+                const isPending = user.status === "PENDING";
+                const isInactive = user.status === "INACTIVE";
+                const isLocked = user.status === "LOCKED";
+                const isActive = user.status === "ACTIVE";
 
-                    {user.status !== "INACTIVE" && user.status !== "ACTIVE" && (
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            icon={UserX}
-                            disabled={updatingId === user.id}
-                            onClick={() => rejectUser(user)}
-                        >
-                            Từ chối
-                        </Button>
-                    )}
+                return (
+                    <div className="action-row admin-account-actions">
+                        {(isPending || isInactive || isLocked) && (
+                            <Button
+                                type="button"
+                                size="sm"
+                                icon={UserCheck}
+                                loading={updatingId === user.id}
+                                disabled={updatingId === user.id}
+                                onClick={() => approveUser(user)}
+                            >
+                                {isPending ? "Duyệt" : isInactive ? "Duyệt lại" : "Mở khóa"}
+                            </Button>
+                        )}
 
-                    {user.status === "ACTIVE" && (
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="danger"
-                            icon={UserX}
-                            disabled={updatingId === user.id}
-                            onClick={() => lockUser(user)}
-                        >
-                            Khóa
-                        </Button>
-                    )}
-                </div>
-            ),
+                        {isActive && (
+                            <Button
+                                type="button"
+                                size="sm"
+                                icon={Save}
+                                loading={updatingId === user.id}
+                                disabled={
+                                    updatingId === user.id ||
+                                    (roleDrafts[user.id] || user.role || "USER") === user.role
+                                }
+                                onClick={() => saveRole(user)}
+                            >
+                                Lưu quyền
+                            </Button>
+                        )}
+
+                        {isPending && (
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                icon={UserX}
+                                disabled={updatingId === user.id}
+                                onClick={() => rejectUser(user)}
+                            >
+                                Từ chối
+                            </Button>
+                        )}
+
+                        {isActive && (
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="danger"
+                                icon={UserX}
+                                disabled={updatingId === user.id}
+                                onClick={() => lockUser(user)}
+                            >
+                                Khóa
+                            </Button>
+                        )}
+                    </div>
+                );
+            },
         },
     ];
 
@@ -286,9 +347,9 @@ const AdminUserApprovalPage = () => {
                     <div className="page-eyebrow">
                         <ShieldCheck size={16} /> Duyệt tài khoản
                     </div>
-                    <h1 className="page-title">Duyệt tài khoản đăng ký</h1>
+                    <h1 className="page-title">Duyệt và quản lý tài khoản</h1>
                     <p className="page-subtitle">
-                        Tài khoản mới cần được quản trị viên duyệt trước khi đăng nhập và sử dụng hệ thống.
+                        Duyệt tài khoản mới, duyệt lại tài khoản không hoạt động, mở khóa và cập nhật quyền sử dụng.
                     </p>
                 </div>
 
@@ -309,18 +370,18 @@ const AdminUserApprovalPage = () => {
             <section className="dashboard-grid">
                 <div className="metric-card">
                     <div className="metric-label">Đang hiển thị</div>
-                    <div className="metric-value">{users.length}</div>
-                    <div className="metric-note">Tài khoản theo bộ lọc hiện tại</div>
+                    <div className="metric-value">{Number(pagination?.total || users.length)}</div>
+                    <div className="metric-note">Kết quả theo bộ lọc hiện tại</div>
                 </div>
                 <div className="metric-card">
                     <div className="metric-label">Chờ duyệt</div>
                     <div className="metric-value">{pendingCount}</div>
-                    <div className="metric-note">Cần quản trị viên kiểm tra</div>
+                    <div className="metric-note">Trên trang hiện tại</div>
                 </div>
                 <div className="metric-card">
                     <div className="metric-label">Đã duyệt</div>
                     <div className="metric-value">{activeCount}</div>
-                    <div className="metric-note">Có thể đăng nhập hệ thống</div>
+                    <div className="metric-note">Trên trang hiện tại</div>
                 </div>
             </section>
 
@@ -394,7 +455,7 @@ const AdminUserApprovalPage = () => {
                     <div>
                         <h2 className="section-title">Danh sách tài khoản</h2>
                         <p className="section-copy">
-                            Chọn quyền phù hợp rồi bấm duyệt để tài khoản được sử dụng hệ thống.
+                            Nút xử lý luôn nằm bên phải: duyệt tài khoản mới, duyệt lại tài khoản đã từ chối hoặc mở khóa tài khoản.
                         </p>
                     </div>
                 </div>
@@ -403,6 +464,7 @@ const AdminUserApprovalPage = () => {
                     columns={columns}
                     data={users}
                     loading={loading}
+                    className="admin-user-table"
                     emptyMessage="Không có tài khoản phù hợp."
                     pagination={
                         pagination

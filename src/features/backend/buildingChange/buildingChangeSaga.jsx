@@ -102,7 +102,8 @@ function* handleApproveRequest(action) {
         const response = yield call(
             [api, api.patch],
             `/building-change-requests/${id}/approve`,
-            { adminNote }
+            { adminNote },
+            { timeout: 15000 }
         );
 
         yield put(buildingChangeActionSuccess(extractData(response)));
@@ -128,7 +129,8 @@ function* handleRejectRequest(action) {
         const response = yield call(
             [api, api.patch],
             `/building-change-requests/${id}/reject`,
-            { adminNote }
+            { adminNote },
+            { timeout: 15000 }
         );
 
         yield put(buildingChangeActionSuccess(extractData(response)));
