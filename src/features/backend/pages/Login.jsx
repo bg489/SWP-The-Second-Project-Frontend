@@ -91,6 +91,24 @@ const Login = () => {
         dispatch(fetchRegisterBuildingsRequest());
     }, [dispatch]);
 
+    useEffect(() => {
+        if (!registerSuccess) return;
+
+        const timer = window.setTimeout(() => {
+            setRegisterForm({
+                name: "",
+                email: "",
+                phone: "",
+                password: "",
+                confirmPassword: "",
+                buildingId: "",
+            });
+            setRegisterErrors({});
+        }, 0);
+
+        return () => window.clearTimeout(timer);
+    }, [registerSuccess]);
+
     const switchMode = (nextMode) => {
         setMode(nextMode);
         setErrors({});

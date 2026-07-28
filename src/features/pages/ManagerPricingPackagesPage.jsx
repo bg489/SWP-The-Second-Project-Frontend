@@ -8,6 +8,7 @@ import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
+import useResetAfterSuccess from "../../hooks/useResetAfterSuccess";
 import {
   clearParkingNotice,
   deactivatePackagePlanRequest,
@@ -100,8 +101,34 @@ const ManagerPricingPackagesPage = () => {
     setPlanForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const markPriceSubmitted = useResetAfterSuccess({
+    submitting: pricingPolicies.saving,
+    success: notice,
+    error: pricingPolicies.error,
+    onSuccess: () => setPriceForm({
+      vehicleType: "MOTORBIKE",
+      pricingType: "TURN",
+      amount: "",
+      status: "ACTIVE",
+    }),
+  });
+
+  const markPlanSubmitted = useResetAfterSuccess({
+    submitting: packagePlans.saving,
+    success: notice,
+    error: packagePlans.error,
+    onSuccess: () => setPlanForm({
+      name: "",
+      vehicleType: "MOTORBIKE",
+      price: "",
+      durationDays: "30",
+      status: "ACTIVE",
+    }),
+  });
+
   const handleSavePrice = (event) => {
     event.preventDefault();
+    markPriceSubmitted();
     dispatch(
       savePricingPolicyRequest({
         vehicleType: priceForm.vehicleType,
@@ -115,6 +142,7 @@ const ManagerPricingPackagesPage = () => {
 
   const handleSavePlan = (event) => {
     event.preventDefault();
+    markPlanSubmitted();
     dispatch(
       savePackagePlanRequest({
         name: planForm.name.trim(),

@@ -9,6 +9,7 @@ import Input from "../../components/Form/Input";
 import QrCodeImage from "../../components/QrCode/QrCodeImage";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
+import useResetAfterSuccess from "../../hooks/useResetAfterSuccess";
 import { useMockAuth } from "../../context/MockAuthContext";
 import {
   clearParkingNotice,
@@ -118,6 +119,20 @@ const TempQrCardsPage = () => {
     }));
   };
 
+  const markCardsSubmitted = useResetAfterSuccess({
+    submitting: tempQrCards.saving,
+    success: notice,
+    error: tempQrCards.error,
+    onSuccess: () => {
+      setForm({
+        quantity: "",
+        status: "READY",
+        note: "",
+      });
+      setFormError("");
+    },
+  });
+
   const createCard = (event) => {
     event.preventDefault();
     const quantity = Number(form.quantity);
@@ -131,6 +146,7 @@ const TempQrCardsPage = () => {
       return;
     }
 
+    markCardsSubmitted();
     dispatch(
       createTempQrCardRequest({
         quantity,

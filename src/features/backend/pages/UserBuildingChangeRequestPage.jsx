@@ -6,6 +6,7 @@ import Button from "../../../components/Button/Button";
 import StatusBanner from "../../../components/Feedback/StatusBanner";
 import FormField from "../../../components/Form/FormField";
 import Table from "../../../components/Table/Table";
+import useResetAfterSuccess from "../../../hooks/useResetAfterSuccess";
 import {
     fetchBuildingsRequest,
     fetchMyBuildingChangeRequestsRequest,
@@ -64,6 +65,21 @@ const UserBuildingChangeRequestPage = () => {
         dispatch(fetchMyBuildingChangeRequestsRequest());
     }, [dispatch]);
 
+    const resetRequestForm = () => {
+        setForm({
+            requestedBuildingId: "",
+            reason: "",
+        });
+        setFormError("");
+    };
+
+    const markRequestSubmitted = useResetAfterSuccess({
+        submitting: submitLoading,
+        success: notice,
+        error,
+        onSuccess: resetRequestForm,
+    });
+
     const handleSubmit = (event) => {
         event.preventDefault();
 
@@ -72,18 +88,13 @@ const UserBuildingChangeRequestPage = () => {
             return;
         }
 
+        markRequestSubmitted();
         dispatch(
             submitBuildingChangeRequest({
                 requestedBuildingId: Number(form.requestedBuildingId),
                 reason: form.reason.trim() || undefined,
             })
         );
-
-        setForm({
-            requestedBuildingId: "",
-            reason: "",
-        });
-        setFormError("");
     };
 
     const refresh = () => {

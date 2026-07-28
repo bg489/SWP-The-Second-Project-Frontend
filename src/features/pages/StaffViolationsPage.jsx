@@ -9,6 +9,7 @@ import Input from "../../components/Form/Input";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
 import { useMockAuth } from "../../context/MockAuthContext";
+import useResetAfterSuccess from "../../hooks/useResetAfterSuccess";
 import {
   confirmFloorMismatchRequest,
   confirmWrongSlotRequest,
@@ -162,6 +163,56 @@ const StaffViolationsPage = () => {
     );
   };
 
+  const resetViolationForm = () => {
+    setSelectedSessionId("");
+    setIsCustom(false);
+    setViolationTypeId("");
+    setCustomName("");
+    setPenaltyFee("");
+    setNote("");
+    setFormError("");
+  };
+
+  const resetWrongSlotForm = () => {
+    setSelectedCarFloorId("");
+    setWrongSlotSessionId("");
+    setObservedSlotId("");
+    setEvidenceUrl("");
+    setWrongSlotNote("");
+    setFormError("");
+  };
+
+  const resetFloorMismatchForm = () => {
+    setFloorMismatchSessionId("");
+    setObservedFloorId("");
+    setTargetCarFloorId("");
+    setTargetSlotId("");
+    setFloorEvidenceUrl("");
+    setFloorMismatchNote("");
+    setFormError("");
+  };
+
+  const markViolationSubmitted = useResetAfterSuccess({
+    submitting: violations.saving,
+    success: notice,
+    error: violations.error,
+    onSuccess: resetViolationForm,
+  });
+
+  const markWrongSlotSubmitted = useResetAfterSuccess({
+    submitting: wrongSlotCases.reporting,
+    success: wrongSlotCases.lastCase,
+    error: wrongSlotCases.error,
+    onSuccess: resetWrongSlotForm,
+  });
+
+  const markFloorMismatchSubmitted = useResetAfterSuccess({
+    submitting: floorMismatchCases.reporting,
+    success: floorMismatchCases.lastCase,
+    error: floorMismatchCases.error,
+    onSuccess: resetFloorMismatchForm,
+  });
+
   const handleRecordViolation = (event) => {
     event.preventDefault();
     if (!selectedSessionId || !penaltyFee) return;
@@ -169,6 +220,7 @@ const StaffViolationsPage = () => {
 
     const selectedType = violationTypes.items.find((type) => String(type.id) === String(violationTypeId));
 
+    markViolationSubmitted();
     dispatch(
       createViolationRequest({
         parkingSessionId: Number(selectedSessionId),
@@ -178,11 +230,6 @@ const StaffViolationsPage = () => {
         note: note.trim(),
       })
     );
-
-    setViolationTypeId("");
-    setCustomName("");
-    setPenaltyFee("");
-    setNote("");
   };
 
   const handleEvidenceFile = async (event) => {
@@ -229,6 +276,7 @@ const StaffViolationsPage = () => {
     }
 
     setFormError("");
+    markWrongSlotSubmitted();
     dispatch(
       reportWrongSlotRequest({
         buildingId,
@@ -254,6 +302,7 @@ const StaffViolationsPage = () => {
     }
 
     setFormError("");
+    markFloorMismatchSubmitted();
     dispatch(
       reportFloorMismatchRequest({
         buildingId,

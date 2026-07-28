@@ -23,6 +23,7 @@ import Input from "../../components/Form/Input";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
 import { compressImageFile } from "../../utils/imageFile";
+import useResetAfterSuccess from "../../hooks/useResetAfterSuccess";
 import { fetchBuildingsRequest } from "../backend/buildings/buildingSlice";
 import {
   clearStaffRoleCandidates,
@@ -133,6 +134,13 @@ const ManagerStaffAssignmentPage = () => {
     setImageError("");
   };
 
+  const markRequestSubmitted = useResetAfterSuccess({
+    submitting: staffRole.submitting,
+    success: staffRole.notice,
+    error: staffRole.error,
+    onSuccess: resetForm,
+  });
+
   const changeBuilding = (value) => {
     setSelectedBuildingId(value);
     setCandidateKeyword("");
@@ -205,6 +213,7 @@ const ManagerStaffAssignmentPage = () => {
       q: candidateKeyword.trim() || undefined,
     };
 
+    markRequestSubmitted();
     dispatch(submitStaffRoleRequest({
       buildingId: Number(activeBuildingId),
       userId: activeCandidate.id,
