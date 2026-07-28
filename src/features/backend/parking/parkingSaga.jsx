@@ -1194,9 +1194,13 @@ function* handleFetchReports(action) {
         yield put(fetchReportsFailure(getErrorMessage(error, "Không lấy được báo cáo.")));
     }
 }
-function* handleFetchViolationTypes() {
+function* handleFetchViolationTypes(action) {
     try {
-        const response = yield call([api, api.get], "/violation-types?status=ACTIVE");
+        const includeInactive = Boolean(action.payload?.includeInactive);
+        const response = yield call(
+            [api, api.get],
+            includeInactive ? "/violation-types" : "/violation-types?status=ACTIVE"
+        );
         const data = response?.data?.data || response?.data || [];
         yield put(fetchViolationTypesSuccess(data));
     } catch (error) {
@@ -1206,15 +1210,16 @@ function* handleFetchViolationTypes() {
 
 function* handleSaveViolationType(action) {
     try {
+        const { includeInactive, ...payload } = action.payload;
         let response;
-        if (action.payload.id) {
-            response = yield call([api, api.put], `/violation-types/${action.payload.id}`, action.payload);
+        if (payload.id) {
+            response = yield call([api, api.put], `/violation-types/${payload.id}`, payload);
         } else {
-            response = yield call([api, api.post], "/violation-types", action.payload);
+            response = yield call([api, api.post], "/violation-types", payload);
         }
         const data = response?.data?.data || response?.data;
         yield put(saveViolationTypeSuccess(data));
-        yield put(fetchViolationTypesRequest());
+        yield put(fetchViolationTypesRequest({ includeInactive }));
     } catch (error) {
         yield put(saveViolationTypeFailure(error?.response?.data?.message || "Lỗi lưu cấu hình vi phạm."));
     }
@@ -1222,9 +1227,12 @@ function* handleSaveViolationType(action) {
 
 function* handleDeactivateViolationType(action) {
     try {
-        yield call([api, api.delete], `/violation-types/${action.payload.id}`);
-        yield put(deactivateViolationTypeSuccess(action.payload.id));
-        yield put(fetchViolationTypesRequest());
+        const response = yield call([api, api.delete], `/violation-types/${action.payload.id}`);
+        const data = response?.data?.data || response?.data;
+        yield put(deactivateViolationTypeSuccess(data));
+        yield put(fetchViolationTypesRequest({
+            includeInactive: action.payload?.includeInactive,
+        }));
     } catch (error) {
         yield put(saveViolationTypeFailure(error?.response?.data?.message || "Không thể tắt mục cấu hình này."));
     }

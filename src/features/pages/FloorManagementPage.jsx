@@ -15,6 +15,7 @@ import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import Table from "../../components/Table/Table";
+import useResetAfterSuccess from "../../hooks/useResetAfterSuccess";
 import { fetchBuildingsRequest } from "../backend/buildings/buildingSlice";
 import {
   clearFloorNotice,
@@ -284,12 +285,20 @@ const FloorManagementPage = () => {
     setSelectedCarFloorId(null);
   };
 
+  const markFormSubmitted = useResetAfterSuccess({
+    submitting: creating || Boolean(updatingId),
+    success: mutationSuccess,
+    error: mutationError,
+    onSuccess: resetForm,
+  });
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
     if (!validateForm()) return;
 
     const payload = buildPayload();
+    markFormSubmitted();
 
     if (editingId) {
       dispatch(
@@ -301,8 +310,6 @@ const FloorManagementPage = () => {
     } else {
       dispatch(createFloorRequest(payload));
     }
-
-    resetForm();
   };
 
   const startEdit = (floor) => {

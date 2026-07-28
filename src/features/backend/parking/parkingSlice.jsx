@@ -79,7 +79,8 @@ const initialState = {
         items: [],
         loading: false,
         error: null,
-        saving: false
+        saving: false,
+        mutationSuccess: null,
     },
 
     vehicles: {
@@ -274,6 +275,9 @@ const parkingSlice = createSlice({
         // Luồng lưu (Thêm mới/Cập nhật) cấu hình lỗi vi phạm
         saveViolationTypeRequest: (state) => {
             state.violationTypes.saving = true;
+            state.violationTypes.error = null;
+            state.violationTypes.mutationSuccess = null;
+            state.notice = null;
         },
         saveViolationTypeSuccess: (state, action) => {
             state.violationTypes.saving = false;
@@ -284,21 +288,32 @@ const parkingSlice = createSlice({
             } else {
                 state.violationTypes.items.unshift(updated);
             }
+            state.violationTypes.mutationSuccess = "Đã lưu mức phí vi phạm.";
+            state.notice = state.violationTypes.mutationSuccess;
         },
         saveViolationTypeFailure: (state, action) => {
             state.violationTypes.saving = false;
-            state.notice = action.payload;
+            state.violationTypes.error = action.payload;
         },
 
         // Luồng ngưng áp dụng cấu hình lỗi vi phạm
         deactivateViolationTypeRequest: (state) => {
             state.violationTypes.saving = true;
+            state.violationTypes.error = null;
+            state.violationTypes.mutationSuccess = null;
+            state.notice = null;
         },
         deactivateViolationTypeSuccess: (state, action) => {
             state.violationTypes.saving = false;
-            state.violationTypes.items = state.violationTypes.items.filter(
-                item => item.id !== action.payload
+            const updated = action.payload;
+            const index = state.violationTypes.items.findIndex(
+                (item) => String(item.id) === String(updated?.id)
             );
+            if (index !== -1) {
+                state.violationTypes.items[index] = updated;
+            }
+            state.violationTypes.mutationSuccess = "Đã ngừng áp dụng mức phí vi phạm.";
+            state.notice = state.violationTypes.mutationSuccess;
         },
         clearParkingNotice: (state) => {
             state.notice = null;
@@ -319,6 +334,8 @@ const parkingSlice = createSlice({
             state.violations.error = null;
             state.payments.error = null;
             state.reports.error = null;
+            state.violationTypes.error = null;
+            state.violationTypes.mutationSuccess = null;
         },
 
         fetchHealthRequest: (state) => {

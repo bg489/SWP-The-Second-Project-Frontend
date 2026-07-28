@@ -164,6 +164,12 @@ const UserProfilePage = () => {
   }, [user?.avatar, user?.avatarCropX, user?.avatarCropY, user?.avatarCropZoom, user?.avatarUrl, user?.name, user?.phone]);
 
   useEffect(() => {
+    if (!profileUpdateRequestId && profileUpdateNotice === "Cập nhật hồ sơ thành công.") {
+      setProfileOtp("");
+    }
+  }, [profileUpdateNotice, profileUpdateRequestId]);
+
+  useEffect(() => {
     if (!vehicleSubmissionRef.current || vehicles.saving) return undefined;
 
     if (notice === "Đã gửi hồ sơ xe để chờ duyệt.") {

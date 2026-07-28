@@ -1,0 +1,99 @@
+.checkout-violation-list {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--border-color));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--danger) 5%, var(--surface));
+}
+
+.checkout-violation-heading,
+.checkout-violation-total,
+.checkout-receipt-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.checkout-violation-heading > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--danger);
+  font-weight: 800;
+}
+
+.checkout-violation-item {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px dashed var(--border-color);
+}
+
+.checkout-violation-number {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  font-weight: 800;
+}
+
+.checkout-violation-item p,
+.checkout-violation-item small {
+  display: block;
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.checkout-violation-amount {
+  color: var(--danger);
+  white-space: nowrap;
+}
+
+.checkout-violation-total {
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+  font-weight: 800;
+}
+
+.checkout-receipt-breakdown {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.checkout-receipt-total {
+  padding: 16px;
+  border-radius: 8px;
+  color: var(--text-primary);
+  background: linear-gradient(115deg, #ffb8f5, #ed9951);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+@media (max-width: 520px) {
+  .checkout-violation-item {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+
+  .checkout-violation-amount {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .checkout-violation-heading,
+  .checkout-violation-total,
+  .checkout-receipt-total {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

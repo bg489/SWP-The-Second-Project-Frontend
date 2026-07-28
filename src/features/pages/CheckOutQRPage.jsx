@@ -9,6 +9,7 @@ import Input from "../../components/Form/Input";
 import PlateCameraScanner from "../../components/PlateScanner/PlateCameraScanner";
 import QrCameraScanner from "../../components/QrScanner/QrCameraScanner";
 import Select from "../../components/Form/Select";
+import useResetAfterSuccess from "../../hooks/useResetAfterSuccess";
 import {
   checkOutByQrRequest,
   checkOutRequest,
@@ -26,6 +27,7 @@ import {
   getPaymentReturnFromUrl,
 } from "../../utils/paymentReturn";
 import { formatPlateNumber, normalizePlateSearch } from "../../utils/licensePlate";
+import "./CheckOutQRPage.css";
 
 const paymentOptions = [
   { value: "CASH", label: "Tiền mặt" },
@@ -55,6 +57,61 @@ const findSessionByQrCode = (sessions, qrCode) => {
   return sessions.find((session) =>
     getSessionQrCodes(session).some((value) => normalizePlateSearch(value) === normalizedCode)
   ) || null;
+};
+
+const getViolationAmount = (violation) =>
+  Number(violation?.penaltyFee ?? violation?.fine ?? 0);
+
+const ViolationFeeList = ({ items = [] }) => {
+  if (!items.length) return null;
+
+  const total = items.reduce(
+    (sum, violation) => sum + getViolationAmount(violation),
+    0
+  );
+
+  return (
+    <div className="checkout-violation-list">
+      <div className="checkout-violation-heading">
+        <span><AlertTriangle size={16} /> Chi tiết từng khoản vi phạm</span>
+        <strong>{items.length} khoản</strong>
+      </div>
+      {items.map((violation, index) => (
+        <article
+          className="checkout-violation-item"
+          key={violation.id || `${violation.violationType || "violation"}-${index}`}
+        >
+          <span className="checkout-violation-number">{index + 1}</span>
+          <div>
+            <strong>
+              {violation.violationTypeName ||
+                violation.violationType ||
+                violation.name ||
+                "Vi phạm quy định bãi xe"}
+            </strong>
+            {violation.note && <p>Ghi chú: {violation.note}</p>}
+            {(violation.detectedAt || violation.createdAt) && (
+              <small>
+                Ghi nhận lúc {formatDateTime(violation.detectedAt || violation.createdAt)}
+              </small>
+            )}
+          </div>
+          <strong className="checkout-violation-amount">
+            {formatCurrency(getViolationAmount(violation))}
+          </strong>
+        </article>
+      ))}
+      <div className="checkout-violation-total">
+        <span>Tổng phí vi phạm</span>
+        <strong>{formatCurrency(total)}</strong>
+      </div>
+    </div>
+  );
+};
+
+const getPaymentMethodLabel = (value) => {
+  if (value === "MONTHLY_PASS") return "Gói tháng";
+  return paymentOptions.find((item) => item.value === value)?.label || value || "-";
 };
 
 const CheckOutQRPage = () => {
@@ -119,10 +176,18 @@ const CheckOutQRPage = () => {
       Boolean(currentSession.monthlyPassId);
     const checkIn = new Date(currentSession.checkInAt);
     const hours = Math.max(1, Math.ceil((checkoutTime - checkIn) / (1000 * 60 * 60)));
-    const sessionViolations = violations.items.filter((item) =>
+    const storedViolations = violations.items.filter((item) =>
       String(item.parkingSessionId || item.sessionId) === String(currentSession.id)
       && ["OPEN", "RESOLVED", "UNPAID"].includes(item.status)
     );
+    const embeddedViolations = Array.isArray(currentSession.violations)
+      ? currentSession.violations.filter((item) =>
+          !item.status || ["OPEN", "RESOLVED", "UNPAID"].includes(item.status)
+        )
+      : [];
+    const sessionViolations = storedViolations.length > 0
+      ? storedViolations
+      : embeddedViolations;
     const violationFee = sessionViolations.reduce((sum, item) => sum + Number(item.penaltyFee || item.fine || 0), 0);
 
     const motorbikePolicy = pricingPolicies.items.find(
@@ -150,6 +215,21 @@ const CheckOutQRPage = () => {
     };
   }, [checkoutTime, currentSession, pricingPolicies.items, violations.items]);
 
+  const markCheckoutSubmitted = useResetAfterSuccess({
+    submitting: parkingSessions.checkingOut,
+    success: parkingSessions.checkoutResult,
+    error: parkingSessions.error,
+    onSuccess: () => {
+      setSelectedSessionId("");
+      setSessionSearch("");
+      setPaymentMethod("CASH");
+      setQrCode("");
+      setCheckoutMode("SESSION");
+      setScannerOpen(false);
+      setPlateScannerOpen(false);
+    },
+  });
+
   const getCheckoutPayload = () => {
     const apiPaymentMethod = paymentMethod === "CARD" ? "VNPAY" : paymentMethod;
 
@@ -164,6 +244,7 @@ const CheckOutQRPage = () => {
     if (checkoutMode === "QR") {
       if (!qrCode.trim()) return;
 
+      markCheckoutSubmitted();
       dispatch(
         checkOutByQrRequest({
           qrCode: qrCode.trim(),
@@ -175,6 +256,7 @@ const CheckOutQRPage = () => {
 
     if (!currentSession || !feeDetails) return;
 
+    markCheckoutSubmitted();
     dispatch(
       checkOutRequest({
         id: currentSession.id,
@@ -215,6 +297,30 @@ const CheckOutQRPage = () => {
   const receipt = parkingSessions.checkoutResult;
   const receiptSession = receipt?.session || receipt;
   const receiptFeeDetail = receipt?.feeDetail || {};
+  const receiptViolations = Array.isArray(receiptFeeDetail.violations)
+    ? receiptFeeDetail.violations
+    : [];
+  const receiptPaymentMethod =
+    receipt?.payment?.method ||
+    receipt?.payment?.provider ||
+    receiptSession?.paymentMethod ||
+    paymentMethod;
+  const receiptBaseFee = Number(
+    receiptFeeDetail.baseFee ?? receiptSession?.baseFee ?? 0
+  );
+  const receiptViolationFee = Number(
+    receiptFeeDetail.violationFee ??
+      receiptViolations.reduce(
+        (sum, violation) => sum + getViolationAmount(violation),
+        0
+      )
+  );
+  const receiptTotal = Number(
+    receiptFeeDetail.totalAmount ??
+      receipt?.payment?.amount ??
+      receiptSession?.totalAmount ??
+      receiptBaseFee + receiptViolationFee
+  );
 
   return (
     <div className="parking-page">
@@ -372,78 +478,11 @@ const CheckOutQRPage = () => {
               )}
               <div className="data-row"><span>Thời gian tính phí</span><strong>{feeDetails.hours} giờ</strong></div>
               <div className="data-row"><span>Phí gửi xe</span><strong>{formatCurrency(feeDetails.baseFee)}</strong></div>
-              <div className="data-row"><span>Phí vi phạm</span><strong>{formatCurrency(feeDetails.violationFee)}</strong></div>
+              <ViolationFeeList items={feeDetails.sessionViolations} />
               <div className="soft-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span className="metric-label">Tổng cần thu</span>
                 <strong className="metric-value">{formatCurrency(feeDetails.total)}</strong>
               </div>
-              {/* Đặt đoạn mã này ngay phía dưới panel hiển thị tổng tiền cước cơ bản của xe */}
-              {currentSession && currentSession.violations && currentSession.violations.length > 0 && (
-                <div className="card section-card animate-fade-in" style={{ marginTop: "16px", borderColor: "var(--danger-light)" }}>
-                  <div className="section-header" style={{ marginBottom: "12px" }}>
-                    <div>
-                      <h3 style={{ fontSize: "15px", fontWeight: "800", color: "var(--color-red)", display: "flex", alignItems: "center", gap: "6px" }}>
-                        ⚠️ Danh sách các lỗi phạt vi phạm phát sinh
-                      </h3>
-                      <p className="section-copy">Các lỗi này được lập biên bản bởi nhân viên vận hành trong suốt thời gian gửi.</p>
-                    </div>
-                    <span className="pill danger">
-                      Cộng dồn: {formatCurrency(currentSession.violationFee || currentSession.violations.reduce((sum, v) => sum + Number(v.penaltyFee || v.fine || 0), 0))}
-                    </span>
-                  </div>
-
-                  <div className="data-list" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {currentSession.violations.map((violation, index) => (
-                      <div
-                        key={violation.id || index}
-                        className="soft-panel"
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          padding: "10px 14px",
-                          background: "rgba(239, 68, 68, 0.04)",
-                          border: "1px solid rgba(239, 68, 68, 0.12)"
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: "800", fontSize: "13.5px" }}>
-                            {index + 1}. {violation.violationType || violation.violationTypeName}
-                          </div>
-                          {violation.note && (
-                            <div className="metric-note" style={{ fontSize: "11.5px", marginTop: "2px" }}>
-                              Ghi chú biên bản: {violation.note}
-                            </div>
-                          )}
-                        </div>
-                        <strong style={{ color: "var(--color-red)", fontSize: "14px" }}>
-                          +{formatCurrency(violation.penaltyFee || violation.fine || 0)}
-                        </strong>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: "14px",
-                      paddingTop: "12px",
-                      borderTop: "1px dashed var(--border-color)",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: "14px",
-                      fontWeight: "800"
-                    }}
-                  >
-                    <span>Tổng tiền cước bãi giữ xe + Phí vi phạm:</span>
-                    <span style={{ fontSize: "16px", color: "var(--orange-strong)" }}>
-                      {formatCurrency(
-                        Number(currentSession.baseFee || 0) +
-                        Number(currentSession.violationFee || currentSession.violations.reduce((sum, v) => sum + Number(v.penaltyFee || v.fine || 0), 0))
-                      )}
-                    </span>
-                  </div>
-                </div>
-              )}
               {["VNPAY", "CARD"].includes(paymentMethod) && (
                 <p className="section-copy">Hệ thống sẽ chuyển sang trang thanh toán sandbox sau khi xác nhận xe ra.</p>
               )}
@@ -470,9 +509,26 @@ const CheckOutQRPage = () => {
           </div>
           <div className="dashboard-grid">
             <div className="soft-panel"><span className="metric-label">Lượt gửi</span><div className="metric-value">{receiptSession?.id || currentSession?.id || effectiveSessionId}</div></div>
-            <div className="soft-panel"><span className="metric-label">Cách thanh toán</span><div className="metric-value">{paymentOptions.find((item) => item.value === paymentMethod)?.label}</div></div>
+            <div className="soft-panel"><span className="metric-label">Cách thanh toán</span><div className="metric-value">{getPaymentMethodLabel(receiptPaymentMethod)}</div></div>
             <div className="soft-panel"><span className="metric-label">Trạng thái</span><div className="metric-value">{receiptSession?.status === "PENDING_PAYMENT" ? "Chờ thanh toán" : "Hoàn tất"}</div></div>
-            <div className="soft-panel"><span className="metric-label">Tổng thu</span><div className="metric-value">{formatCurrency(receiptFeeDetail.totalAmount || receiptSession?.totalAmount || feeDetails?.total || 0)}</div></div>
+            <div className="soft-panel"><span className="metric-label">Tổng thu</span><div className="metric-value">{formatCurrency(receiptTotal)}</div></div>
+          </div>
+          <div className="checkout-receipt-breakdown">
+            <div className="data-row">
+              <span>Phí gửi xe</span>
+              <strong>{formatCurrency(receiptBaseFee)}</strong>
+            </div>
+            <ViolationFeeList items={receiptViolations} />
+            {receiptViolations.length === 0 && receiptViolationFee > 0 && (
+              <div className="data-row">
+                <span>Phí vi phạm</span>
+                <strong>{formatCurrency(receiptViolationFee)}</strong>
+              </div>
+            )}
+            <div className="checkout-receipt-total">
+              <span>Tổng đã xử lý</span>
+              <strong>{formatCurrency(receiptTotal)}</strong>
+            </div>
           </div>
         </section>
       )}
@@ -481,7 +537,7 @@ const CheckOutQRPage = () => {
         open={plateScannerOpen}
         onClose={() => setPlateScannerOpen(false)}
         onScan={handlePlateScan}
-        title="Chụp biển số xe ra"
+        title="Quét biển số xe ra"
       />
     </div>
   );

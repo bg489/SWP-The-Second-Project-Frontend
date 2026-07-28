@@ -13,6 +13,7 @@ import Button from "../../../components/Button/Button";
 import StatusBanner from "../../../components/Feedback/StatusBanner";
 import FormField from "../../../components/Form/FormField";
 import Input from "../../../components/Form/Input";
+import useResetAfterSuccess from "../../../hooks/useResetAfterSuccess";
 import {
     clearSlotNotice,
     createSlotRequest,
@@ -162,6 +163,13 @@ const CarSlotManagementPanel = ({ floor }) => {
         setFormErrors({});
     };
 
+    const markFormSubmitted = useResetAfterSuccess({
+        submitting: creating || Boolean(updatingId),
+        success: mutationSuccess,
+        error: mutationError,
+        onSuccess: resetForm,
+    });
+
     const startEditSlot = (slot) => {
         setEditingSlotId(slot.id);
 
@@ -188,6 +196,8 @@ const CarSlotManagementPanel = ({ floor }) => {
             note: form.note.trim() || undefined,
         };
 
+        markFormSubmitted();
+
         if (editingSlotId) {
             dispatch(
                 updateSlotRequest({
@@ -198,8 +208,6 @@ const CarSlotManagementPanel = ({ floor }) => {
         } else {
             dispatch(createSlotRequest(payload));
         }
-
-        resetForm();
     };
 
     const handleDeleteSlot = (slot) => {

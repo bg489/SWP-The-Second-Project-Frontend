@@ -14,6 +14,7 @@ import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import Table from "../../components/Table/Table";
+import useResetAfterSuccess from "../../hooks/useResetAfterSuccess";
 import {
   clearBuildingNotice,
   createBuildingRequest,
@@ -164,6 +165,13 @@ const BuildingManagementPage = () => {
     setFormErrors({});
   };
 
+  const markFormSubmitted = useResetAfterSuccess({
+    submitting: creating || Boolean(updatingId),
+    success: mutationSuccess,
+    error: mutationError,
+    onSuccess: resetForm,
+  });
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
@@ -173,6 +181,8 @@ const BuildingManagementPage = () => {
       name: form.name.trim(),
       address: form.address.trim(),
     };
+
+    markFormSubmitted();
 
     if (editingId) {
       dispatch(
@@ -190,8 +200,6 @@ const BuildingManagementPage = () => {
         carMonthlyPrice: Number(form.carMonthlyPrice),
       }));
     }
-
-    resetForm();
   };
 
   const startEdit = (building) => {

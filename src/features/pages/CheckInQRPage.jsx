@@ -10,6 +10,7 @@ import PlateCameraScanner from "../../components/PlateScanner/PlateCameraScanner
 import QrCameraScanner from "../../components/QrScanner/QrCameraScanner";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
+import useResetAfterSuccess from "../../hooks/useResetAfterSuccess";
 import {
   checkInRequest,
   clearParkingNotice,
@@ -42,7 +43,7 @@ const CheckInQRPage = () => {
     vehicleType: "CAR",
     customerType: "WALK_IN_GUEST",
     qrCode: "",
-    tempQrCardCode: "TMP-001",
+    tempQrCardCode: "",
     slotId: "",
   });
   const [selectedCarFloorId, setSelectedCarFloorId] = useState("");
@@ -159,7 +160,9 @@ const CheckInQRPage = () => {
       value: card.cardCode || card.id,
       label: `${card.cardCode || card.id} - ${card.label || "Sẵn sàng"}`,
     }));
-    const selectedCode = form.tempQrCardCode;
+    const selectedCode = form.tempQrCardCode ||
+      readyCards[0]?.cardCode ||
+      (readyCards[0]?.id ? String(readyCards[0].id) : "");
 
     if (selectedCode && !options.some((option) => option.value === selectedCode)) {
       options.unshift({
@@ -170,6 +173,9 @@ const CheckInQRPage = () => {
 
     return options;
   }, [form.tempQrCardCode, readyCards]);
+  const effectiveTempQrCardCode = form.tempQrCardCode ||
+    readyCards[0]?.cardCode ||
+    (readyCards[0]?.id ? String(readyCards[0].id) : "");
 
   const updateForm = (field, value) => {
     dispatch(clearParkingNotice());
@@ -185,6 +191,34 @@ const CheckInQRPage = () => {
       return next;
     });
   };
+
+  const markCheckInSubmitted = useResetAfterSuccess({
+    submitting: parkingSessions.checkingIn,
+    success: parkingSessions.lastCheckIn,
+    error: parkingSessions.error,
+    onSuccess: () => {
+      setForm({
+        plateNumber: "",
+        vehicleType: "CAR",
+        customerType: "WALK_IN_GUEST",
+        qrCode: "",
+        tempQrCardCode: "",
+        slotId: "",
+      });
+      setSelectedCarFloorId("");
+      setSelectedMotorbikeFloorId("");
+      setScannerTarget("");
+      setPlateScannerOpen(false);
+      setFormError("");
+
+      if (currentBuildingId) {
+        dispatch(fetchTempQrCardsRequest({
+          buildingId: currentBuildingId,
+          status: "READY",
+        }));
+      }
+    },
+  });
 
   const validateQr = () => {
     if (!form.qrCode.trim()) return;
@@ -233,7 +267,7 @@ const CheckInQRPage = () => {
     if (form.customerType === "REGISTERED_USER") {
       payload.qrCode = form.qrCode.trim();
     } else {
-      payload.tempQrCardCode = form.tempQrCardCode;
+      payload.tempQrCardCode = effectiveTempQrCardCode;
     }
 
     if (form.vehicleType === "CAR") {
@@ -260,6 +294,7 @@ const CheckInQRPage = () => {
       return;
     }
 
+    markCheckInSubmitted();
     dispatch(checkInRequest(payload));
   };
 
@@ -387,7 +422,7 @@ const CheckInQRPage = () => {
               <FormField label="Thẻ QR tạm">
                 <div style={{ display: "grid", gap: 10 }}>
                   <Select
-                    value={form.tempQrCardCode}
+                    value={effectiveTempQrCardCode}
                     onChange={(event) => updateForm("tempQrCardCode", event.target.value)}
                     options={tempQrOptions}
                     placeholder="Chọn thẻ QR tạm"
@@ -545,7 +580,7 @@ const CheckInQRPage = () => {
         open={plateScannerOpen}
         onClose={() => setPlateScannerOpen(false)}
         onScan={(plateNumber) => updateForm("plateNumber", plateNumber)}
-        title="Chụp biển số xe vào"
+        title="Quét biển số xe vào"
       />
     </div>
   );

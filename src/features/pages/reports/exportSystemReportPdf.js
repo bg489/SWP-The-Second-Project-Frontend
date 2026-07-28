@@ -190,6 +190,12 @@ export const buildSystemReportPdfDefinition = ({ filters, report }) => {
   const capacityRows = asRows(report.capacity);
   const totalRevenue = toNumber(revenue.totalRevenue || revenue.paidRevenue);
   const buildingCount = toNumber(report.scope?.buildingCount || capacityRows.length);
+  const isBuildingScope = report.scope?.type === "BUILDING";
+  const scopeName =
+    report.scope?.buildingName ||
+    capacityRows[0]?.buildingName ||
+    (isBuildingScope ? "Tòa nhà đã chọn" : "Toàn hệ thống");
+  const scopeSummary = isBuildingScope ? scopeName : `${buildingCount} tòa nhà`;
   const registered = customerMix.registeredUser || {};
   const walkIn = customerMix.walkInGuest || {};
   const generatedAt = new Date().toLocaleString("vi-VN");
@@ -275,9 +281,9 @@ export const buildSystemReportPdfDefinition = ({ filters, report }) => {
               fillColor: COLORS.pink,
               margin: [18, 15, 18, 15],
               stack: [
-                { text: "BÁO CÁO TOÀN HỆ THỐNG", fontSize: 8, bold: true, color: COLORS.muted },
+                { text: isBuildingScope ? "BÁO CÁO THEO TÒA NHÀ" : "BÁO CÁO TOÀN HỆ THỐNG", fontSize: 8, bold: true, color: COLORS.muted },
                 { text: "Tổng quan vận hành bãi xe", fontSize: 24, bold: true, color: COLORS.heading, margin: [0, 8, 0, 5] },
-                { text: `${buildingCount} tòa nhà • ${rangeLabel} • Xuất lúc ${generatedAt}`, fontSize: 9, bold: true, color: COLORS.muted },
+                { text: `${scopeSummary} • ${rangeLabel} • Xuất lúc ${generatedAt}`, fontSize: 9, bold: true, color: COLORS.muted },
               ],
             },
             {
@@ -288,7 +294,7 @@ export const buildSystemReportPdfDefinition = ({ filters, report }) => {
               stack: [
                 { text: "SUNRISE", fontSize: 15, bold: true, color: COLORS.white },
                 { text: "PARKING", fontSize: 15, bold: true, color: COLORS.white },
-                { text: `${buildingCount} TÒA NHÀ`, fontSize: 8, bold: true, color: COLORS.white, margin: [0, 8, 0, 0] },
+                { text: isBuildingScope ? scopeName.toUpperCase() : `${buildingCount} TÒA NHÀ`, fontSize: 8, bold: true, color: COLORS.white, margin: [0, 8, 0, 0] },
               ],
             },
           ]],
@@ -310,7 +316,11 @@ export const buildSystemReportPdfDefinition = ({ filters, report }) => {
               summaryCard("Lượt dùng gói tháng", toNumber(totals.monthlyPassSessionsCompleted), "Lượt xe ra bằng gói tháng"),
               summaryCard("Gói tháng đã thanh toán", toNumber(revenue.completedMonthlyPayments), formatCurrency(toNumber(report.monthlyPasses?.totalPaid))),
               summaryCard("Phí vi phạm đã thu", formatCurrency(toNumber(revenue.violationRevenue)), "Đã cộng trong tổng doanh thu"),
-              summaryCard("Số tòa nhà", buildingCount, "Tổng hợp toàn bộ cơ sở"),
+              summaryCard(
+                isBuildingScope ? "Phạm vi" : "Số tòa nhà",
+                isBuildingScope ? "1" : buildingCount,
+                isBuildingScope ? scopeName : "Tổng hợp toàn bộ cơ sở"
+              ),
             ],
           ],
         },
@@ -358,7 +368,9 @@ export const buildSystemReportPdfDefinition = ({ filters, report }) => {
       }),
       section({
         title: "Xe vào, xe ra và vé đã hoàn tất theo tòa nhà",
-        description: `So sánh dữ liệu của ${buildingCount} tòa nhà, gồm lượt dùng vé, lượt dùng gói tháng và tỷ lệ người dùng/khách vãng lai.`,
+        description: isBuildingScope
+          ? `Chi tiết lượt xe, loại vé và tỷ lệ người dùng/khách vãng lai tại ${scopeName}.`
+          : `So sánh dữ liệu của ${buildingCount} tòa nhà, gồm lượt dùng vé, lượt dùng gói tháng và tỷ lệ người dùng/khách vãng lai.`,
         pageBreak: "before",
         table: makeTable({ columns: operationColumns, rows: operationRows, fontSize: 6.8 }),
       }),
@@ -396,8 +408,8 @@ export const buildSystemReportPdfDefinition = ({ filters, report }) => {
     info: {
       author: "Sunrise Parking",
       creator: "Sunrise Parking Management System",
-      subject: `Báo cáo vận hành ${filters.from} - ${filters.to}`,
-      title: "Sunrise Parking - Báo cáo vận hành toàn hệ thống",
+      subject: `Báo cáo vận hành ${scopeName} ${filters.from} - ${filters.to}`,
+      title: `Sunrise Parking - Báo cáo vận hành ${scopeName}`,
     },
     pageMargins: [28, 28, 28, 30],
     pageOrientation: "landscape",
@@ -439,7 +451,10 @@ export const exportSystemReportPdf = async ({ filters, report }) => {
   const anchor = document.createElement("a");
 
   anchor.href = objectUrl;
-  anchor.download = `sunrise-parking-system-report-${uniqueFilePart(filters.from)}-${uniqueFilePart(filters.to)}.pdf`;
+  const scopeFilePart = report.scope?.buildingId
+    ? `building-${uniqueFilePart(report.scope.buildingId)}`
+    : "all-buildings";
+  anchor.download = `sunrise-parking-report-${scopeFilePart}-${uniqueFilePart(filters.from)}-${uniqueFilePart(filters.to)}.pdf`;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
