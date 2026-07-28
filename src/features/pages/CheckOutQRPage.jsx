@@ -6,6 +6,7 @@ import Button from "../../components/Button/Button";
 import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
+import PlateCameraScanner from "../../components/PlateScanner/PlateCameraScanner";
 import QrCameraScanner from "../../components/QrScanner/QrCameraScanner";
 import Select from "../../components/Form/Select";
 import {
@@ -24,6 +25,7 @@ import {
   clearPaymentReturnState,
   getPaymentReturnFromUrl,
 } from "../../utils/paymentReturn";
+import { formatPlateNumber, normalizePlateSearch } from "../../utils/licensePlate";
 
 const paymentOptions = [
   { value: "CASH", label: "Tiền mặt" },
@@ -55,11 +57,6 @@ const findSessionByQrCode = (sessions, qrCode) => {
   ) || null;
 };
 
-const normalizePlateSearch = (value) =>
-  String(value || "")
-    .toUpperCase()
-    .replace(/[.\-\s]/g, "");
-
 const CheckOutQRPage = () => {
   const dispatch = useDispatch();
   const { parkingSessions, pricingPolicies, violations, notice } = useSelector((state) => state.parking);
@@ -71,6 +68,7 @@ const CheckOutQRPage = () => {
   const [qrCode, setQrCode] = useState("");
   const [checkoutMode, setCheckoutMode] = useState("SESSION");
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [plateScannerOpen, setPlateScannerOpen] = useState(false);
   const [paymentReturn] = useState(() =>
     getPaymentReturnFromUrl({
       successMessage: "Thanh toán thành công. Lượt xe ra đã được hoàn tất.",
@@ -202,6 +200,18 @@ const CheckOutQRPage = () => {
     }
   };
 
+  const handlePlateScan = (value) => {
+    const plateNumber = formatPlateNumber(value);
+    const normalizedPlate = normalizePlateSearch(plateNumber);
+    const foundSession = parkingSessions.active.find((session) =>
+      normalizePlateSearch(session.plateNumber) === normalizedPlate
+    );
+
+    setCheckoutMode("SESSION");
+    setSessionSearch(plateNumber);
+    setSelectedSessionId(foundSession?.id || "");
+  };
+
   const receipt = parkingSessions.checkoutResult;
   const receiptSession = receipt?.session || receipt;
   const receiptFeeDetail = receipt?.feeDetail || {};
@@ -258,14 +268,24 @@ const CheckOutQRPage = () => {
             {checkoutMode === "SESSION" ? (
               <>
                 <FormField label="Tìm biển số xe">
-                  <Input
-                    value={sessionSearch}
-                    onChange={(event) => {
-                      setSessionSearch(event.target.value);
-                      setSelectedSessionId("");
-                    }}
-                    placeholder="Gõ một phần biển số, không cần dấu chấm/gạch"
-                  />
+                  <div className="plate-input-row">
+                    <Input
+                      value={sessionSearch}
+                      onChange={(event) => {
+                        setSessionSearch(event.target.value);
+                        setSelectedSessionId("");
+                      }}
+                      placeholder="Gõ một phần biển số, không cần dấu chấm/gạch"
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      icon={Camera}
+                      onClick={() => setPlateScannerOpen(true)}
+                    >
+                      Quét biển số
+                    </Button>
+                  </div>
                 </FormField>
                 <FormField label="Lượt gửi">
                   <Select
@@ -456,6 +476,13 @@ const CheckOutQRPage = () => {
           </div>
         </section>
       )}
+
+      <PlateCameraScanner
+        open={plateScannerOpen}
+        onClose={() => setPlateScannerOpen(false)}
+        onScan={handlePlateScan}
+        title="Chụp biển số xe ra"
+      />
     </div>
   );
 };

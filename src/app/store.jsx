@@ -26,6 +26,9 @@ export const store = configureStore({
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
+            serializableCheck: {
+                ignoredActions: ["parking/recognizePlateRequest"],
+            },
             thunk: false,
         }).concat(sagaMiddleware),
 });

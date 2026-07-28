@@ -186,6 +186,19 @@ const initialState = {
         active: parkingSessions.filter((session) =>
             ["ACTIVE", "PENDING_PAYMENT"].includes(session.status)
         ),
+        dailyActivity: {
+            date: null,
+            scope: { buildingId: null },
+            sessions: [],
+            buildingSummaries: [],
+            summary: {
+                currentlyParked: { total: 0, motorbike: 0, car: 0 },
+                enteredToday: { total: 0, motorbike: 0, car: 0 },
+                exitedToday: { total: 0, motorbike: 0, car: 0 },
+            },
+            loading: false,
+            error: null,
+        },
         mine: parkingSessions.filter(
             (session) =>
                 session.userId === 1 &&
@@ -197,6 +210,14 @@ const initialState = {
         checkingOut: false,
         lastCheckIn: null,
         checkoutResult: null,
+        error: null,
+    },
+
+    plateRecognition: {
+        requestId: null,
+        plateNumber: "",
+        confidence: 0,
+        loading: false,
         error: null,
     },
 
@@ -866,6 +887,58 @@ const parkingSlice = createSlice({
             state.parkingSessions.error = action.payload;
         },
 
+        fetchDailyParkingActivityRequest: (state) => {
+            state.parkingSessions.dailyActivity.loading = true;
+            state.parkingSessions.dailyActivity.error = null;
+        },
+        fetchDailyParkingActivitySuccess: (state, action) => {
+            const data = action.payload || {};
+            state.parkingSessions.dailyActivity.loading = false;
+            state.parkingSessions.dailyActivity.date = data.date || null;
+            state.parkingSessions.dailyActivity.scope = data.scope || { buildingId: null };
+            state.parkingSessions.dailyActivity.sessions = data.sessions || [];
+            state.parkingSessions.dailyActivity.buildingSummaries =
+                data.buildingSummaries || [];
+            state.parkingSessions.dailyActivity.summary = data.summary || {
+                currentlyParked: { total: 0, motorbike: 0, car: 0 },
+                enteredToday: { total: 0, motorbike: 0, car: 0 },
+                exitedToday: { total: 0, motorbike: 0, car: 0 },
+            };
+        },
+        fetchDailyParkingActivityFailure: (state, action) => {
+            state.parkingSessions.dailyActivity.loading = false;
+            state.parkingSessions.dailyActivity.error = action.payload;
+        },
+
+        recognizePlateRequest: (state, action) => {
+            state.plateRecognition.requestId = action.payload?.requestId || null;
+            state.plateRecognition.plateNumber = "";
+            state.plateRecognition.confidence = 0;
+            state.plateRecognition.loading = true;
+            state.plateRecognition.error = null;
+        },
+        recognizePlateSuccess: (state, action) => {
+            state.plateRecognition.requestId = action.payload?.requestId || null;
+            state.plateRecognition.plateNumber = action.payload?.plateNumber || "";
+            state.plateRecognition.confidence = Number(action.payload?.confidence || 0);
+            state.plateRecognition.loading = false;
+            state.plateRecognition.error = null;
+        },
+        recognizePlateFailure: (state, action) => {
+            state.plateRecognition.requestId = action.payload?.requestId || null;
+            state.plateRecognition.loading = false;
+            state.plateRecognition.error = action.payload?.error || "Không đọc được biển số xe.";
+        },
+        clearPlateRecognition: (state) => {
+            state.plateRecognition = {
+                requestId: null,
+                plateNumber: "",
+                confidence: 0,
+                loading: false,
+                error: null,
+            };
+        },
+
         fetchMyActiveParkingSessionsRequest: (state) => {
             state.parkingSessions.myLoading = true;
             state.parkingSessions.error = null;
@@ -1053,6 +1126,13 @@ export const {
     fetchActiveParkingSessionsFailure,
     fetchActiveParkingSessionsRequest,
     fetchActiveParkingSessionsSuccess,
+    fetchDailyParkingActivityFailure,
+    fetchDailyParkingActivityRequest,
+    fetchDailyParkingActivitySuccess,
+    recognizePlateFailure,
+    recognizePlateRequest,
+    recognizePlateSuccess,
+    clearPlateRecognition,
     fetchMyActiveParkingSessionsFailure,
     fetchMyActiveParkingSessionsRequest,
     fetchMyActiveParkingSessionsSuccess,
