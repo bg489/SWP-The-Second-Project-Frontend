@@ -481,7 +481,7 @@ const CheckOutQRPage = () => {
         open={plateScannerOpen}
         onClose={() => setPlateScannerOpen(false)}
         onScan={handlePlateScan}
-        title="Chụp biển số xe ra"
+        title="Quét biển số xe ra"
       />
     </div>
   );

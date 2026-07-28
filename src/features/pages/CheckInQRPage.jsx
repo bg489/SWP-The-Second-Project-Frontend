@@ -545,7 +545,7 @@ const CheckInQRPage = () => {
         open={plateScannerOpen}
         onClose={() => setPlateScannerOpen(false)}
         onScan={(plateNumber) => updateForm("plateNumber", plateNumber)}
-        title="Chụp biển số xe vào"
+        title="Quét biển số xe vào"
       />
     </div>
   );
