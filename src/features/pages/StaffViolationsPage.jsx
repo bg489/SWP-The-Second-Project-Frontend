@@ -48,6 +48,21 @@ const floorMismatchTypeLabel = {
   CAR_IN_MOTORBIKE_FLOOR: "Ô tô vào khu xe máy",
 };
 
+const specialViolationNames = {
+  WRONG_SLOT: "Ô tô đậu sai ô",
+  MOTORBIKE_WRONG_FLOOR: "Xe máy đậu sai khu",
+  CAR_WRONG_FLOOR_TOW: "Ô tô đậu sai khu",
+};
+
+const getViolationTypeName = (type) => {
+  const legacyNames = ["WRONG_SLOT", "Xe may vao khu oto", "Keo oto do sai khu"];
+  if (type?.code && specialViolationNames[type.code] && legacyNames.includes(type.name)) {
+    return specialViolationNames[type.code];
+  }
+
+  return type?.name || "Vi phạm bãi xe";
+};
+
 const StaffViolationsPage = () => {
   const dispatch = useDispatch();
   const { user: mockUser } = useMockAuth();
@@ -116,6 +131,14 @@ const StaffViolationsPage = () => {
   const selectedFloorMismatchSession = useMemo(() => {
     return activeSessions.find((session) => String(session.id) === String(floorMismatchSessionId));
   }, [activeSessions, floorMismatchSessionId]);
+  const getConfiguredPenalty = (code) => {
+    const type = violationTypes.items.find((item) => item.code === code);
+    return type ? Number(type.defaultPenaltyFee ?? type.penaltyFee ?? 0) : null;
+  };
+  const wrongSlotPenalty = getConfiguredPenalty("WRONG_SLOT");
+  const floorMismatchPenalty = selectedFloorMismatchSession?.vehicleType === "CAR"
+    ? getConfiguredPenalty("CAR_WRONG_FLOOR_TOW")
+    : getConfiguredPenalty("MOTORBIKE_WRONG_FLOOR");
 
   const sessionOptions = useMemo(() => {
     return activeSessions.map((session) => ({
@@ -132,7 +155,12 @@ const StaffViolationsPage = () => {
   }, [carSessions]);
 
   const typeOptions = useMemo(() => {
-    return (violationTypes.items || []).map((type) => ({ value: type.id, label: type.name }));
+    return (violationTypes.items || []).map((type) => ({
+      value: type.id,
+      label: `${getViolationTypeName(type)} - ${formatCurrency(
+        type.defaultPenaltyFee ?? type.penaltyFee ?? 0
+      )}`,
+    }));
   }, [violationTypes.items]);
 
   const handleViolationTypeChange = (value) => {
@@ -226,7 +254,7 @@ const StaffViolationsPage = () => {
         parkingSessionId: Number(selectedSessionId),
         violationTypeId: isCustom ? null : Number(violationTypeId),
         violationType: isCustom ? customName.trim() : selectedType?.name || "Vi phạm quy định bãi xe",
-        penaltyFee: Number(penaltyFee),
+        penaltyFee: isCustom ? Number(penaltyFee) : undefined,
         note: note.trim(),
       })
     );
@@ -471,7 +499,18 @@ const StaffViolationsPage = () => {
             )}
 
             <FormField label="Tiền phạt" required>
-              <Input type="number" min="0" value={penaltyFee} onChange={(event) => setPenaltyFee(event.target.value)} />
+              <Input
+                type="number"
+                min="0"
+                value={penaltyFee}
+                disabled={!isCustom}
+                onChange={(event) => setPenaltyFee(event.target.value)}
+              />
+              {!isCustom && (
+                <span className="section-copy">
+                  Số tiền do quản lý cấu hình và không thể thay đổi tại đây.
+                </span>
+              )}
             </FormField>
 
             <FormField label="Ghi chú">
@@ -490,6 +529,16 @@ const StaffViolationsPage = () => {
             </div>
           </div>
           <form onSubmit={handleReportWrongSlot} style={{ display: "grid", gap: 14 }}>
+            <div className="soft-panel">
+              <div className="data-row">
+                <span>Mức phí nếu quá hạn dời xe</span>
+                <strong>
+                  {wrongSlotPenalty === null
+                    ? "Chưa được quản lý cấu hình"
+                    : formatCurrency(wrongSlotPenalty)}
+                </strong>
+              </div>
+            </div>
             <FormField label="Xe ô tô đang đậu sai" required>
               <Select value={wrongSlotSessionId} onChange={(event) => setWrongSlotSessionId(event.target.value)} options={carSessionOptions} placeholder="Chọn xe ô tô" />
             </FormField>
@@ -558,6 +607,18 @@ const StaffViolationsPage = () => {
         </div>
 
         <form onSubmit={handleReportFloorMismatch} style={{ display: "grid", gap: 14 }}>
+          <div className="soft-panel">
+            <div className="data-row">
+              <span>Mức phí xử lý</span>
+              <strong>
+                {!selectedFloorMismatchSession
+                  ? "Chọn xe để xem mức phí"
+                  : floorMismatchPenalty === null
+                    ? "Chưa được quản lý cấu hình"
+                    : formatCurrency(floorMismatchPenalty)}
+              </strong>
+            </div>
+          </div>
           <div className="two-column-grid">
             <FormField label="Xe đang trong bãi" required>
               <Select
