@@ -68,6 +68,9 @@ import {
     fetchActiveParkingSessionsFailure,
     fetchActiveParkingSessionsRequest,
     fetchActiveParkingSessionsSuccess,
+    fetchDailyParkingActivityFailure,
+    fetchDailyParkingActivityRequest,
+    fetchDailyParkingActivitySuccess,
     fetchMyActiveParkingSessionsFailure,
     fetchMyActiveParkingSessionsRequest,
     fetchMyActiveParkingSessionsSuccess,
@@ -125,6 +128,9 @@ import {
     fetchWrongSlotCasesFailure,
     fetchWrongSlotCasesRequest,
     fetchWrongSlotCasesSuccess,
+    recognizePlateFailure,
+    recognizePlateRequest,
+    recognizePlateSuccess,
     rejectVehicleFailure,
     rejectVehicleRequest,
     rejectVehicleSuccess,
@@ -962,6 +968,44 @@ function* handleFetchActiveParkingSessions(action) {
     }
 }
 
+function* handleFetchDailyParkingActivity(action) {
+    try {
+        const response = yield call([api, api.get], "/parking-sessions/daily-activity", {
+            params: action.payload,
+        });
+        yield put(fetchDailyParkingActivitySuccess(extractData(response) || {}));
+    } catch (error) {
+        yield put(
+            fetchDailyParkingActivityFailure(
+                getErrorMessage(error, "Không lấy được lượt xe ra vào trong ngày.")
+            )
+        );
+    }
+}
+
+function* handleRecognizePlate(action) {
+    const requestId = action.payload?.requestId;
+
+    try {
+        const formData = new FormData();
+        formData.append("image", action.payload?.file);
+        const response = yield call(
+            [api, api.post],
+            "/parking-sessions/recognize-plate",
+            formData
+        );
+        yield put(recognizePlateSuccess({
+            ...(extractData(response) || {}),
+            requestId,
+        }));
+    } catch (error) {
+        yield put(recognizePlateFailure({
+            error: getErrorMessage(error, "Không đọc được biển số xe từ ảnh."),
+            requestId,
+        }));
+    }
+}
+
 function* handleFetchMyActiveParkingSessions() {
     try {
         const response = yield call([api, api.get], "/parking-sessions/my-active");
@@ -1242,6 +1286,8 @@ export default function* parkingSaga() {
     yield takeEvery(confirmFloorMismatchRequest.type, handleConfirmFloorMismatch);
 
     yield takeLatest(fetchActiveParkingSessionsRequest.type, handleFetchActiveParkingSessions);
+    yield takeLatest(fetchDailyParkingActivityRequest.type, handleFetchDailyParkingActivity);
+    yield takeLatest(recognizePlateRequest.type, handleRecognizePlate);
     yield takeLatest(fetchMyActiveParkingSessionsRequest.type, handleFetchMyActiveParkingSessions);
     yield takeEvery(checkInRequest.type, handleCheckIn);
     yield takeEvery(checkOutRequest.type, handleCheckOut);

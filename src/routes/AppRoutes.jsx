@@ -36,6 +36,7 @@ import ManagerViolationTypesPage from "../features/pages/ManagerViolationTypesPa
 import AdminStaffRoleRequestsPage from "../features/pages/AdminStaffRoleRequestsPage";
 import ManagerStaffProfilesPage from "../features/pages/ManagerStaffProfilesPage";
 import StaffWorkProfilePage from "../features/pages/StaffWorkProfilePage";
+import VehicleActivityPage from "../features/pages/VehicleActivityPage";
 import {
   PAYMENT_RETURN_STORAGE_KEY,
   getStoredPaymentReturnTarget,
@@ -89,6 +90,7 @@ const AppRoutes = () => {
 
         <Route element={<RoleProtectedRoute allowedRoles={["PARKING_STAFF"]} />}>
           <Route path="/staff/dashboard" element={<StaffDashboard />} />
+          <Route path="/staff/vehicle-activity" element={<VehicleActivityPage />} />
           <Route path="/staff/work-profile" element={<StaffWorkProfilePage />} />
           <Route path="/staff/check-in" element={<CheckInQRPage />} />
           <Route path="/staff/check-out" element={<CheckOutQRPage />} />
@@ -101,6 +103,7 @@ const AppRoutes = () => {
 
         <Route element={<RoleProtectedRoute allowedRoles={["PARKING_MANAGER"]} />}>
           <Route path="/manager/dashboard" element={<ManagerDashboard />} />
+          <Route path="/manager/vehicle-activity" element={<VehicleActivityPage />} />
           <Route path="/manager/building" element={<BuildingManagementPage />} />
           <Route path="/manager/floors" element={<FloorManagementPage />} />
           <Route path="/manager/pricing-packages" element={<ManagerPricingPackagesPage />} />

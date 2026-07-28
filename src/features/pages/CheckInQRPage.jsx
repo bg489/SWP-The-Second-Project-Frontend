@@ -6,6 +6,7 @@ import Button from "../../components/Button/Button";
 import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
+import PlateCameraScanner from "../../components/PlateScanner/PlateCameraScanner";
 import QrCameraScanner from "../../components/QrScanner/QrCameraScanner";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
@@ -47,6 +48,7 @@ const CheckInQRPage = () => {
   const [selectedCarFloorId, setSelectedCarFloorId] = useState("");
   const [selectedMotorbikeFloorId, setSelectedMotorbikeFloorId] = useState("");
   const [scannerTarget, setScannerTarget] = useState("");
+  const [plateScannerOpen, setPlateScannerOpen] = useState(false);
   const [formError, setFormError] = useState("");
 
   const currentBuildingId = user?.buildingId;
@@ -329,7 +331,16 @@ const CheckInQRPage = () => {
           </div>
           <form onSubmit={submitCheckIn} style={{ display: "grid", gap: 14 }}>
             <FormField label="Biển số xe" required>
-              <Input value={form.plateNumber} onChange={(event) => updateForm("plateNumber", event.target.value.toUpperCase())} />
+              <div className="plate-input-row">
+                <Input
+                  value={form.plateNumber}
+                  onChange={(event) => updateForm("plateNumber", event.target.value.toUpperCase())}
+                  placeholder="Ví dụ: 51G-123.45"
+                />
+                <Button type="button" variant="secondary" icon={Camera} onClick={() => setPlateScannerOpen(true)}>
+                  Quét biển số
+                </Button>
+              </div>
             </FormField>
             <FormField label="Loại xe">
               <Select
@@ -529,6 +540,13 @@ const CheckInQRPage = () => {
           )}
         </div>
       </section>
+
+      <PlateCameraScanner
+        open={plateScannerOpen}
+        onClose={() => setPlateScannerOpen(false)}
+        onScan={(plateNumber) => updateForm("plateNumber", plateNumber)}
+        title="Chụp biển số xe vào"
+      />
     </div>
   );
 };

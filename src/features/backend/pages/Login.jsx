@@ -34,16 +34,7 @@ import {
     buildingInfo,
     floors,
     roleHomePaths,
-    roleLabels,
 } from "../../../services/mockParkingData";
-
-
-const demoAccounts = [
-    { label: "Quản trị viên", email: "admin@test.com" },
-    { label: "Quản lý", email: "manager@test.com" },
-    { label: "Nhân viên", email: "staff@test.com" },
-    { label: "Cư dân", email: "user1@test.com" },
-];
 
 const Login = () => {
     const dispatch = useDispatch();
@@ -349,15 +340,6 @@ const Login = () => {
         );
     };
 
-    const fillDemoAccount = (email) => {
-        setForm({
-            emailOrPhone: email,
-            password: "123456",
-        });
-
-        setErrors({});
-    };
-
     return (
         <div className="login-shell">
             <section className="login-story">
@@ -502,7 +484,7 @@ const Login = () => {
                                 >
                                     <Input
                                         icon={Mail}
-                                        placeholder="admin@test.com"
+                                        placeholder="Nhập email hoặc số điện thoại"
                                         value={form.emailOrPhone}
                                         onChange={(event) =>
                                             updateField("emailOrPhone", event.target.value)
@@ -771,61 +753,6 @@ const Login = () => {
                         </>
                     )}
 
-                    {mode === "login" && (
-                        <>
-
-                            <div className="soft-panel" style={{ marginTop: 18 }}>
-                                <div className="section-title" style={{ fontSize: 15 }}>
-                                    Tài khoản dùng thử
-                                </div>
-
-                                <p className="section-copy">
-                                    Mật khẩu mặc định: <strong>123456</strong>
-                                </p>
-
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                                    {demoAccounts.map((account) => (
-                                        <Button
-                                            key={account.email}
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={loading}
-                                            onClick={() => fillDemoAccount(account.email)}
-                                        >
-                                            {account.label}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
-
-
-
-
-                            <div className="data-list" style={{ marginTop: 18 }}>
-                                <div className="data-row">
-                                    <span>Quản trị viên</span>
-                                    <strong>{roleLabels.ADMIN}</strong>
-                                </div>
-
-                                <div className="data-row">
-                                    <span>Quản lý</span>
-                                    <strong>{roleLabels.PARKING_MANAGER}</strong>
-                                </div>
-
-                                <div className="data-row">
-                                    <span>Nhân viên</span>
-                                    <strong>{roleLabels.PARKING_STAFF}</strong>
-                                </div>
-
-                                <div className="data-row">
-                                    <span>Cư dân</span>
-                                    <strong>{roleLabels.USER}</strong>
-                                </div>
-                            </div>
-
-                        </>
-                    )}
                 </div>
             </main >
         </div >

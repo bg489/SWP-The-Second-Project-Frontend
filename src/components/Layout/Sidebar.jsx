@@ -8,6 +8,7 @@ import {
   BarChart3,
   Building2,
   Car,
+  History,
   IdCard,
   LayoutDashboard,
   Layers,
@@ -42,6 +43,7 @@ const menus = {
     { path: "/profile", label: "Hồ sơ cá nhân", icon: User },
     { path: "/staff/work-profile", label: "Hồ sơ nhân viên", icon: IdCard },
     { path: "/staff/dashboard", label: "Bàn vận hành", icon: LayoutDashboard },
+    { path: "/staff/vehicle-activity", label: "Lượt xe hôm nay", icon: History },
     { path: "/staff/check-in", label: "Xe vào", icon: ArrowDownLeft },
     { path: "/staff/check-out", label: "Xe ra", icon: ArrowUpRight },
     { path: "/staff/temp-qr-cards", label: "QR tạm", icon: QrCode },
@@ -53,6 +55,7 @@ const menus = {
   PARKING_MANAGER: [
     { path: "/profile", label: "Hồ sơ cá nhân", icon: User },
     { path: "/manager/dashboard", label: "Tổng quan quản lý", icon: LayoutDashboard },
+    { path: "/manager/vehicle-activity", label: "Lượt xe hôm nay", icon: History },
     { path: "/manager/building", label: "Tòa nhà", icon: Building2 },
     { path: "/manager/floors", label: "Tầng & ô đỗ", icon: Layers },
     { path: "/manager/pricing-packages", label: "Bảng giá & gói tháng", icon: BadgeDollarSign },

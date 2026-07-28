@@ -234,6 +234,18 @@
   gap: 10px;
 }
 
+.plate-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .plate-input-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .mg-pagination {
   margin-top: 10px;
 }
