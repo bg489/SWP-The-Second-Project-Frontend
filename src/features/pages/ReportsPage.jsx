@@ -9,20 +9,26 @@ import {
   Car,
   CircleDollarSign,
   Download,
+  Eye,
   FileCheck2,
   FileText,
   Layers3,
+  Mail,
+  Phone,
   RefreshCcw,
   TicketCheck,
   Users,
+  X,
 } from "lucide-react";
 
 import Button from "../../components/Button/Button";
 import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
+import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
 import { formatCurrency, formatDateTime, getStatusLabel, getStatusTone } from "../../services/mockParkingData";
+import { fetchBuildingsRequest } from "../backend/buildings/buildingSlice";
 import { clearParkingNotice, fetchReportsRequest } from "../backend/parking/parkingSlice";
 import { exportSystemReportPdf } from "./reports/exportSystemReportPdf";
 import "./reports/ReportsPage.css";
@@ -56,14 +62,39 @@ const asRows = (value) => (Array.isArray(value) ? value : []);
 const toNumber = (value) => Number(value || 0);
 const labelOf = (labels, value) => labels[value] || value || "Chưa có";
 const percentageLabel = (value) => `${toNumber(value).toLocaleString("vi-VN", { maximumFractionDigits: 2 })}%`;
+const splitValues = (value) =>
+  String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const getRelatedVehicles = (row) => {
+  if (Array.isArray(row?.relatedVehicles)) return row.relatedVehicles;
+
+  return splitValues(row?.plateNumbers).map((plateNumber) => ({
+    buildingName: row?.buildingNames,
+    ownerName: row?.userNames,
+    paidPenalty: 0,
+    plateNumber,
+    violationCount: 1,
+    violations: [],
+  }));
+};
 
 const ReportsPage = () => {
   const dispatch = useDispatch();
   const { reports } = useSelector((state) => state.parking);
+  const {
+    buildings,
+    error: buildingsError,
+    loading: buildingsLoading,
+  } = useSelector((state) => state.buildings);
   const [filters, setFilters] = useState({
+    buildingId: "",
     from: "2026-06-01",
     to: "2026-06-30",
   });
+  const [selectedViolation, setSelectedViolation] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
   const [exportNotice, setExportNotice] = useState(null);
@@ -71,9 +102,17 @@ const ReportsPage = () => {
     ? "Ngày bắt đầu phải trước hoặc trùng ngày kết thúc."
     : null;
   const reportParams = useMemo(
-    () => ({ from: filters.from, to: filters.to }),
-    [filters.from, filters.to]
+    () => ({
+      from: filters.from,
+      to: filters.to,
+      ...(filters.buildingId ? { buildingId: Number(filters.buildingId) } : {}),
+    }),
+    [filters.buildingId, filters.from, filters.to]
   );
+
+  useEffect(() => {
+    dispatch(fetchBuildingsRequest());
+  }, [dispatch]);
 
   useEffect(() => {
     if (!dateRangeError) {
@@ -99,6 +138,13 @@ const ReportsPage = () => {
   const registeredMix = customerMix.registeredUser || {};
   const walkInMix = customerMix.walkInGuest || {};
   const violationRevenueRow = revenueRows.find((row) => row.key === "VIOLATION_FEE") || {};
+  const selectedBuilding = buildings.find(
+    (building) => String(building.id) === String(filters.buildingId)
+  );
+  const scopeName =
+    fullReport.scope?.buildingName ||
+    selectedBuilding?.name ||
+    (filters.buildingId ? "Tòa nhà đã chọn" : "Tất cả tòa nhà");
 
   const revenueColumns = [
     { header: "Nội dung thu", key: "label", minWidth: 190 },
@@ -182,7 +228,29 @@ const ReportsPage = () => {
     { header: "Tòa nhà", key: "buildingNames", minWidth: 180 },
     { header: "Số lần", key: "violationCount" },
     { header: "Người liên quan", key: "userNames", minWidth: 190 },
-    { header: "Xe liên quan", key: "plateNumbers", minWidth: 170 },
+    {
+      header: "Xe liên quan",
+      key: "relatedVehicles",
+      minWidth: 150,
+      render: (row) => {
+        const relatedVehicles = getRelatedVehicles(row);
+
+        return (
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Eye}
+            disabled={relatedVehicles.length === 0}
+            onClick={() => setSelectedViolation({
+              ...row,
+              relatedVehicles,
+            })}
+          >
+            Xem {relatedVehicles.length} xe
+          </Button>
+        );
+      },
+    },
     { header: "Đã thu", key: "paidPenalty", render: (row) => formatCurrency(row.paidPenalty) },
   ];
 
@@ -226,21 +294,23 @@ const ReportsPage = () => {
     <div className="parking-page reports-page">
       <section className="page-hero reports-hero">
         <div className="page-hero-content">
-          <div className="page-eyebrow"><FileText size={16} /> Báo cáo toàn hệ thống</div>
-          <h1 className="page-title">Tổng hợp vận hành của tất cả tòa nhà</h1>
+          <div className="page-eyebrow"><FileText size={16} /> Báo cáo vận hành</div>
+          <h1 className="page-title">
+            {filters.buildingId ? `Tổng hợp vận hành ${scopeName}` : "Tổng hợp vận hành của tất cả tòa nhà"}
+          </h1>
           <p className="page-subtitle">
             Doanh thu, xe vào ra, vé đã hoàn tất, nhóm khách, vi phạm và sức chứa được lấy trực tiếp từ dữ liệu vận hành.
           </p>
         </div>
         <div className="page-hero-aside">
-          <span className="page-hero-label">Đang tổng hợp</span>
-          <span className="page-hero-number">{buildingCount}</span>
-          <span className="page-hero-label">tòa nhà</span>
+          <span className="page-hero-label">Phạm vi báo cáo</span>
+          <span className="page-hero-number">{filters.buildingId ? 1 : buildingCount}</span>
+          <span className="page-hero-label">{filters.buildingId ? scopeName : "tòa nhà"}</span>
         </div>
       </section>
 
       <StatusBanner
-        errors={[reports.error, dateRangeError, exportError].filter(Boolean)}
+        errors={[reports.error, buildingsError, dateRangeError, exportError].filter(Boolean)}
         success={exportNotice}
       />
 
@@ -248,7 +318,7 @@ const ReportsPage = () => {
         <div className="section-header">
           <div>
             <h2 className="section-title"><BarChart3 size={19} /> Khoảng thời gian báo cáo</h2>
-            <p className="section-copy">Phạm vi ngày áp dụng cho toàn bộ tòa nhà, không giới hạn theo hồ sơ của quản lý.</p>
+            <p className="section-copy">Chọn một tòa nhà để xem riêng, hoặc chọn tất cả để đối chiếu toàn hệ thống.</p>
           </div>
           <div className="action-row">
             <Button variant="outline" icon={RefreshCcw} loading={reports.loading} onClick={refresh} disabled={Boolean(dateRangeError)}>
@@ -260,6 +330,27 @@ const ReportsPage = () => {
           </div>
         </div>
         <div className="filter-grid reports-date-grid">
+          <FormField label="Tòa nhà">
+            <Select
+              value={filters.buildingId}
+              onChange={(event) => {
+                setSelectedViolation(null);
+                setFilters((previous) => ({
+                  ...previous,
+                  buildingId: event.target.value,
+                }));
+              }}
+              options={[
+                { value: "", label: "Tất cả tòa nhà" },
+                ...buildings.map((building) => ({
+                  value: building.id,
+                  label: building.name,
+                })),
+              ]}
+              placeholder={null}
+              disabled={buildingsLoading}
+            />
+          </FormField>
           <FormField label="Từ ngày">
             <Input type="date" value={filters.from} onChange={(event) => setFilters((previous) => ({ ...previous, from: event.target.value }))} />
           </FormField>
@@ -427,8 +518,92 @@ const ReportsPage = () => {
 
       <section className="reports-footnote" aria-label="Phạm vi báo cáo">
         <Car size={17} />
-        <span>Dữ liệu trên màn hình và trong PDF cùng lấy từ một báo cáo của {buildingCount} tòa nhà.</span>
+        <span>Dữ liệu trên màn hình và trong PDF cùng lấy từ phạm vi: {scopeName}.</span>
       </section>
+
+      {selectedViolation && (
+        <div
+          className="modal-backdrop reports-related-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="related-vehicles-title"
+          onClick={() => setSelectedViolation(null)}
+        >
+          <section
+            className="card reports-related-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="section-header reports-related-header">
+              <div>
+                <h2 className="section-title" id="related-vehicles-title">
+                  <Car size={19} /> Xe liên quan đến {labelOf(violationLabels, selectedViolation.violationName)}
+                </h2>
+                <p className="section-copy">
+                  {selectedViolation.violationCount} lần vi phạm, đã thu {formatCurrency(selectedViolation.paidPenalty)}.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="theme-toggle-btn"
+                aria-label="Đóng danh sách xe"
+                onClick={() => setSelectedViolation(null)}
+              >
+                <X size={19} />
+              </button>
+            </div>
+
+            <div className="reports-related-list">
+              {selectedViolation.relatedVehicles.map((vehicle, index) => (
+                <article
+                  className="reports-related-vehicle"
+                  key={vehicle.sessionId || vehicle.vehicleId || `${vehicle.plateNumber}-${index}`}
+                >
+                  <div className="reports-related-vehicle-heading">
+                    <div>
+                      <strong>{vehicle.plateNumber || "Chưa có biển số"}</strong>
+                      <span>{labelOf(vehicleLabels, vehicle.vehicleType)}</span>
+                    </div>
+                    <span className="pill danger">
+                      {vehicle.violationCount || 1} lỗi • {formatCurrency(vehicle.paidPenalty)}
+                    </span>
+                  </div>
+                  <div className="reports-related-details">
+                    <div><span>Chủ xe</span><strong>{vehicle.ownerName || "Khách vãng lai"}</strong></div>
+                    <div><span>Tòa nhà</span><strong>{vehicle.buildingName || "Chưa có"}</strong></div>
+                    <div><span>Vị trí</span><strong>{[vehicle.floorName, vehicle.slotCode].filter(Boolean).join(" - ") || "Khu xe máy"}</strong></div>
+                    <div><span>Thông tin xe</span><strong>{[vehicle.brand, vehicle.color].filter(Boolean).join(" - ") || "Chưa cập nhật"}</strong></div>
+                    <div><span>Giờ vào</span><strong>{formatDateTime(vehicle.checkInAt)}</strong></div>
+                    <div><span>Giờ ra</span><strong>{formatDateTime(vehicle.checkOutAt)}</strong></div>
+                  </div>
+                  {(vehicle.ownerEmail || vehicle.ownerPhone) && (
+                    <div className="reports-related-contact">
+                      {vehicle.ownerEmail && <span><Mail size={14} /> {vehicle.ownerEmail}</span>}
+                      {vehicle.ownerPhone && <span><Phone size={14} /> {vehicle.ownerPhone}</span>}
+                    </div>
+                  )}
+                  {asRows(vehicle.violations).some((violation) => violation.evidenceUrl) && (
+                    <div className="reports-related-evidence">
+                      {vehicle.violations
+                        .filter((violation) => violation.evidenceUrl)
+                        .map((violation) => (
+                          <a
+                            key={violation.id}
+                            href={violation.evidenceUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="Mở ảnh bằng chứng"
+                          >
+                            <img src={violation.evidenceUrl} alt={`Bằng chứng xe ${vehicle.plateNumber || ""}`} />
+                          </a>
+                        ))}
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 };
