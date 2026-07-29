@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AlertTriangle, Camera, Clock, Layers, RefreshCcw, Save, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, Clock, Layers, RefreshCcw, Save, ShieldAlert } from "lucide-react";
 
 import Button from "../../components/Button/Button";
 import DeadlineCountdown from "../../components/Feedback/DeadlineCountdown";
@@ -18,6 +18,8 @@ import {
   fetchViolationsRequest,
   fetchViolationTypesRequest,
   fetchWrongSlotCasesRequest,
+  markFloorMismatchMovedRequest,
+  markWrongSlotMovedRequest,
   reportFloorMismatchRequest,
   reportWrongSlotRequest,
 } from "../backend/parking/parkingSlice";
@@ -166,6 +168,7 @@ const StaffViolationsPage = () => {
   const floorMismatchPenalty = selectedFloorMismatchSession?.vehicleType === "CAR"
     ? getConfiguredPenalty("CAR_WRONG_FLOOR_TOW")
     : getConfiguredPenalty("MOTORBIKE_WRONG_FLOOR");
+  const carFloorIds = useMemo(() => carFloors.map((floor) => floor.id), [carFloors]);
 
   const sessionOptions = useMemo(() => {
     return activeSessions.map((session) => ({
@@ -382,6 +385,26 @@ const StaffViolationsPage = () => {
     );
   };
 
+  const handleConfirmMoved = (item, type) => {
+    const confirmed = window.confirm(
+      `Xác nhận xe ${item.plateNumber || ""} đã được dời đúng vị trí trước thời hạn?`
+    );
+
+    if (!confirmed) return;
+
+    const payload = {
+      id: item.id,
+      buildingId,
+      floorIds: carFloorIds,
+    };
+
+    dispatch(
+      type === "wrong-slot"
+        ? markWrongSlotMovedRequest(payload)
+        : markFloorMismatchMovedRequest(payload)
+    );
+  };
+
   const violationColumns = [
     { header: "Biển số", key: "plateNumber", render: (row) => <strong>{row.plateNumber}</strong> },
     { header: "Nội dung", key: "violationType", render: (row) => row.violationType || row.violationTypeName },
@@ -420,10 +443,29 @@ const StaffViolationsPage = () => {
     {
       header: "Xử lý",
       key: "actions",
-      render: (row) =>
-        row.status === "WAITING_USER"
-          ? <span className="pill warning">Hệ thống tự xử lý</span>
-          : row.reassignedSlotCode || "-",
+      render: (row) => {
+        if (row.status !== "WAITING_USER") {
+          return row.reassignedSlotCode || "-";
+        }
+
+        const expired =
+          row.notifyUntil &&
+          new Date(row.notifyUntil).getTime() <= Date.now();
+
+        return expired ? (
+          <span className="pill warning">Đang xử lý quá hạn</span>
+        ) : (
+          <Button
+            size="sm"
+            variant="secondary"
+            icon={CheckCircle2}
+            loading={String(wrongSlotCases.movingId) === String(row.id)}
+            onClick={() => handleConfirmMoved(row, "wrong-slot")}
+          >
+            Đã dời xe
+          </Button>
+        );
+      },
     },
   ];
 
@@ -458,10 +500,29 @@ const StaffViolationsPage = () => {
     {
       header: "Xử lý",
       key: "actions",
-      render: (row) =>
-        row.status === "WAITING_USER"
-          ? <span className="pill warning">Hệ thống tự xử lý</span>
-          : row.violationId ? `#${row.violationId}` : "-",
+      render: (row) => {
+        if (row.status !== "WAITING_USER") {
+          return row.violationId ? `#${row.violationId}` : "-";
+        }
+
+        const expired =
+          row.notifyUntil &&
+          new Date(row.notifyUntil).getTime() <= Date.now();
+
+        return expired ? (
+          <span className="pill warning">Đang xử lý quá hạn</span>
+        ) : (
+          <Button
+            size="sm"
+            variant="secondary"
+            icon={CheckCircle2}
+            loading={String(floorMismatchCases.movingId) === String(row.id)}
+            onClick={() => handleConfirmMoved(row, "floor-mismatch")}
+          >
+            Đã dời xe
+          </Button>
+        );
+      },
     },
   ];
 

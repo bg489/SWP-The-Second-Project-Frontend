@@ -2,7 +2,9 @@ export const PAYMENT_RETURN_STORAGE_KEY = "parking_payment_return_path";
 
 const PAYMENT_RETURN_ROUTES = new Set([
   "/user/qr-pass",
+  "/user/slot-reservations",
   "/staff/check-out",
+  "/staff/slot-reservations",
 ]);
 
 export const getPaymentReturnFromUrl = ({

@@ -11,6 +11,7 @@ import {
     vehicles,
     violations,
 } from "../../../services/mockParkingData";
+import { fetchSlotsByFloorRequest } from "../slots/slotSlice";
 import {
     fetchViolationTypesSuccess,
     fetchViolationTypesFailure,
@@ -44,6 +45,12 @@ import {
     confirmWrongSlotFailure,
     confirmWrongSlotRequest,
     confirmWrongSlotSuccess,
+    markFloorMismatchMovedFailure,
+    markFloorMismatchMovedRequest,
+    markFloorMismatchMovedSuccess,
+    markWrongSlotMovedFailure,
+    markWrongSlotMovedRequest,
+    markWrongSlotMovedSuccess,
     continueMonthlyPassPaymentFailure,
     continueMonthlyPassPaymentRequest,
     continueMonthlyPassPaymentSuccess,
@@ -53,6 +60,12 @@ import {
     createSlotRegistrationFailure,
     createSlotRegistrationRequest,
     createSlotRegistrationSuccess,
+    createGuestHourlyReservationFailure,
+    createGuestHourlyReservationRequest,
+    createGuestHourlyReservationSuccess,
+    createUserHourlyReservationFailure,
+    createUserHourlyReservationRequest,
+    createUserHourlyReservationSuccess,
     createTempQrCardFailure,
     createTempQrCardRequest,
     createTempQrCardSuccess,
@@ -98,6 +111,12 @@ import {
     fetchHealthFailure,
     fetchHealthRequest,
     fetchHealthSuccess,
+    fetchHourlyReservationAvailabilityFailure,
+    fetchHourlyReservationAvailabilityRequest,
+    fetchHourlyReservationAvailabilitySuccess,
+    fetchHourlyCheckInMatchFailure,
+    fetchHourlyCheckInMatchRequest,
+    fetchHourlyCheckInMatchSuccess,
     fetchMonthlyPassesFailure,
     fetchMonthlyPassesRequest,
     fetchMonthlyPassesSuccess,
@@ -110,6 +129,9 @@ import {
     fetchMySlotRegistrationsFailure,
     fetchMySlotRegistrationsRequest,
     fetchMySlotRegistrationsSuccess,
+    fetchMyHourlyReservationsFailure,
+    fetchMyHourlyReservationsRequest,
+    fetchMyHourlyReservationsSuccess,
     fetchMyVehiclesFailure,
     fetchMyVehiclesRequest,
     fetchMyVehiclesSuccess,
@@ -128,6 +150,9 @@ import {
     fetchStaffAssignmentsFailure,
     fetchStaffAssignmentsRequest,
     fetchStaffAssignmentsSuccess,
+    fetchStaffHourlyReservationsFailure,
+    fetchStaffHourlyReservationsRequest,
+    fetchStaffHourlyReservationsSuccess,
     fetchTempQrCardsFailure,
     fetchTempQrCardsRequest,
     fetchTempQrCardsSuccess,
@@ -1021,6 +1046,174 @@ function* handleConfirmWrongSlot(action) {
     }
 }
 
+function* handleFetchHourlyReservationAvailability(action) {
+    try {
+        const response = yield call(
+            [api, api.get],
+            "/hourly-slot-reservations/availability",
+            { params: action.payload }
+        );
+        yield put(
+            fetchHourlyReservationAvailabilitySuccess(extractData(response))
+        );
+    } catch (error) {
+        yield put(
+            fetchHourlyReservationAvailabilityFailure(
+                getErrorMessage(
+                    error,
+                    "Không thể tải các ô đỗ phù hợp với khung giờ đã chọn."
+                )
+            )
+        );
+    }
+}
+
+function* handleFetchHourlyCheckInMatch(action) {
+    try {
+        const response = yield call(
+            [api, api.get],
+            "/hourly-slot-reservations/check-in-match",
+            { params: action.payload }
+        );
+        yield put(fetchHourlyCheckInMatchSuccess(extractData(response)));
+    } catch {
+        yield put(fetchHourlyCheckInMatchFailure());
+    }
+}
+
+function* handleFetchMyHourlyReservations() {
+    try {
+        const response = yield call(
+            [api, api.get],
+            "/hourly-slot-reservations/my"
+        );
+        yield put(
+            fetchMyHourlyReservationsSuccess(
+                extractList(response, ["reservations"])
+            )
+        );
+    } catch (error) {
+        yield put(
+            fetchMyHourlyReservationsFailure(
+                getErrorMessage(error, "Không thể tải danh sách ô đã đặt.")
+            )
+        );
+    }
+}
+
+function* handleFetchStaffHourlyReservations(action) {
+    try {
+        const response = yield call(
+            [api, api.get],
+            "/hourly-slot-reservations/staff",
+            { params: action.payload }
+        );
+        yield put(
+            fetchStaffHourlyReservationsSuccess(
+                extractList(response, ["reservations"])
+            )
+        );
+    } catch (error) {
+        yield put(
+            fetchStaffHourlyReservationsFailure(
+                getErrorMessage(
+                    error,
+                    "Không thể tải danh sách đặt ô của tòa nhà."
+                )
+            )
+        );
+    }
+}
+
+function* handleCreateUserHourlyReservation(action) {
+    try {
+        const response = yield call(
+            [api, api.post],
+            "/hourly-slot-reservations/my",
+            action.payload
+        );
+        const data = extractData(response);
+
+        yield put(createUserHourlyReservationSuccess(data));
+        yield put(fetchMyHourlyReservationsRequest());
+        yield call(redirectToPayment, extractPaymentUrl(data));
+    } catch (error) {
+        yield put(
+            createUserHourlyReservationFailure(
+                getErrorMessage(error, "Không thể tạo lượt đặt ô theo giờ.")
+            )
+        );
+    }
+}
+
+function* handleCreateGuestHourlyReservation(action) {
+    try {
+        const response = yield call(
+            [api, api.post],
+            "/hourly-slot-reservations/staff",
+            action.payload
+        );
+        const data = extractData(response);
+
+        yield put(createGuestHourlyReservationSuccess(data));
+        yield put(
+            fetchStaffHourlyReservationsRequest({
+                buildingId: action.payload?.buildingId,
+            })
+        );
+        yield put(
+            fetchHourlyReservationAvailabilityRequest({
+                buildingId: action.payload?.buildingId,
+                endAt: action.payload?.endAt,
+                startAt: action.payload?.startAt,
+            })
+        );
+        yield call(redirectToPayment, extractPaymentUrl(data));
+    } catch (error) {
+        yield put(
+            createGuestHourlyReservationFailure(
+                getErrorMessage(
+                    error,
+                    "Không thể tạo lượt đặt ô cho khách vãng lai."
+                )
+            )
+        );
+    }
+}
+
+function* handleMarkWrongSlotMoved(action) {
+    try {
+        const {
+            buildingId,
+            floorIds = [],
+            id,
+        } = action.payload;
+        const response = yield call(
+            [api, api.post],
+            `/wrong-slot-cases/${id}/moved`
+        );
+        yield put(markWrongSlotMovedSuccess(extractData(response)));
+        yield put(fetchWrongSlotCasesRequest({
+            ...(buildingId ? { buildingId } : {}),
+            silent: true,
+        }));
+        yield put(fetchActiveParkingSessionsRequest({
+            ...(buildingId ? { buildingId } : {}),
+            silent: true,
+        }));
+
+        for (const floorId of floorIds) {
+            yield put(fetchSlotsByFloorRequest({ floorId, silent: true }));
+        }
+    } catch (error) {
+        yield put(
+            markWrongSlotMovedFailure(
+                getErrorMessage(error, "Không xác nhận được việc xe đã dời.")
+            )
+        );
+    }
+}
+
 function* handleFetchFloorMismatchCases(action) {
     const { params, silent } = splitSyncOptions(action.payload);
 
@@ -1126,6 +1319,39 @@ function* handleConfirmFloorMismatch(action) {
         yield put(
             confirmFloorMismatchFailure(
                 getErrorMessage(error, "Xác nhận xe đậu sai khu thất bại.")
+            )
+        );
+    }
+}
+
+function* handleMarkFloorMismatchMoved(action) {
+    try {
+        const {
+            buildingId,
+            floorIds = [],
+            id,
+        } = action.payload;
+        const response = yield call(
+            [api, api.post],
+            `/floor-mismatch-cases/${id}/moved`
+        );
+        yield put(markFloorMismatchMovedSuccess(extractData(response)));
+        yield put(fetchFloorMismatchCasesRequest({
+            ...(buildingId ? { buildingId } : {}),
+            silent: true,
+        }));
+        yield put(fetchActiveParkingSessionsRequest({
+            ...(buildingId ? { buildingId } : {}),
+            silent: true,
+        }));
+
+        for (const floorId of floorIds) {
+            yield put(fetchSlotsByFloorRequest({ floorId, silent: true }));
+        }
+    } catch (error) {
+        yield put(
+            markFloorMismatchMovedFailure(
+                getErrorMessage(error, "Không xác nhận được việc xe đã dời.")
             )
         );
     }
@@ -1469,6 +1695,30 @@ export default function* parkingSaga() {
 
     yield takeLatest(fetchMySlotRegistrationsRequest.type, handleFetchMySlotRegistrations);
     yield takeEvery(createSlotRegistrationRequest.type, handleCreateSlotRegistration);
+    yield takeLatest(
+        fetchHourlyReservationAvailabilityRequest.type,
+        handleFetchHourlyReservationAvailability
+    );
+    yield takeLatest(
+        fetchHourlyCheckInMatchRequest.type,
+        handleFetchHourlyCheckInMatch
+    );
+    yield takeLatest(
+        fetchMyHourlyReservationsRequest.type,
+        handleFetchMyHourlyReservations
+    );
+    yield takeLatest(
+        fetchStaffHourlyReservationsRequest.type,
+        handleFetchStaffHourlyReservations
+    );
+    yield takeEvery(
+        createUserHourlyReservationRequest.type,
+        handleCreateUserHourlyReservation
+    );
+    yield takeEvery(
+        createGuestHourlyReservationRequest.type,
+        handleCreateGuestHourlyReservation
+    );
     yield takeLatest(fetchMyNotificationsRequest.type, handleFetchMyNotifications);
     yield takeEvery(markNotificationReadRequest.type, handleMarkNotificationRead);
     yield takeEvery(
@@ -1490,6 +1740,7 @@ export default function* parkingSaga() {
     yield takeEvery(markMyWrongSlotMovedRequest.type, handleMarkMyWrongSlotMoved);
     yield takeEvery(reportWrongSlotRequest.type, handleReportWrongSlot);
     yield takeEvery(confirmWrongSlotRequest.type, handleConfirmWrongSlot);
+    yield takeEvery(markWrongSlotMovedRequest.type, handleMarkWrongSlotMoved);
     yield takeLatest(fetchFloorMismatchCasesRequest.type, handleFetchFloorMismatchCases);
     yield takeLatest(
         fetchMyFloorMismatchCasesRequest.type,
@@ -1501,6 +1752,10 @@ export default function* parkingSaga() {
     );
     yield takeEvery(reportFloorMismatchRequest.type, handleReportFloorMismatch);
     yield takeEvery(confirmFloorMismatchRequest.type, handleConfirmFloorMismatch);
+    yield takeEvery(
+        markFloorMismatchMovedRequest.type,
+        handleMarkFloorMismatchMoved
+    );
 
     yield takeLatest(fetchActiveParkingSessionsRequest.type, handleFetchActiveParkingSessions);
     yield takeLatest(fetchDailyParkingActivityRequest.type, handleFetchDailyParkingActivity);

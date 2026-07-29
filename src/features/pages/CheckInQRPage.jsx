@@ -13,7 +13,9 @@ import Table from "../../components/Table/Table";
 import useResetAfterSuccess from "../../hooks/useResetAfterSuccess";
 import {
   checkInRequest,
+  clearHourlyCheckInMatch,
   clearParkingNotice,
+  fetchHourlyCheckInMatchRequest,
   fetchActiveParkingSessionsRequest,
   fetchTempQrCardsRequest,
   validateQrPassRequest,
@@ -40,7 +42,7 @@ const getCarSlotCount = (floor) => Number(
 const CheckInQRPage = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { parkingSessions, qrPasses, tempQrCards, notice } = useSelector((state) => state.parking);
+  const { hourlyReservations, parkingSessions, qrPasses, tempQrCards, notice } = useSelector((state) => state.parking);
   const { buildings, error: buildingsError } = useSelector((state) => state.buildings);
   const { floors, loading: floorsLoading, error: floorsError } = useSelector((state) => state.floors);
   const { slotsByFloor, loading: slotsLoading, error: slotsError } = useSelector((state) => state.slots);
@@ -85,7 +87,11 @@ const CheckInQRPage = () => {
     : null;
   const registeredReservedSlotId = validQrPass?.slotId ? String(validQrPass.slotId) : "";
   const registeredSlotFloorId = validQrPass?.slotFloorId ? String(validQrPass.slotFloorId) : "";
+  const hourlyReservation = hourlyReservations.checkInMatch;
+  const hourlyReservedSlotId = hourlyReservation?.slotId ? String(hourlyReservation.slotId) : "";
+  const hourlySlotFloorId = hourlyReservation?.floorId ? String(hourlyReservation.floorId) : "";
   const effectiveCarFloorId =
+    hourlySlotFloorId ||
     (form.customerType === "REGISTERED_USER" && registeredSlotFloorId ? registeredSlotFloorId : "") ||
     selectedCarFloorId ||
     (carFloors[0]?.id ? String(carFloors[0].id) : "");
@@ -108,6 +114,30 @@ const CheckInQRPage = () => {
     if (!effectiveCarFloorId) return;
     dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
   }, [dispatch, effectiveCarFloorId]);
+
+  useEffect(() => {
+    const plateNumber = form.plateNumber.trim();
+
+    if (
+      form.vehicleType !== "CAR" ||
+      plateNumber.length < 4 ||
+      !currentBuildingId
+    ) {
+      dispatch(clearHourlyCheckInMatch());
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      dispatch(
+        fetchHourlyCheckInMatchRequest({
+          buildingId: Number(currentBuildingId),
+          plateNumber,
+        })
+      );
+    }, 450);
+
+    return () => window.clearTimeout(timer);
+  }, [currentBuildingId, dispatch, form.plateNumber, form.vehicleType]);
 
   useEffect(() => {
     if (!currentBuildingId) return undefined;
@@ -145,6 +175,9 @@ const CheckInQRPage = () => {
   }, [effectiveCarFloorId, slotsByFloor]);
   const isRegisteredCustomer = form.customerType === "REGISTERED_USER";
   const isSelectableCarSlot = (slot) =>
+    (Boolean(hourlyReservedSlotId) &&
+      ["AVAILABLE", "RESERVED"].includes(slot.status) &&
+      String(slot.id) === hourlyReservedSlotId) ||
     (!isRegisteredCustomer && slot.status === "AVAILABLE") ||
     (isRegisteredCustomer &&
       Boolean(registeredReservedSlotId) &&
@@ -155,10 +188,15 @@ const CheckInQRPage = () => {
   const preferredCarSlot = registeredReservedSlotId
     ? selectableCarSlots.find((slot) => String(slot.id) === registeredReservedSlotId)
     : null;
-  const fallbackCarSlot = isRegisteredCustomer ? null : selectableCarSlots[0];
+  const hourlyPreferredCarSlot = hourlyReservedSlotId
+    ? selectableCarSlots.find((slot) => String(slot.id) === hourlyReservedSlotId)
+    : null;
+  const fallbackCarSlot = isRegisteredCustomer && !hourlyReservation ? null : selectableCarSlots[0];
   const formSlotStillAvailable = selectableCarSlots.some((slot) => String(slot.id) === String(form.slotId));
   const selectedCarSlotId = String(
-    (formSlotStillAvailable ? form.slotId : preferredCarSlot?.id || fallbackCarSlot?.id) || ""
+    (formSlotStillAvailable
+      ? form.slotId
+      : hourlyPreferredCarSlot?.id || preferredCarSlot?.id || fallbackCarSlot?.id) || ""
   );
   const selectedSlot = currentCarSlots.find((slot) => String(slot.id) === selectedCarSlotId);
 
@@ -247,6 +285,7 @@ const CheckInQRPage = () => {
       setScannerTarget("");
       setPlateScannerOpen(false);
       setFormError("");
+      dispatch(clearHourlyCheckInMatch());
 
       if (currentBuildingId) {
         dispatch(fetchFloorsRequest({
@@ -320,20 +359,24 @@ const CheckInQRPage = () => {
 
     if (form.customerType === "REGISTERED_USER") {
       payload.qrCode = form.qrCode.trim();
-    } else {
+    } else if (!hourlyReservation) {
       payload.tempQrCardCode = effectiveTempQrCardCode;
     }
 
     if (form.vehicleType === "CAR") {
+      if (hourlyReservedSlotId) {
+        payload.slotId = Number(hourlyReservedSlotId);
+      }
+
       if (isRegisteredCustomer) {
-        if (registeredReservedSlotId) {
+        if (!payload.slotId && registeredReservedSlotId) {
           payload.slotId = Number(selectedCarSlotId || registeredReservedSlotId);
         }
-      } else {
+      } else if (!payload.slotId) {
         payload.slotId = Number(form.slotId || selectedCarSlotId);
       }
 
-      if (!isRegisteredCustomer && !payload.slotId) {
+      if (!isRegisteredCustomer && !hourlyReservation && !payload.slotId) {
         setFormError("Tòa nhà hiện tại chưa còn ô ô tô trống để nhận xe.");
         return;
       }
@@ -515,6 +558,20 @@ const CheckInQRPage = () => {
             {form.vehicleType === "CAR" && (
               <FormField label="Ô đỗ ô tô">
                 <div style={{ display: "grid", gap: 12 }}>
+                  {hourlyReservations.matchingCheckIn && (
+                    <div className="soft-panel">
+                      Đang kiểm tra lượt đặt ô đã thanh toán theo biển số...
+                    </div>
+                  )}
+                  {hourlyReservation && (
+                    <div className="soft-panel">
+                      <strong>Đã tìm thấy lượt đặt ô theo giờ</strong>
+                      <p className="section-copy">
+                        Hệ thống sẽ nhận xe vào ô {hourlyReservation.slotCode} tại {hourlyReservation.floorName}.
+                        Lượt đặt có hiệu lực đến {formatDateTime(hourlyReservation.endAt)}.
+                      </p>
+                    </div>
+                  )}
                   {carFloors.length > 1 && (
                     <Select
                       value={effectiveCarFloorId}
