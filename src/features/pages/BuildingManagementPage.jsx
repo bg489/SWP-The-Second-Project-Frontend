@@ -240,6 +240,11 @@ const BuildingManagementPage = () => {
     },
     { header: "Địa chỉ", key: "address", render: (building) => building.address || "-" },
     {
+      header: "QR tạm",
+      key: "tempQrCardCount",
+      render: (building) => `${Number(building.tempQrCardCount || 0)} thẻ`,
+    },
+    {
       header: "Ngày tạo",
       key: "createdAt",
       render: (building) =>
@@ -316,7 +321,8 @@ const BuildingManagementPage = () => {
 
             <p className="section-copy">
               Thông tin sau khi lưu sẽ dùng cho đăng ký tài khoản, tầng gửi xe
-              và yêu cầu đổi tòa nhà.
+              và yêu cầu đổi tòa nhà. Hệ thống tự tạo sẵn thẻ QR tạm theo tên
+              viết tắt của tòa nhà.
             </p>
           </div>
         </div>

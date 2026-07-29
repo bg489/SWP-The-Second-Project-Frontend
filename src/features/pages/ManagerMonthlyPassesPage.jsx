@@ -9,6 +9,7 @@ import Input from "../../components/Form/Input";
 import QrCodeImage from "../../components/QrCode/QrCodeImage";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
+import { fetchBuildingsRequest } from "../backend/buildings/buildingSlice";
 import { clearParkingNotice, fetchMonthlyPassesRequest } from "../backend/parking/parkingSlice";
 import { formatCurrency } from "../../services/mockParkingData";
 
@@ -85,20 +86,35 @@ const ManagerMonthlyPassesPage = () => {
   const dispatch = useDispatch();
   const { monthlyPasses } = useSelector((state) => state.parking);
   const { user } = useSelector((state) => state.auth);
+  const {
+    buildings,
+    error: buildingsError,
+    loading: buildingsLoading,
+  } = useSelector((state) => state.buildings);
   const [filters, setFilters] = useState({
+    buildingId: "",
     q: "",
     status: "",
   });
 
   useEffect(() => {
-    dispatch(fetchMonthlyPassesRequest());
+    dispatch(fetchBuildingsRequest());
   }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchMonthlyPassesRequest(
+      filters.buildingId ? { buildingId: Number(filters.buildingId) } : undefined
+    ));
+  }, [dispatch, filters.buildingId]);
 
   const rows = useMemo(() => {
     const keyword = normalizeText(filters.q);
 
     return (monthlyPasses.items || []).filter((pass) => {
       const lifeState = getLifeState(pass);
+      const matchesBuilding =
+        !filters.buildingId ||
+        Number(pass.buildingId) === Number(filters.buildingId);
       const matchesStatus =
         !filters.status ||
         (filters.status === "ACTIVE" && lifeState.tone === "success") ||
@@ -106,7 +122,7 @@ const ManagerMonthlyPassesPage = () => {
         (filters.status === "EXPIRED" && lifeState.label === "Đã hết hạn") ||
         pass.status === filters.status;
 
-      if (!matchesStatus) return false;
+      if (!matchesBuilding || !matchesStatus) return false;
       if (!keyword) return true;
 
       return [
@@ -116,7 +132,7 @@ const ManagerMonthlyPassesPage = () => {
         pass.qrCode,
       ].some((value) => normalizeText(value).includes(keyword));
     });
-  }, [filters.q, filters.status, monthlyPasses.items]);
+  }, [filters.buildingId, filters.q, filters.status, monthlyPasses.items]);
 
   const summary = useMemo(() => {
     return rows.reduce(
@@ -198,7 +214,9 @@ const ManagerMonthlyPassesPage = () => {
 
   const refresh = () => {
     dispatch(clearParkingNotice());
-    dispatch(fetchMonthlyPassesRequest());
+    dispatch(fetchMonthlyPassesRequest(
+      filters.buildingId ? { buildingId: Number(filters.buildingId) } : undefined
+    ));
   };
 
   return (
@@ -206,9 +224,9 @@ const ManagerMonthlyPassesPage = () => {
       <section className="page-hero">
         <div className="page-hero-content">
           <div className="page-eyebrow"><QrCode size={16} /> QR tháng</div>
-          <h1 className="page-title">Quản lý QR gói tháng trong tòa nhà</h1>
+          <h1 className="page-title">Quản lý QR gói tháng của các tòa nhà</h1>
           <p className="page-subtitle">
-            Theo dõi chủ xe, phương tiện, gói đã mua, ngày hết hạn và mã QR đang được dùng tại tòa của bạn.
+            Theo dõi chủ xe, phương tiện, tòa nhà, gói đã mua, ngày hết hạn và mã QR đang được sử dụng.
           </p>
         </div>
         <div className="page-hero-aside">
@@ -218,14 +236,14 @@ const ManagerMonthlyPassesPage = () => {
         </div>
       </section>
 
-      <StatusBanner errors={monthlyPasses.error} />
+      <StatusBanner errors={[monthlyPasses.error, buildingsError]} />
 
       <div className="dashboard-grid">
         <div className="card metric-card">
           <div className="metric-icon"><ShieldCheck size={22} /></div>
           <div className="metric-label">Tổng gói tháng</div>
           <div className="metric-value">{summary.total}</div>
-          <div className="metric-note">Trong tòa đang quản lý</div>
+          <div className="metric-note">Theo danh sách tòa nhà đang lọc</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><Clock3 size={22} /></div>
@@ -259,6 +277,24 @@ const ManagerMonthlyPassesPage = () => {
         </div>
 
         <div className="filter-grid">
+          <FormField label="Tòa nhà">
+            <Select
+              value={filters.buildingId}
+              onChange={(event) => setFilters((prev) => ({
+                ...prev,
+                buildingId: event.target.value,
+              }))}
+              options={[
+                { value: "", label: "Tất cả tòa nhà" },
+                ...buildings.map((building) => ({
+                  value: building.id,
+                  label: building.name,
+                })),
+              ]}
+              placeholder={null}
+              disabled={buildingsLoading}
+            />
+          </FormField>
           <FormField label="Tìm kiếm">
             <Input
               value={filters.q}
@@ -280,7 +316,8 @@ const ManagerMonthlyPassesPage = () => {
           columns={columns}
           data={rows}
           loading={monthlyPasses.loading}
-          emptyMessage="Chưa có QR gói tháng trong tòa này."
+          emptyMessage="Chưa có QR gói tháng phù hợp."
+          pageSize={10}
         />
       </section>
     </div>
