@@ -57,6 +57,19 @@ const violationLabels = {
   WRONG_SLOT: "Đỗ sai ô",
   "Xe may vao khu oto": "Xe máy đậu sai khu",
 };
+const specialViolationCodes = new Set([
+  "WRONG_SLOT",
+  "MOTORBIKE_WRONG_FLOOR",
+  "CAR_WRONG_FLOOR_TOW",
+]);
+const specialViolationNames = new Set([
+  "Ô tô đậu sai ô",
+  "Ô tô đậu sai khu",
+  "Xe máy đậu sai khu",
+  "Do sai slot",
+  "Keo oto do sai khu",
+  "Xe may vao khu oto",
+]);
 
 const asRows = (value) => (Array.isArray(value) ? value : []);
 const toNumber = (value) => Number(value || 0);
@@ -80,6 +93,10 @@ const getRelatedVehicles = (row) => {
     violations: [],
   }));
 };
+
+const isSpecialViolation = (row) =>
+  asRows(row?.violationCodes).some((code) => specialViolationCodes.has(code)) ||
+  specialViolationNames.has(row?.violationName);
 
 const ReportsPage = () => {
   const dispatch = useDispatch();
@@ -130,7 +147,13 @@ const ReportsPage = () => {
   const operationRows = asRows(operations.byBuilding);
   const ticketRows = asRows(fullReport.tickets?.rows);
   const monthlyRows = asRows(fullReport.monthlyPasses?.rows);
-  const violationRows = asRows(fullReport.violations?.rows);
+  const allViolationRows = asRows(fullReport.violations?.rows);
+  const specialViolationRows = Array.isArray(fullReport.violations?.specialRows)
+    ? fullReport.violations.specialRows
+    : allViolationRows.filter(isSpecialViolation);
+  const regularViolationRows = Array.isArray(fullReport.violations?.regularRows)
+    ? fullReport.violations.regularRows
+    : allViolationRows.filter((row) => !isSpecialViolation(row));
   const capacityRows = asRows(fullReport.capacity);
   const buildingCount = toNumber(fullReport.scope?.buildingCount || capacityRows.length);
   const totalRevenue = toNumber(revenue.totalRevenue || revenue.paidRevenue);
@@ -499,11 +522,23 @@ const ReportsPage = () => {
       <section className="card section-card">
         <div className="section-header">
           <div>
-            <h2 className="section-title"><AlertTriangle size={19} /> Phí vi phạm đã thu</h2>
+            <h2 className="section-title"><Car size={19} /> Sai ô và sai khu đã thu</h2>
+            <p className="section-copy">
+              Tách riêng ô tô đậu sai ô, ô tô đậu sai khu và xe máy đậu sai khu; tổng đã thu {formatCurrency(fullReport.violations?.specialPaidPenalty)}.
+            </p>
+          </div>
+        </div>
+        <Table columns={violationColumns} data={specialViolationRows} loading={reports.loading} pageSize={10} />
+      </section>
+
+      <section className="card section-card">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title"><AlertTriangle size={19} /> Vi phạm thường đã thu</h2>
             <p className="section-copy">Các lỗi trùng tên được gộp lại nhưng vẫn giữ người, xe và tòa nhà liên quan.</p>
           </div>
         </div>
-        <Table columns={violationColumns} data={violationRows} loading={reports.loading} pageSize={10} />
+        <Table columns={violationColumns} data={regularViolationRows} loading={reports.loading} pageSize={10} />
       </section>
 
       <section className="card section-card">

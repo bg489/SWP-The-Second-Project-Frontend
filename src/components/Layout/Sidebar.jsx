@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   BadgeDollarSign,
   BarChart3,
+  Bell,
   Building2,
   Car,
   History,
@@ -35,6 +36,8 @@ const roleLabels = {
 const menus = {
   USER: [
     { path: "/user/dashboard", label: "Tổng quan", icon: LayoutDashboard },
+    { path: "/user/notifications", label: "Thông báo", icon: Bell },
+    { path: "/user/parking-issues", label: "Xử lý chỗ đỗ", icon: AlertTriangle },
     { path: "/user/qr-pass", label: "QR & gói tháng", icon: QrCode },
     { path: "/user/profile", label: "Hồ sơ & xe", icon: User },
     { path: "/user/building-change", label: "Đổi tòa nhà", icon: Building2 },

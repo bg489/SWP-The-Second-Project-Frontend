@@ -56,6 +56,11 @@ const getNextPreviewNumber = (cards, prefix) => {
   }, 0) + 1;
 };
 
+const getExistingCardPrefix = (cards) =>
+  cards
+    .map((card) => String(card.cardCode || "").match(/^([A-Z0-9]+)-\d+$/)?.[1])
+    .find(Boolean);
+
 const TempQrCardsPage = () => {
   const dispatch = useDispatch();
   const { role } = useMockAuth();
@@ -104,7 +109,9 @@ const TempQrCardsPage = () => {
   }, [tempQrCards.items]);
 
   const selectedBuilding = buildings.find((building) => String(building.id) === String(effectiveBuildingId));
-  const previewPrefix = buildBuildingPrefix(selectedBuilding?.name || authUser?.buildingName || "QR");
+  const previewPrefix =
+    getExistingCardPrefix(tempQrCards.items) ||
+    buildBuildingPrefix(selectedBuilding?.name || authUser?.buildingName || "QR");
   const previewStart = getNextPreviewNumber(tempQrCards.items, previewPrefix);
   const previewEnd = previewStart + Math.max(Number(form.quantity) || 0, 1) - 1;
   const previewFirstCode = `${previewPrefix}-${String(previewStart).padStart(4, "0")}`;

@@ -1,0 +1,86 @@
+.parking-issue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: 14px;
+}
+
+.parking-issue-card {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.parking-issue-head {
+  display: flex;
+  gap: 12px;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.parking-issue-head span:first-child {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.parking-issue-head h3 {
+  margin: 5px 0 0;
+  font-size: 22px;
+}
+
+.parking-issue-details {
+  display: grid;
+  gap: 0;
+}
+
+.parking-issue-details > div {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.parking-issue-details span {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  color: var(--text-secondary);
+}
+
+.parking-issue-details strong {
+  text-align: right;
+}
+
+.parking-issue-evidence {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 7px;
+}
+
+@media (max-width: 560px) {
+  .parking-issue-card {
+    padding: 14px;
+  }
+
+  .parking-issue-head,
+  .parking-issue-details > div {
+    align-items: flex-start;
+  }
+
+  .parking-issue-details > div {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .parking-issue-details strong {
+    text-align: left;
+  }
+}

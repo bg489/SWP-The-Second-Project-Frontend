@@ -77,6 +77,12 @@ import {
     fetchMyNotificationsFailure,
     fetchMyNotificationsRequest,
     fetchMyNotificationsSuccess,
+    markAllNotificationsReadFailure,
+    markAllNotificationsReadRequest,
+    markAllNotificationsReadSuccess,
+    markNotificationReadFailure,
+    markNotificationReadRequest,
+    markNotificationReadSuccess,
     fetchNotificationPreferencesFailure,
     fetchNotificationPreferencesRequest,
     fetchNotificationPreferencesSuccess,
@@ -86,6 +92,9 @@ import {
     fetchFloorMismatchCasesFailure,
     fetchFloorMismatchCasesRequest,
     fetchFloorMismatchCasesSuccess,
+    fetchMyFloorMismatchCasesFailure,
+    fetchMyFloorMismatchCasesRequest,
+    fetchMyFloorMismatchCasesSuccess,
     fetchHealthFailure,
     fetchHealthRequest,
     fetchHealthSuccess,
@@ -128,6 +137,15 @@ import {
     fetchWrongSlotCasesFailure,
     fetchWrongSlotCasesRequest,
     fetchWrongSlotCasesSuccess,
+    fetchMyWrongSlotCasesFailure,
+    fetchMyWrongSlotCasesRequest,
+    fetchMyWrongSlotCasesSuccess,
+    markMyFloorMismatchMovedFailure,
+    markMyFloorMismatchMovedRequest,
+    markMyFloorMismatchMovedSuccess,
+    markMyWrongSlotMovedFailure,
+    markMyWrongSlotMovedRequest,
+    markMyWrongSlotMovedSuccess,
     recognizePlateFailure,
     recognizePlateRequest,
     recognizePlateSuccess,
@@ -790,6 +808,35 @@ function* handleFetchMyNotifications() {
     }
 }
 
+function* handleMarkNotificationRead(action) {
+    try {
+        const response = yield call(
+            [api, api.patch],
+            `/notifications/${action.payload.id}/read`
+        );
+        yield put(markNotificationReadSuccess(extractData(response)));
+    } catch (error) {
+        yield put(
+            markNotificationReadFailure(
+                getErrorMessage(error, "Không đánh dấu được thông báo đã đọc.")
+            )
+        );
+    }
+}
+
+function* handleMarkAllNotificationsRead() {
+    try {
+        yield call([api, api.patch], "/notifications/my/read-all");
+        yield put(markAllNotificationsReadSuccess());
+    } catch (error) {
+        yield put(
+            markAllNotificationsReadFailure(
+                getErrorMessage(error, "Không đánh dấu được tất cả thông báo.")
+            )
+        );
+    }
+}
+
 function* handleFetchNotificationPreferences() {
     try {
         const response = yield call([api, api.get], "/notifications/preferences");
@@ -868,6 +915,44 @@ function* handleFetchWrongSlotCases(action) {
     }
 }
 
+function* handleFetchMyWrongSlotCases(action) {
+    try {
+        const response = yield call([api, api.get], "/wrong-slot-cases/my", {
+            params: action.payload,
+        });
+        yield put(
+            fetchMyWrongSlotCasesSuccess(
+                extractList(response, ["wrongSlotCases", "cases"])
+            )
+        );
+    } catch (error) {
+        yield put(
+            fetchMyWrongSlotCasesFailure(
+                getErrorMessage(error, "Không lấy được tình trạng ô đỗ của bạn.")
+            )
+        );
+    }
+}
+
+function* handleMarkMyWrongSlotMoved(action) {
+    try {
+        const response = yield call(
+            [api, api.post],
+            `/wrong-slot-cases/my/${action.payload.id}/moved`
+        );
+        yield put(markMyWrongSlotMovedSuccess(extractData(response)));
+        yield put(fetchMyWrongSlotCasesRequest());
+        yield put(fetchMyNotificationsRequest());
+        yield put(fetchMySlotRegistrationsRequest());
+    } catch (error) {
+        yield put(
+            markMyWrongSlotMovedFailure(
+                getErrorMessage(error, "Không xác nhận được việc dời xe.")
+            )
+        );
+    }
+}
+
 function* handleReportWrongSlot(action) {
     try {
         const { buildingId, ...payload } = action.payload || {};
@@ -907,6 +992,43 @@ function* handleFetchFloorMismatchCases(action) {
         yield put(
             fetchFloorMismatchCasesFailure(
                 getErrorMessage(error, "Không lấy được danh sách xe đậu sai khu.")
+            )
+        );
+    }
+}
+
+function* handleFetchMyFloorMismatchCases(action) {
+    try {
+        const response = yield call([api, api.get], "/floor-mismatch-cases/my", {
+            params: action.payload,
+        });
+        yield put(
+            fetchMyFloorMismatchCasesSuccess(
+                extractList(response, ["floorMismatchCases", "cases"])
+            )
+        );
+    } catch (error) {
+        yield put(
+            fetchMyFloorMismatchCasesFailure(
+                getErrorMessage(error, "Không lấy được tình trạng xe đậu sai khu.")
+            )
+        );
+    }
+}
+
+function* handleMarkMyFloorMismatchMoved(action) {
+    try {
+        const response = yield call(
+            [api, api.post],
+            `/floor-mismatch-cases/my/${action.payload.id}/moved`
+        );
+        yield put(markMyFloorMismatchMovedSuccess(extractData(response)));
+        yield put(fetchMyFloorMismatchCasesRequest());
+        yield put(fetchMyNotificationsRequest());
+    } catch (error) {
+        yield put(
+            markMyFloorMismatchMovedFailure(
+                getErrorMessage(error, "Không xác nhận được việc dời xe.")
             )
         );
     }
@@ -1276,6 +1398,11 @@ export default function* parkingSaga() {
     yield takeLatest(fetchMySlotRegistrationsRequest.type, handleFetchMySlotRegistrations);
     yield takeEvery(createSlotRegistrationRequest.type, handleCreateSlotRegistration);
     yield takeLatest(fetchMyNotificationsRequest.type, handleFetchMyNotifications);
+    yield takeEvery(markNotificationReadRequest.type, handleMarkNotificationRead);
+    yield takeEvery(
+        markAllNotificationsReadRequest.type,
+        handleMarkAllNotificationsRead
+    );
     yield takeLatest(
         fetchNotificationPreferencesRequest.type,
         handleFetchNotificationPreferences
@@ -1287,9 +1414,19 @@ export default function* parkingSaga() {
     yield takeLatest(fetchStaffAssignmentsRequest.type, handleFetchStaffAssignments);
     yield takeEvery(assignStaffToBuildingRequest.type, handleAssignStaffToBuilding);
     yield takeLatest(fetchWrongSlotCasesRequest.type, handleFetchWrongSlotCases);
+    yield takeLatest(fetchMyWrongSlotCasesRequest.type, handleFetchMyWrongSlotCases);
+    yield takeEvery(markMyWrongSlotMovedRequest.type, handleMarkMyWrongSlotMoved);
     yield takeEvery(reportWrongSlotRequest.type, handleReportWrongSlot);
     yield takeEvery(confirmWrongSlotRequest.type, handleConfirmWrongSlot);
     yield takeLatest(fetchFloorMismatchCasesRequest.type, handleFetchFloorMismatchCases);
+    yield takeLatest(
+        fetchMyFloorMismatchCasesRequest.type,
+        handleFetchMyFloorMismatchCases
+    );
+    yield takeEvery(
+        markMyFloorMismatchMovedRequest.type,
+        handleMarkMyFloorMismatchMoved
+    );
     yield takeEvery(reportFloorMismatchRequest.type, handleReportFloorMismatch);
     yield takeEvery(confirmFloorMismatchRequest.type, handleConfirmFloorMismatch);
 

@@ -36,6 +36,19 @@ const violationLabels = {
   WRONG_SLOT: "Đỗ sai ô",
   "Xe may vao khu oto": "Xe máy đậu sai khu",
 };
+const specialViolationCodes = new Set([
+  "WRONG_SLOT",
+  "MOTORBIKE_WRONG_FLOOR",
+  "CAR_WRONG_FLOOR_TOW",
+]);
+const specialViolationNames = new Set([
+  "Ô tô đậu sai ô",
+  "Ô tô đậu sai khu",
+  "Xe máy đậu sai khu",
+  "Do sai slot",
+  "Keo oto do sai khu",
+  "Xe may vao khu oto",
+]);
 
 const statusLabels = {
   ACTIVE: "Còn hạn",
@@ -53,6 +66,9 @@ const asRows = (value) => (Array.isArray(value) ? value : []);
 const toNumber = (value) => Number(value || 0);
 const displayText = (value, fallback = "Chưa có") => String(value ?? "").trim() || fallback;
 const labelOf = (labels, value) => labels[value] || value || "Chưa có";
+const isSpecialViolation = (row) =>
+  asRows(row?.violationCodes).some((code) => specialViolationCodes.has(code)) ||
+  specialViolationNames.has(row?.violationName);
 const displayDate = (value) => {
   if (!value) return "Chưa có";
 
@@ -186,7 +202,13 @@ export const buildSystemReportPdfDefinition = ({ filters, report }) => {
   const operationRows = asRows(operations.byBuilding);
   const ticketRows = asRows(report.tickets?.rows);
   const monthlyRows = asRows(report.monthlyPasses?.rows);
-  const violationRows = asRows(report.violations?.rows);
+  const allViolationRows = asRows(report.violations?.rows);
+  const specialViolationRows = Array.isArray(report.violations?.specialRows)
+    ? report.violations.specialRows
+    : allViolationRows.filter(isSpecialViolation);
+  const regularViolationRows = Array.isArray(report.violations?.regularRows)
+    ? report.violations.regularRows
+    : allViolationRows.filter((row) => !isSpecialViolation(row));
   const capacityRows = asRows(report.capacity);
   const totalRevenue = toNumber(revenue.totalRevenue || revenue.paidRevenue);
   const buildingCount = toNumber(report.scope?.buildingCount || capacityRows.length);
@@ -381,10 +403,16 @@ export const buildSystemReportPdfDefinition = ({ filters, report }) => {
         table: makeTable({ columns: monthlyColumns, rows: monthlyRows, fontSize: 6.6 }),
       }),
       section({
-        title: "Phí vi phạm đã thu",
-        description: `Đã thu ${formatCurrency(toNumber(revenue.violationRevenue))}. Các lỗi trùng tên được cộng số lần và số tiền, đồng thời giữ người, xe và tòa nhà liên quan.`,
+        title: "Ô tô đậu sai ô và xe đậu sai khu",
+        description: `Đã thu ${formatCurrency(toNumber(report.violations?.specialPaidPenalty))}. Nhóm này được tách khỏi các vi phạm thông thường để quản lý dễ đối chiếu.`,
         pageBreak: "before",
-        table: makeTable({ columns: violationColumns, rows: violationRows, fontSize: 7 }),
+        table: makeTable({ columns: violationColumns, rows: specialViolationRows, fontSize: 7 }),
+      }),
+      section({
+        title: "Vi phạm thường đã thu",
+        description: `Đã thu ${formatCurrency(toNumber(report.violations?.regularPaidPenalty))}. Các lỗi trùng tên được cộng số lần và số tiền, đồng thời giữ người, xe và tòa nhà liên quan.`,
+        pageBreak: "before",
+        table: makeTable({ columns: violationColumns, rows: regularViolationRows, fontSize: 7 }),
       }),
       section({
         title: "Sức chứa từng tòa nhà",

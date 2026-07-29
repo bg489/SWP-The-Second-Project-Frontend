@@ -29,6 +29,13 @@ import {
 } from "../../services/mockParkingData";
 
 const slotClassName = (status) => String(status || "AVAILABLE").toLowerCase();
+const getCarSlotCount = (floor) => Number(
+  floor?.slotCount ??
+  floor?.slotsCount ??
+  floor?.slot_count ??
+  floor?.slots?.length ??
+  0
+);
 
 const CheckInQRPage = () => {
   const dispatch = useDispatch();
@@ -101,6 +108,28 @@ const CheckInQRPage = () => {
     if (!effectiveCarFloorId) return;
     dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
   }, [dispatch, effectiveCarFloorId]);
+
+  useEffect(() => {
+    if (!currentBuildingId) return undefined;
+
+    const timer = window.setInterval(() => {
+      dispatch(fetchFloorsRequest({
+        buildingId: currentBuildingId,
+        status: "ACTIVE",
+        limit: 100,
+      }));
+      dispatch(fetchActiveParkingSessionsRequest({ buildingId: currentBuildingId }));
+      dispatch(fetchTempQrCardsRequest({
+        buildingId: currentBuildingId,
+        status: "READY",
+      }));
+      if (effectiveCarFloorId) {
+        dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
+      }
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [currentBuildingId, dispatch, effectiveCarFloorId]);
 
   const readyCards = tempQrCards.items.filter((card) => card.status === "READY");
   const currentCarSlots = useMemo(() => {
@@ -212,10 +241,19 @@ const CheckInQRPage = () => {
       setFormError("");
 
       if (currentBuildingId) {
+        dispatch(fetchFloorsRequest({
+          buildingId: currentBuildingId,
+          status: "ACTIVE",
+          limit: 100,
+        }));
+        dispatch(fetchActiveParkingSessionsRequest({ buildingId: currentBuildingId }));
         dispatch(fetchTempQrCardsRequest({
           buildingId: currentBuildingId,
           status: "READY",
         }));
+      }
+      if (effectiveCarFloorId) {
+        dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
       }
     },
   });
@@ -302,7 +340,11 @@ const CheckInQRPage = () => {
     { header: "Lượt gửi", key: "id" },
     { header: "Biển số", key: "plateNumber", render: (row) => <strong>{row.plateNumber}</strong> },
     { header: "Loại xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
-    { header: "Thẻ QR", key: "qrCardId", render: (row) => row.qrCardId || row.qrCode || "-" },
+    {
+      header: "Thẻ QR",
+      key: "sessionQrCode",
+      render: (row) => row.tempQrCardCode || row.sessionQrCode || row.qrCode || "-",
+    },
     { header: "Vị trí", key: "slotCode", render: (row) => row.slotCode || "Khu xe máy" },
     { header: "Giờ vào", key: "checkInAt", render: (row) => formatDateTime(row.checkInAt) },
   ];
@@ -566,7 +608,7 @@ const CheckInQRPage = () => {
           {buildingFloors.map((floor) => (
             <div className="soft-panel" key={floor.id}>
               <strong>{floor.name}</strong>
-              <p className="section-copy">{floor.floorType === "CAR" ? `${floor.slotsCount} ô đỗ ô tô` : `${floor.currentCount}/${floor.capacity} xe máy`}</p>
+              <p className="section-copy">{floor.floorType === "CAR" ? `${getCarSlotCount(floor)} ô đỗ ô tô` : `${floor.currentCount}/${floor.capacity} xe máy`}</p>
               <span className={`pill ${getStatusTone(floor.status)}`}>{getStatusLabel(floor.status)}</span>
             </div>
           ))}

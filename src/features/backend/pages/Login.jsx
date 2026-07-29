@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-    Building2,
     Car,
     Eye,
     EyeOff,
@@ -31,8 +30,6 @@ import {
     verifyPasswordResetRequest,
 } from "../auth/authSlice";
 import {
-    buildingInfo,
-    floors,
     roleHomePaths,
 } from "../../../services/mockParkingData";
 
@@ -217,16 +214,6 @@ const Login = () => {
         </button>
     );
 
-    const motorbikeCapacity = useMemo(() => {
-        return floors
-            .filter((floor) => floor.floorType === "MOTORBIKE")
-            .reduce((sum, floor) => sum + Number(floor.capacity || 0), 0);
-    }, []);
-
-    const carSlots = useMemo(() => {
-        return floors.find((floor) => floor.floorType === "CAR")?.slotsCount || 0;
-    }, []);
-
     useEffect(() => {
         if (!loginCompleted || !token) return;
 
@@ -372,29 +359,6 @@ const Login = () => {
                         Một tòa nhà, xe máy theo sức chứa, ô tô theo từng ô đỗ,
                         mã QR tháng và QR tạm cho khách vãng lai.
                     </p>
-                </div>
-
-                <div className="soft-panel">
-                    <div className="section-title">
-                        <Building2 size={19} /> {buildingInfo.name}
-                    </div>
-
-                    <div className="data-list" style={{ marginTop: 14 }}>
-                        <div className="data-row">
-                            <span>Địa chỉ</span>
-                            <strong>{buildingInfo.address}</strong>
-                        </div>
-
-                        <div className="data-row">
-                            <span>Sức chứa xe máy</span>
-                            <strong>{motorbikeCapacity} xe</strong>
-                        </div>
-
-                        <div className="data-row">
-                            <span>Ô đỗ ô tô</span>
-                            <strong>{carSlots} ô</strong>
-                        </div>
-                    </div>
                 </div>
 
                 <div className="dashboard-grid">
