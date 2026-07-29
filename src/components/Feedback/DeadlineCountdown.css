@@ -1,0 +1,31 @@
+.deadline-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--warning) 45%, var(--border-color));
+  border-radius: 999px;
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.deadline-countdown.compact {
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.deadline-countdown.urgent {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--border-color));
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  animation: deadline-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes deadline-pulse {
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 10%, transparent);
+  }
+}

@@ -37,6 +37,8 @@ import AdminStaffRoleRequestsPage from "../features/pages/AdminStaffRoleRequests
 import ManagerStaffProfilesPage from "../features/pages/ManagerStaffProfilesPage";
 import StaffWorkProfilePage from "../features/pages/StaffWorkProfilePage";
 import VehicleActivityPage from "../features/pages/VehicleActivityPage";
+import UserNotificationsPage from "../features/pages/UserNotificationsPage";
+import UserParkingIssuesPage from "../features/pages/UserParkingIssuesPage";
 import {
   PAYMENT_RETURN_STORAGE_KEY,
   getStoredPaymentReturnTarget,
@@ -86,6 +88,8 @@ const AppRoutes = () => {
           <Route path="/user/qr-pass" element={<MyQRPassPage />} />
           <Route path="/user/profile" element={<UserProfilePage />} />
           <Route path="/user/building-change" element={<UserBuildingChangeRequestPage />} />
+          <Route path="/user/notifications" element={<UserNotificationsPage />} />
+          <Route path="/user/parking-issues" element={<UserParkingIssuesPage />} />
         </Route>
 
         <Route element={<RoleProtectedRoute allowedRoles={["PARKING_STAFF"]} />}>

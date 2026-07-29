@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AlertTriangle, Camera, Clock, Layers, RefreshCcw, Save, ShieldAlert } from "lucide-react";
 
 import Button from "../../components/Button/Button";
+import DeadlineCountdown from "../../components/Feedback/DeadlineCountdown";
 import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
@@ -11,8 +12,6 @@ import Table from "../../components/Table/Table";
 import { useMockAuth } from "../../context/MockAuthContext";
 import useResetAfterSuccess from "../../hooks/useResetAfterSuccess";
 import {
-  confirmFloorMismatchRequest,
-  confirmWrongSlotRequest,
   createViolationRequest,
   fetchActiveParkingSessionsRequest,
   fetchFloorMismatchCasesRequest,
@@ -32,6 +31,7 @@ const slotClassName = (status) => String(status || "AVAILABLE").toLowerCase();
 const wrongSlotStatusLabel = {
   ALLOWED: "Được phép đậu",
   WAITING_USER: "Chờ dời xe",
+  USER_MOVED: "Đã dời xe đúng hạn",
   PENALIZED: "Đã tính phí",
   CANCELLED: "Đã hủy",
 };
@@ -39,6 +39,7 @@ const wrongSlotStatusLabel = {
 const floorMismatchStatusLabel = {
   LOCKED_AND_PENALIZED: "Đã khóa xe và tính phí",
   WAITING_USER: "Chờ dời xe",
+  USER_MOVED: "Đã dời xe đúng hạn",
   TOWED: "Đã đưa về ô chỉ định",
   CANCELLED: "Đã hủy",
 };
@@ -53,6 +54,11 @@ const specialViolationNames = {
   MOTORBIKE_WRONG_FLOOR: "Xe máy đậu sai khu",
   CAR_WRONG_FLOOR_TOW: "Ô tô đậu sai khu",
 };
+const specialViolationCodes = new Set([
+  "WRONG_SLOT",
+  "MOTORBIKE_WRONG_FLOOR",
+  "CAR_WRONG_FLOOR_TOW",
+]);
 
 const getViolationTypeName = (type) => {
   const legacyNames = ["WRONG_SLOT", "Xe may vao khu oto", "Keo oto do sai khu"];
@@ -117,6 +123,22 @@ const StaffViolationsPage = () => {
   }, [buildingId, floors]);
 
   useEffect(() => {
+    if (!buildingId) return undefined;
+
+    const timer = window.setInterval(() => {
+      dispatch(fetchActiveParkingSessionsRequest({ buildingId }));
+      dispatch(fetchWrongSlotCasesRequest({ buildingId }));
+      dispatch(fetchFloorMismatchCasesRequest({ buildingId }));
+      dispatch(fetchFloorsRequest({ buildingId, status: "ACTIVE", limit: 100 }));
+      carFloors.forEach((floor) => {
+        dispatch(fetchSlotsByFloorRequest({ floorId: floor.id }));
+      });
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [buildingId, carFloors, dispatch]);
+
+  useEffect(() => {
     if (!effectiveCarFloorId) return;
     dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
   }, [dispatch, effectiveCarFloorId]);
@@ -155,12 +177,14 @@ const StaffViolationsPage = () => {
   }, [carSessions]);
 
   const typeOptions = useMemo(() => {
-    return (violationTypes.items || []).map((type) => ({
-      value: type.id,
-      label: `${getViolationTypeName(type)} - ${formatCurrency(
-        type.defaultPenaltyFee ?? type.penaltyFee ?? 0
-      )}`,
-    }));
+    return (violationTypes.items || [])
+      .filter((type) => !specialViolationCodes.has(type.code))
+      .map((type) => ({
+        value: type.id,
+        label: `${getViolationTypeName(type)} - ${formatCurrency(
+          type.defaultPenaltyFee ?? type.penaltyFee ?? 0
+        )}`,
+      }));
   }, [violationTypes.items]);
 
   const handleViolationTypeChange = (value) => {
@@ -231,14 +255,28 @@ const StaffViolationsPage = () => {
     submitting: wrongSlotCases.reporting,
     success: wrongSlotCases.lastCase,
     error: wrongSlotCases.error,
-    onSuccess: resetWrongSlotForm,
+    onSuccess: () => {
+      resetWrongSlotForm();
+      dispatch(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
+      dispatch(fetchWrongSlotCasesRequest(buildingId ? { buildingId } : undefined));
+      carFloors.forEach((floor) => {
+        dispatch(fetchSlotsByFloorRequest({ floorId: floor.id }));
+      });
+    },
   });
 
   const markFloorMismatchSubmitted = useResetAfterSuccess({
     submitting: floorMismatchCases.reporting,
     success: floorMismatchCases.lastCase,
     error: floorMismatchCases.error,
-    onSuccess: resetFloorMismatchForm,
+    onSuccess: () => {
+      resetFloorMismatchForm();
+      dispatch(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
+      dispatch(fetchFloorMismatchCasesRequest(buildingId ? { buildingId } : undefined));
+      carFloors.forEach((floor) => {
+        dispatch(fetchSlotsByFloorRequest({ floorId: floor.id }));
+      });
+    },
   });
 
   const handleRecordViolation = (event) => {
@@ -365,7 +403,14 @@ const StaffViolationsPage = () => {
       key: "status",
       render: (row) => <span className={`pill ${row.status === "ALLOWED" ? "success" : row.status === "PENALIZED" ? "danger" : "warning"}`}>{wrongSlotStatusLabel[row.status] || row.status}</span>,
     },
-    { header: "Hạn dời xe", key: "notifyUntil", render: (row) => row.notifyUntil ? formatDateTime(row.notifyUntil) : "-" },
+    {
+      header: "Hạn dời xe",
+      key: "notifyUntil",
+      render: (row) =>
+        row.status === "WAITING_USER" ? (
+          <DeadlineCountdown compact deadline={row.notifyUntil} status={row.status} />
+        ) : row.notifyUntil ? formatDateTime(row.notifyUntil) : "-",
+    },
     {
       header: "Bằng chứng",
       key: "evidenceUrl",
@@ -374,22 +419,10 @@ const StaffViolationsPage = () => {
     {
       header: "Xử lý",
       key: "actions",
-      render: (row) => (
-        row.status === "WAITING_USER" ? (
-          <Button
-            size="sm"
-            variant="danger"
-            icon={ShieldAlert}
-            loading={wrongSlotCases.confirmingId === row.id}
-            disabled={wrongSlotCases.confirmingId === row.id}
-            onClick={() => dispatch(confirmWrongSlotRequest({ id: row.id, buildingId, force: true }))}
-          >
-            Xác nhận chưa dời
-          </Button>
-        ) : (
-          row.reassignedSlotCode || "-"
-        )
-      ),
+      render: (row) =>
+        row.status === "WAITING_USER"
+          ? <span className="pill warning">Hệ thống tự xử lý</span>
+          : row.reassignedSlotCode || "-",
     },
   ];
 
@@ -408,7 +441,14 @@ const StaffViolationsPage = () => {
         </span>
       ),
     },
-    { header: "Hạn dời xe", key: "notifyUntil", render: (row) => row.notifyUntil ? formatDateTime(row.notifyUntil) : "-" },
+    {
+      header: "Hạn dời xe",
+      key: "notifyUntil",
+      render: (row) =>
+        row.status === "WAITING_USER" ? (
+          <DeadlineCountdown compact deadline={row.notifyUntil} status={row.status} />
+        ) : row.notifyUntil ? formatDateTime(row.notifyUntil) : "-",
+    },
     {
       header: "Bằng chứng",
       key: "evidenceUrl",
@@ -417,22 +457,10 @@ const StaffViolationsPage = () => {
     {
       header: "Xử lý",
       key: "actions",
-      render: (row) => (
-        row.status === "WAITING_USER" ? (
-          <Button
-            size="sm"
-            variant="danger"
-            icon={ShieldAlert}
-            loading={floorMismatchCases.confirmingId === row.id}
-            disabled={floorMismatchCases.confirmingId === row.id}
-            onClick={() => dispatch(confirmFloorMismatchRequest({ id: row.id, buildingId, force: true }))}
-          >
-            Xác nhận quá hạn
-          </Button>
-        ) : (
-          row.violationId ? `#${row.violationId}` : "-"
-        )
-      ),
+      render: (row) =>
+        row.status === "WAITING_USER"
+          ? <span className="pill warning">Hệ thống tự xử lý</span>
+          : row.violationId ? `#${row.violationId}` : "-",
     },
   ];
 

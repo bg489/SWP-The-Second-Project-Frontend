@@ -148,6 +148,8 @@ const initialState = {
     notifications: {
         mine: [],
         loading: false,
+        updatingId: null,
+        markingAll: false,
         preferences: {
             emailNotificationsEnabled: true,
             loading: false,
@@ -167,18 +169,22 @@ const initialState = {
 
     wrongSlotCases: {
         items: [],
+        myItems: [],
         loading: false,
         reporting: false,
         confirmingId: null,
+        movingId: null,
         lastCase: null,
         error: null,
     },
 
     floorMismatchCases: {
         items: [],
+        myItems: [],
         loading: false,
         reporting: false,
         confirmingId: null,
+        movingId: null,
         lastCase: null,
         error: null,
     },
@@ -730,6 +736,36 @@ const parkingSlice = createSlice({
             state.notifications.loading = false;
             state.notifications.error = action.payload;
         },
+        markNotificationReadRequest: (state, action) => {
+            state.notifications.updatingId = action.payload.id;
+            state.notifications.error = null;
+        },
+        markNotificationReadSuccess: (state, action) => {
+            state.notifications.updatingId = null;
+            state.notifications.mine = upsertById(
+                state.notifications.mine,
+                action.payload
+            );
+        },
+        markNotificationReadFailure: (state, action) => {
+            state.notifications.updatingId = null;
+            state.notifications.error = action.payload;
+        },
+        markAllNotificationsReadRequest: (state) => {
+            state.notifications.markingAll = true;
+            state.notifications.error = null;
+        },
+        markAllNotificationsReadSuccess: (state) => {
+            state.notifications.markingAll = false;
+            state.notifications.mine = state.notifications.mine.map((item) => ({
+                ...item,
+                status: item.status === "UNREAD" ? "READ" : item.status,
+            }));
+        },
+        markAllNotificationsReadFailure: (state, action) => {
+            state.notifications.markingAll = false;
+            state.notifications.error = action.payload;
+        },
         fetchNotificationPreferencesRequest: (state) => {
             state.notifications.preferences.loading = true;
             state.notifications.preferences.error = null;
@@ -805,6 +841,18 @@ const parkingSlice = createSlice({
             state.wrongSlotCases.loading = false;
             state.wrongSlotCases.error = action.payload;
         },
+        fetchMyWrongSlotCasesRequest: (state) => {
+            state.wrongSlotCases.loading = true;
+            state.wrongSlotCases.error = null;
+        },
+        fetchMyWrongSlotCasesSuccess: (state, action) => {
+            state.wrongSlotCases.loading = false;
+            state.wrongSlotCases.myItems = action.payload || [];
+        },
+        fetchMyWrongSlotCasesFailure: (state, action) => {
+            state.wrongSlotCases.loading = false;
+            state.wrongSlotCases.error = action.payload;
+        },
         reportWrongSlotRequest: (state) => {
             state.wrongSlotCases.reporting = true;
             state.wrongSlotCases.error = null;
@@ -838,6 +886,23 @@ const parkingSlice = createSlice({
             state.wrongSlotCases.confirmingId = null;
             state.wrongSlotCases.error = action.payload;
         },
+        markMyWrongSlotMovedRequest: (state, action) => {
+            state.wrongSlotCases.movingId = action.payload.id;
+            state.wrongSlotCases.error = null;
+            state.notice = null;
+        },
+        markMyWrongSlotMovedSuccess: (state, action) => {
+            state.wrongSlotCases.movingId = null;
+            state.wrongSlotCases.myItems = upsertById(
+                state.wrongSlotCases.myItems,
+                action.payload
+            );
+            state.notice = "Đã xác nhận xe được dời trước thời hạn.";
+        },
+        markMyWrongSlotMovedFailure: (state, action) => {
+            state.wrongSlotCases.movingId = null;
+            state.wrongSlotCases.error = action.payload;
+        },
 
         fetchFloorMismatchCasesRequest: (state) => {
             state.floorMismatchCases.loading = true;
@@ -848,6 +913,18 @@ const parkingSlice = createSlice({
             state.floorMismatchCases.items = action.payload || [];
         },
         fetchFloorMismatchCasesFailure: (state, action) => {
+            state.floorMismatchCases.loading = false;
+            state.floorMismatchCases.error = action.payload;
+        },
+        fetchMyFloorMismatchCasesRequest: (state) => {
+            state.floorMismatchCases.loading = true;
+            state.floorMismatchCases.error = null;
+        },
+        fetchMyFloorMismatchCasesSuccess: (state, action) => {
+            state.floorMismatchCases.loading = false;
+            state.floorMismatchCases.myItems = action.payload || [];
+        },
+        fetchMyFloorMismatchCasesFailure: (state, action) => {
             state.floorMismatchCases.loading = false;
             state.floorMismatchCases.error = action.payload;
         },
@@ -888,6 +965,23 @@ const parkingSlice = createSlice({
         },
         confirmFloorMismatchFailure: (state, action) => {
             state.floorMismatchCases.confirmingId = null;
+            state.floorMismatchCases.error = action.payload;
+        },
+        markMyFloorMismatchMovedRequest: (state, action) => {
+            state.floorMismatchCases.movingId = action.payload.id;
+            state.floorMismatchCases.error = null;
+            state.notice = null;
+        },
+        markMyFloorMismatchMovedSuccess: (state, action) => {
+            state.floorMismatchCases.movingId = null;
+            state.floorMismatchCases.myItems = upsertById(
+                state.floorMismatchCases.myItems,
+                action.payload
+            );
+            state.notice = "Đã xác nhận xe được dời trước thời hạn.";
+        },
+        markMyFloorMismatchMovedFailure: (state, action) => {
+            state.floorMismatchCases.movingId = null;
             state.floorMismatchCases.error = action.payload;
         },
 
@@ -1156,6 +1250,12 @@ export const {
     fetchMyNotificationsFailure,
     fetchMyNotificationsRequest,
     fetchMyNotificationsSuccess,
+    markAllNotificationsReadFailure,
+    markAllNotificationsReadRequest,
+    markAllNotificationsReadSuccess,
+    markNotificationReadFailure,
+    markNotificationReadRequest,
+    markNotificationReadSuccess,
     fetchNotificationPreferencesFailure,
     fetchNotificationPreferencesRequest,
     fetchNotificationPreferencesSuccess,
@@ -1165,6 +1265,9 @@ export const {
     fetchFloorMismatchCasesFailure,
     fetchFloorMismatchCasesRequest,
     fetchFloorMismatchCasesSuccess,
+    fetchMyFloorMismatchCasesFailure,
+    fetchMyFloorMismatchCasesRequest,
+    fetchMyFloorMismatchCasesSuccess,
     fetchHealthFailure,
     fetchHealthRequest,
     fetchHealthSuccess,
@@ -1207,6 +1310,15 @@ export const {
     fetchWrongSlotCasesFailure,
     fetchWrongSlotCasesRequest,
     fetchWrongSlotCasesSuccess,
+    fetchMyWrongSlotCasesFailure,
+    fetchMyWrongSlotCasesRequest,
+    fetchMyWrongSlotCasesSuccess,
+    markMyFloorMismatchMovedFailure,
+    markMyFloorMismatchMovedRequest,
+    markMyFloorMismatchMovedSuccess,
+    markMyWrongSlotMovedFailure,
+    markMyWrongSlotMovedRequest,
+    markMyWrongSlotMovedSuccess,
     rejectVehicleFailure,
     rejectVehicleRequest,
     rejectVehicleSuccess,

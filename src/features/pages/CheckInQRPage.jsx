@@ -109,6 +109,28 @@ const CheckInQRPage = () => {
     dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
   }, [dispatch, effectiveCarFloorId]);
 
+  useEffect(() => {
+    if (!currentBuildingId) return undefined;
+
+    const timer = window.setInterval(() => {
+      dispatch(fetchFloorsRequest({
+        buildingId: currentBuildingId,
+        status: "ACTIVE",
+        limit: 100,
+      }));
+      dispatch(fetchActiveParkingSessionsRequest({ buildingId: currentBuildingId }));
+      dispatch(fetchTempQrCardsRequest({
+        buildingId: currentBuildingId,
+        status: "READY",
+      }));
+      if (effectiveCarFloorId) {
+        dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
+      }
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [currentBuildingId, dispatch, effectiveCarFloorId]);
+
   const readyCards = tempQrCards.items.filter((card) => card.status === "READY");
   const currentCarSlots = useMemo(() => {
     return effectiveCarFloorId ? slotsByFloor[effectiveCarFloorId] || [] : [];
@@ -219,10 +241,19 @@ const CheckInQRPage = () => {
       setFormError("");
 
       if (currentBuildingId) {
+        dispatch(fetchFloorsRequest({
+          buildingId: currentBuildingId,
+          status: "ACTIVE",
+          limit: 100,
+        }));
+        dispatch(fetchActiveParkingSessionsRequest({ buildingId: currentBuildingId }));
         dispatch(fetchTempQrCardsRequest({
           buildingId: currentBuildingId,
           status: "READY",
         }));
+      }
+      if (effectiveCarFloorId) {
+        dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
       }
     },
   });
