@@ -122,6 +122,16 @@
   animation: plate-live-pulse 1.2s ease-in-out infinite;
 }
 
+.plate-scanner-live.is-confirmed {
+  border-color: rgba(49, 211, 138, 0.62);
+  background: rgba(11, 82, 58, 0.9);
+}
+
+.plate-scanner-live.is-confirmed i {
+  box-shadow: none;
+  animation: none;
+}
+
 .plate-scanner-canvas {
   display: none;
 }
