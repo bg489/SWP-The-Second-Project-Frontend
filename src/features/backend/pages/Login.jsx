@@ -19,6 +19,7 @@ import StatusBanner from "../../../components/Feedback/StatusBanner";
 import FormField from "../../../components/Form/FormField";
 import Input from "../../../components/Form/Input";
 import { useMockAuth } from "../../../context/MockAuthContext";
+import useResetAfterSuccess from "../../../hooks/useResetAfterSuccess";
 import {
     clearRegisterState,
     clearPasswordResetState,
@@ -33,6 +34,23 @@ import {
     roleHomePaths,
 } from "../../../services/mockParkingData";
 
+const EMPTY_REGISTER_FORM = {
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+    buildingId: "",
+};
+
+const EMPTY_RESET_FORM = {
+    email: "",
+    otp: "",
+    token: "",
+    password: "",
+    confirmPassword: "",
+};
+
 const Login = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -46,14 +64,7 @@ const Login = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [showResetPassword, setShowResetPassword] = useState(false);
 
-    const [registerForm, setRegisterForm] = useState({
-        name: "",
-        email: "",
-        phone: "",
-        password: "",
-        confirmPassword: "",
-        buildingId: "",
-    });
+    const [registerForm, setRegisterForm] = useState(EMPTY_REGISTER_FORM);
 
     const [registerErrors, setRegisterErrors] = useState({});
     const [resetForm, setResetForm] = useState({
@@ -79,32 +90,40 @@ const Login = () => {
         registerBuildingsLoading,
         registerBuildingsError,
         passwordResetLoading,
+        passwordResetAction,
         passwordResetError,
         passwordResetNotice,
         passwordResetVerified,
+        passwordResetCompleted,
     } = useSelector((state) => state.auth);
+    const requestingPasswordReset = passwordResetAction === "request";
+    const verifyingPasswordReset = passwordResetAction === "verify";
+    const changingPassword = passwordResetAction === "reset";
+    const markRegisterSubmitted = useResetAfterSuccess({
+        submitting: registerLoading,
+        success: registerSuccess,
+        error: registerError,
+        onSuccess: () => {
+            setRegisterForm(EMPTY_REGISTER_FORM);
+            setRegisterErrors({});
+            setShowRegisterPassword(false);
+            setShowConfirmPassword(false);
+        },
+    });
+    const markPasswordChangeSubmitted = useResetAfterSuccess({
+        submitting: changingPassword,
+        success: passwordResetCompleted,
+        error: passwordResetError,
+        onSuccess: () => {
+            setResetForm(EMPTY_RESET_FORM);
+            setResetErrors({});
+            setShowResetPassword(false);
+        },
+    });
 
     useEffect(() => {
         dispatch(fetchRegisterBuildingsRequest());
     }, [dispatch]);
-
-    useEffect(() => {
-        if (!registerSuccess) return;
-
-        const timer = window.setTimeout(() => {
-            setRegisterForm({
-                name: "",
-                email: "",
-                phone: "",
-                password: "",
-                confirmPassword: "",
-                buildingId: "",
-            });
-            setRegisterErrors({});
-        }, 0);
-
-        return () => window.clearTimeout(timer);
-    }, [registerSuccess]);
 
     const switchMode = (nextMode) => {
         setMode(nextMode);
@@ -182,6 +201,7 @@ const Login = () => {
             payload.phone = registerForm.phone.trim();
         }
 
+        markRegisterSubmitted();
         dispatch(registerRequest(payload));
     };
 
@@ -335,6 +355,7 @@ const Login = () => {
         setResetErrors((prev) => ({ ...prev, ...nextErrors }));
         if (Object.keys(nextErrors).length > 0) return;
 
+        markPasswordChangeSubmitted();
         dispatch(
             resetPasswordRequest({
                 email: resetForm.email.trim(),
@@ -656,14 +677,14 @@ const Login = () => {
                                 <Button
                                     type="submit"
                                     variant="secondary"
-                                    loading={passwordResetLoading}
+                                    loading={requestingPasswordReset}
                                     disabled={passwordResetLoading}
                                 >
                                     Gửi email xác minh
                                 </Button>
                             </form>
 
-                            <form onSubmit={passwordResetVerified ? handleResetPassword : handleVerifyReset} style={{ display: "grid", gap: 16, marginTop: 18 }}>
+                            <form onSubmit={handleVerifyReset} style={{ display: "grid", gap: 16, marginTop: 18 }}>
                                 <FormField label="OTP trong email" error={resetErrors.otp}>
                                     <Input
                                         placeholder="Nhập 6 số OTP hoặc dùng link trong email"
@@ -685,10 +706,10 @@ const Login = () => {
                                 <Button
                                     type="submit"
                                     variant={passwordResetVerified ? "outline" : "primary"}
-                                    loading={passwordResetLoading}
-                                    disabled={passwordResetLoading}
+                                    loading={verifyingPasswordReset}
+                                    disabled={passwordResetLoading || passwordResetVerified}
                                 >
-                                    {passwordResetVerified ? "Mã đã xác minh" : "Kiểm tra mã xác minh"}
+                                    {passwordResetVerified ? "Đã xác minh mã" : "Kiểm tra mã xác minh"}
                                 </Button>
                             </form>
 
@@ -725,8 +746,8 @@ const Login = () => {
                                 <Button
                                     type="submit"
                                     size="lg"
-                                    loading={passwordResetLoading}
-                                    disabled={passwordResetLoading}
+                                    loading={changingPassword}
+                                    disabled={passwordResetLoading || !passwordResetVerified}
                                     icon={KeyRound}
                                 >
                                     Đổi mật khẩu

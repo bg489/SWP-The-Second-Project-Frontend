@@ -166,7 +166,7 @@
   border-bottom: 0;
 }
 
-.monthly-owner-detail-grid > div:last-child:nth-child(odd) {
+.monthly-owner-detail-grid > .monthly-owner-detail-wide {
   grid-column: 1 / -1;
   border-right: 0;
 }
