@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { reconcileCollectionById } from "../../../utils/reconcileCollection";
 
 const initialState = {
     floors: [],
@@ -19,21 +20,37 @@ const floorSlice = createSlice({
     name: "floors",
     initialState,
     reducers: {
-        fetchFloorsRequest: (state) => {
-            state.loading = true;
-            state.error = null;
+        fetchFloorsRequest: (state, action) => {
+            if (!action.payload?.silent) {
+                state.loading = true;
+                state.error = null;
+            }
         },
 
         fetchFloorsSuccess: (state, action) => {
-            state.loading = false;
-            state.error = null;
-            state.floors = action.payload.floors || [];
-            state.pagination = action.payload.pagination || null;
+            if (!action.payload.silent) {
+                state.loading = false;
+                state.error = null;
+            }
+            state.floors = reconcileCollectionById(
+                state.floors,
+                action.payload.floors || []
+            );
+            if (!action.payload.silent) {
+                state.pagination = action.payload.pagination || null;
+            }
         },
 
         fetchFloorsFailure: (state, action) => {
-            state.loading = false;
-            state.error = action.payload;
+            const payload =
+                typeof action.payload === "object"
+                    ? action.payload
+                    : { error: action.payload, silent: false };
+
+            if (!payload.silent) {
+                state.loading = false;
+                state.error = payload.error;
+            }
         },
 
         createFloorRequest: (state) => {

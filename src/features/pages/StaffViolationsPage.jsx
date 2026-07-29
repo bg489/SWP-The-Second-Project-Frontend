@@ -126,12 +126,17 @@ const StaffViolationsPage = () => {
     if (!buildingId) return undefined;
 
     const timer = window.setInterval(() => {
-      dispatch(fetchActiveParkingSessionsRequest({ buildingId }));
-      dispatch(fetchWrongSlotCasesRequest({ buildingId }));
-      dispatch(fetchFloorMismatchCasesRequest({ buildingId }));
-      dispatch(fetchFloorsRequest({ buildingId, status: "ACTIVE", limit: 100 }));
+      dispatch(fetchActiveParkingSessionsRequest({ buildingId, silent: true }));
+      dispatch(fetchWrongSlotCasesRequest({ buildingId, silent: true }));
+      dispatch(fetchFloorMismatchCasesRequest({ buildingId, silent: true }));
+      dispatch(fetchFloorsRequest({
+        buildingId,
+        silent: true,
+        status: "ACTIVE",
+        limit: 100,
+      }));
       carFloors.forEach((floor) => {
-        dispatch(fetchSlotsByFloorRequest({ floorId: floor.id }));
+        dispatch(fetchSlotsByFloorRequest({ floorId: floor.id, silent: true }));
       });
     }, 5000);
 
@@ -257,10 +262,8 @@ const StaffViolationsPage = () => {
     error: wrongSlotCases.error,
     onSuccess: () => {
       resetWrongSlotForm();
-      dispatch(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
-      dispatch(fetchWrongSlotCasesRequest(buildingId ? { buildingId } : undefined));
       carFloors.forEach((floor) => {
-        dispatch(fetchSlotsByFloorRequest({ floorId: floor.id }));
+        dispatch(fetchSlotsByFloorRequest({ floorId: floor.id, silent: true }));
       });
     },
   });
@@ -271,10 +274,8 @@ const StaffViolationsPage = () => {
     error: floorMismatchCases.error,
     onSuccess: () => {
       resetFloorMismatchForm();
-      dispatch(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
-      dispatch(fetchFloorMismatchCasesRequest(buildingId ? { buildingId } : undefined));
       carFloors.forEach((floor) => {
-        dispatch(fetchSlotsByFloorRequest({ floorId: floor.id }));
+        dispatch(fetchSlotsByFloorRequest({ floorId: floor.id, silent: true }));
       });
     },
   });
