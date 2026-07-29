@@ -823,7 +823,7 @@ function* handleFetchMyNotifications() {
         const response = yield call([api, api.get], "/notifications/my");
         yield put(fetchMyNotificationsSuccess(extractList(response, ["notifications"])));
     } catch (error) {
-        yield put(fetchMyNotificationsFailure(getErrorMessage(error, "Khong lay duoc thong bao cua ban.")));
+        yield put(fetchMyNotificationsFailure(getErrorMessage(error, "Không lấy được thông báo của bạn.")));
     }
 }
 
@@ -998,7 +998,7 @@ function* handleReportWrongSlot(action) {
             silent: true,
         }));
     } catch (error) {
-        yield put(reportWrongSlotFailure(getErrorMessage(error, "Ghi nhan dau sai o that bai.")));
+        yield put(reportWrongSlotFailure(getErrorMessage(error, "Ghi nhận đậu sai ô thất bại.")));
     }
 }
 
@@ -1017,7 +1017,7 @@ function* handleConfirmWrongSlot(action) {
         }));
         yield put(fetchViolationsRequest());
     } catch (error) {
-        yield put(confirmWrongSlotFailure(getErrorMessage(error, "Xac nhan dau sai o that bai.")));
+        yield put(confirmWrongSlotFailure(getErrorMessage(error, "Xác nhận đậu sai ô thất bại.")));
     }
 }
 
