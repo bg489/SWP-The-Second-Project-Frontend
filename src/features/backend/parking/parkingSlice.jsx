@@ -159,6 +159,26 @@ const initialState = {
         error: null,
     },
 
+    hourlyReservations: {
+        availability: {
+            buildingId: null,
+            startAt: null,
+            endAt: null,
+            quote: null,
+            slots: [],
+        },
+        mine: [],
+        staffItems: [],
+        checkInMatch: null,
+        matchingCheckIn: false,
+        availabilityLoading: false,
+        listLoading: false,
+        creatingUser: false,
+        creatingGuest: false,
+        lastCreated: null,
+        error: null,
+    },
+
     notifications: {
         mine: [],
         loading: false,
@@ -350,6 +370,7 @@ const parkingSlice = createSlice({
             state.tempQrCards.error = null;
             state.qrPasses.error = null;
             state.slotRegistrations.error = null;
+            state.hourlyReservations.error = null;
             state.notifications.error = null;
             state.notifications.preferences.error = null;
             state.staffAssignments.error = null;
@@ -756,6 +777,120 @@ const parkingSlice = createSlice({
             state.slotRegistrations.error = action.payload;
         },
 
+        fetchHourlyReservationAvailabilityRequest: (state) => {
+            state.hourlyReservations.availabilityLoading = true;
+            state.hourlyReservations.error = null;
+            state.hourlyReservations.availability = {
+                buildingId: null,
+                startAt: null,
+                endAt: null,
+                quote: null,
+                slots: [],
+            };
+        },
+        fetchHourlyReservationAvailabilitySuccess: (state, action) => {
+            state.hourlyReservations.availabilityLoading = false;
+            state.hourlyReservations.availability = {
+                buildingId: action.payload?.buildingId || null,
+                startAt: action.payload?.startAt || null,
+                endAt: action.payload?.endAt || null,
+                quote: action.payload?.quote || null,
+                slots: Array.isArray(action.payload?.slots)
+                    ? action.payload.slots
+                    : [],
+            };
+        },
+        fetchHourlyReservationAvailabilityFailure: (state, action) => {
+            state.hourlyReservations.availabilityLoading = false;
+            state.hourlyReservations.error = action.payload;
+        },
+        fetchMyHourlyReservationsRequest: (state) => {
+            state.hourlyReservations.listLoading = true;
+            state.hourlyReservations.error = null;
+        },
+        fetchMyHourlyReservationsSuccess: (state, action) => {
+            state.hourlyReservations.listLoading = false;
+            state.hourlyReservations.mine = action.payload || [];
+        },
+        fetchMyHourlyReservationsFailure: (state, action) => {
+            state.hourlyReservations.listLoading = false;
+            state.hourlyReservations.error = action.payload;
+        },
+        fetchStaffHourlyReservationsRequest: (state) => {
+            state.hourlyReservations.listLoading = true;
+            state.hourlyReservations.error = null;
+        },
+        fetchStaffHourlyReservationsSuccess: (state, action) => {
+            state.hourlyReservations.listLoading = false;
+            state.hourlyReservations.staffItems = action.payload || [];
+        },
+        fetchStaffHourlyReservationsFailure: (state, action) => {
+            state.hourlyReservations.listLoading = false;
+            state.hourlyReservations.error = action.payload;
+        },
+        fetchHourlyCheckInMatchRequest: (state) => {
+            state.hourlyReservations.matchingCheckIn = true;
+            state.hourlyReservations.checkInMatch = null;
+        },
+        fetchHourlyCheckInMatchSuccess: (state, action) => {
+            state.hourlyReservations.matchingCheckIn = false;
+            state.hourlyReservations.checkInMatch = action.payload || null;
+        },
+        fetchHourlyCheckInMatchFailure: (state) => {
+            state.hourlyReservations.matchingCheckIn = false;
+            state.hourlyReservations.checkInMatch = null;
+        },
+        clearHourlyCheckInMatch: (state) => {
+            state.hourlyReservations.matchingCheckIn = false;
+            state.hourlyReservations.checkInMatch = null;
+        },
+        createUserHourlyReservationRequest: (state) => {
+            state.hourlyReservations.creatingUser = true;
+            state.hourlyReservations.lastCreated = null;
+            state.hourlyReservations.error = null;
+            state.notice = null;
+        },
+        createUserHourlyReservationSuccess: (state, action) => {
+            const reservation = action.payload?.reservation || action.payload;
+
+            state.hourlyReservations.creatingUser = false;
+            state.hourlyReservations.lastCreated = action.payload;
+            state.hourlyReservations.mine = upsertById(
+                state.hourlyReservations.mine,
+                reservation
+            );
+            state.notice =
+                "Đã tạo lượt đặt ô. Vui lòng hoàn tất thanh toán VNPay để giữ chỗ.";
+        },
+        createUserHourlyReservationFailure: (state, action) => {
+            state.hourlyReservations.creatingUser = false;
+            state.hourlyReservations.error = action.payload;
+        },
+        createGuestHourlyReservationRequest: (state) => {
+            state.hourlyReservations.creatingGuest = true;
+            state.hourlyReservations.lastCreated = null;
+            state.hourlyReservations.error = null;
+            state.notice = null;
+        },
+        createGuestHourlyReservationSuccess: (state, action) => {
+            const reservation = action.payload?.reservation || action.payload;
+
+            state.hourlyReservations.creatingGuest = false;
+            state.hourlyReservations.lastCreated = action.payload;
+            state.hourlyReservations.staffItems = upsertById(
+                state.hourlyReservations.staffItems,
+                reservation
+            );
+            state.notice =
+                reservation?.paymentMethod === "CASH"
+                    ? "Đã thu tiền mặt và giữ ô cho khách."
+                    : "Đã tạo lượt đặt ô và chuyển sang VNPay.";
+        },
+        createGuestHourlyReservationFailure: (state, action) => {
+            state.hourlyReservations.creatingGuest = false;
+            state.hourlyReservations.error = action.payload;
+        },
+
         fetchMyNotificationsRequest: (state) => {
             state.notifications.loading = true;
             state.notifications.error = null;
@@ -944,6 +1079,23 @@ const parkingSlice = createSlice({
             state.wrongSlotCases.confirmingId = null;
             state.wrongSlotCases.error = action.payload;
         },
+        markWrongSlotMovedRequest: (state, action) => {
+            state.wrongSlotCases.movingId = action.payload.id;
+            state.wrongSlotCases.error = null;
+            state.notice = null;
+        },
+        markWrongSlotMovedSuccess: (state, action) => {
+            state.wrongSlotCases.movingId = null;
+            state.wrongSlotCases.items = upsertById(
+                state.wrongSlotCases.items,
+                action.payload
+            );
+            state.notice = "Đã xác nhận xe được dời đúng hạn và không phát sinh phí.";
+        },
+        markWrongSlotMovedFailure: (state, action) => {
+            state.wrongSlotCases.movingId = null;
+            state.wrongSlotCases.error = action.payload;
+        },
         markMyWrongSlotMovedRequest: (state, action) => {
             state.wrongSlotCases.movingId = action.payload.id;
             state.wrongSlotCases.error = null;
@@ -1049,6 +1201,23 @@ const parkingSlice = createSlice({
         },
         confirmFloorMismatchFailure: (state, action) => {
             state.floorMismatchCases.confirmingId = null;
+            state.floorMismatchCases.error = action.payload;
+        },
+        markFloorMismatchMovedRequest: (state, action) => {
+            state.floorMismatchCases.movingId = action.payload.id;
+            state.floorMismatchCases.error = null;
+            state.notice = null;
+        },
+        markFloorMismatchMovedSuccess: (state, action) => {
+            state.floorMismatchCases.movingId = null;
+            state.floorMismatchCases.items = upsertById(
+                state.floorMismatchCases.items,
+                action.payload
+            );
+            state.notice = "Đã xác nhận xe được dời đúng hạn và không phát sinh phí.";
+        },
+        markFloorMismatchMovedFailure: (state, action) => {
+            state.floorMismatchCases.movingId = null;
             state.floorMismatchCases.error = action.payload;
         },
         markMyFloorMismatchMovedRequest: (state, action) => {
@@ -1323,6 +1492,7 @@ export const {
     checkOutFailure,
     checkOutRequest,
     checkOutSuccess,
+    clearHourlyCheckInMatch,
     clearParkingNotice,
     confirmFloorMismatchFailure,
     confirmFloorMismatchRequest,
@@ -1339,6 +1509,12 @@ export const {
     createSlotRegistrationFailure,
     createSlotRegistrationRequest,
     createSlotRegistrationSuccess,
+    createGuestHourlyReservationFailure,
+    createGuestHourlyReservationRequest,
+    createGuestHourlyReservationSuccess,
+    createUserHourlyReservationFailure,
+    createUserHourlyReservationRequest,
+    createUserHourlyReservationSuccess,
     createTempQrCardFailure,
     createTempQrCardRequest,
     createTempQrCardSuccess,
@@ -1388,6 +1564,12 @@ export const {
     fetchHealthFailure,
     fetchHealthRequest,
     fetchHealthSuccess,
+    fetchHourlyReservationAvailabilityFailure,
+    fetchHourlyReservationAvailabilityRequest,
+    fetchHourlyReservationAvailabilitySuccess,
+    fetchHourlyCheckInMatchFailure,
+    fetchHourlyCheckInMatchRequest,
+    fetchHourlyCheckInMatchSuccess,
     fetchMonthlyPassesFailure,
     fetchMonthlyPassesRequest,
     fetchMonthlyPassesSuccess,
@@ -1400,6 +1582,9 @@ export const {
     fetchMySlotRegistrationsFailure,
     fetchMySlotRegistrationsRequest,
     fetchMySlotRegistrationsSuccess,
+    fetchMyHourlyReservationsFailure,
+    fetchMyHourlyReservationsRequest,
+    fetchMyHourlyReservationsSuccess,
     fetchMyVehiclesFailure,
     fetchMyVehiclesRequest,
     fetchMyVehiclesSuccess,
@@ -1418,6 +1603,9 @@ export const {
     fetchStaffAssignmentsFailure,
     fetchStaffAssignmentsRequest,
     fetchStaffAssignmentsSuccess,
+    fetchStaffHourlyReservationsFailure,
+    fetchStaffHourlyReservationsRequest,
+    fetchStaffHourlyReservationsSuccess,
     fetchTempQrCardsFailure,
     fetchTempQrCardsRequest,
     fetchTempQrCardsSuccess,
@@ -1427,6 +1615,9 @@ export const {
     fetchWrongSlotCasesFailure,
     fetchWrongSlotCasesRequest,
     fetchWrongSlotCasesSuccess,
+    markFloorMismatchMovedFailure,
+    markFloorMismatchMovedRequest,
+    markFloorMismatchMovedSuccess,
     fetchMyWrongSlotCasesFailure,
     fetchMyWrongSlotCasesRequest,
     fetchMyWrongSlotCasesSuccess,
@@ -1436,6 +1627,9 @@ export const {
     markMyWrongSlotMovedFailure,
     markMyWrongSlotMovedRequest,
     markMyWrongSlotMovedSuccess,
+    markWrongSlotMovedFailure,
+    markWrongSlotMovedRequest,
+    markWrongSlotMovedSuccess,
     rejectVehicleFailure,
     rejectVehicleRequest,
     rejectVehicleSuccess,
