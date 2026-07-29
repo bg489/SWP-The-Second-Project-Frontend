@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -22,12 +22,19 @@ import "./PlateCameraScanner.css";
 const EMPTY_RECOGNITION = {
   requestId: null,
   plateNumber: "",
+  rawText: "",
   confidence: 0,
+  detectionConfidence: 0,
+  ocrConfidence: 0,
+  engine: null,
+  candidates: [],
   loading: false,
   error: null,
 };
 
 const CAMERA_SCAN_DELAY = 1200;
+const REQUIRED_MATCHES = 3;
+const SAMPLE_WINDOW_SIZE = 6;
 
 const PlateCameraScanner = ({
   autoApply = true,
@@ -44,18 +51,52 @@ const PlateCameraScanner = ({
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const operationRef = useRef(0);
-  const appliedRequestRef = useRef(null);
+  const appliedPlateRef = useRef(null);
+  const processedRequestRef = useRef(null);
   const [editedPlate, setEditedPlate] = useState(null);
   const [localError, setLocalError] = useState("");
   const [currentRequestId, setCurrentRequestId] = useState(0);
   const [cameraStatus, setCameraStatus] = useState("idle");
+  const [samples, setSamples] = useState([]);
   const recognitionMatches =
     currentRequestId !== 0 && recognition.requestId === currentRequestId;
   const recognizedPlate = recognitionMatches ? recognition.plateNumber : "";
-  const plateNumber = editedPlate ?? recognizedPlate;
+  const consensus = useMemo(() => {
+    const groups = new Map();
+
+    samples.forEach((sample) => {
+      const key = sample.plateNumber.replace(/[^A-Z0-9]/g, "");
+      const current = groups.get(key) || {
+        confidenceTotal: 0,
+        count: 0,
+        plateNumber: sample.plateNumber,
+      };
+      current.confidenceTotal += sample.confidence;
+      current.count += 1;
+      groups.set(key, current);
+    });
+
+    return [...groups.values()]
+      .map((group) => ({
+        ...group,
+        averageConfidence: group.confidenceTotal / group.count,
+      }))
+      .sort((left, right) =>
+        right.count - left.count
+        || right.averageConfidence - left.averageConfidence
+      )[0] || null;
+  }, [samples]);
+  const confirmedPlate = consensus?.count >= REQUIRED_MATCHES
+    ? consensus.plateNumber
+    : "";
+  const candidatePlate = confirmedPlate || consensus?.plateNumber || recognizedPlate;
+  const plateNumber = editedPlate ?? candidatePlate;
+  const displayedConfidence = consensus?.averageConfidence
+    || (recognitionMatches ? Number(recognition.confidence || 0) : 0);
   const reading = recognitionMatches && recognition.loading;
   const error = localError || (recognitionMatches ? recognition.error : "");
   const cameraActive = cameraStatus === "active";
+  const editing = editedPlate !== null;
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -74,7 +115,9 @@ const PlateCameraScanner = ({
     setCameraStatus("starting");
     setCurrentRequestId(0);
     setEditedPlate(null);
-    appliedRequestRef.current = null;
+    setSamples([]);
+    appliedPlateRef.current = null;
+    processedRequestRef.current = null;
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraStatus("unavailable");
@@ -120,8 +163,6 @@ const PlateCameraScanner = ({
     operationRef.current = requestId;
     setCurrentRequestId(requestId);
     setLocalError("");
-    setEditedPlate(null);
-    appliedRequestRef.current = null;
     dispatch(clearPlateRecognition());
     dispatch(recognizePlateRequest({ file, requestId }));
   }, [dispatch]);
@@ -188,7 +229,8 @@ const PlateCameraScanner = ({
     if (!open) return undefined;
 
     operationRef.current += 1;
-    appliedRequestRef.current = null;
+    appliedPlateRef.current = null;
+    processedRequestRef.current = null;
     dispatch(clearPlateRecognition());
     const startTimer = window.setTimeout(startCamera, 0);
 
@@ -204,8 +246,8 @@ const PlateCameraScanner = ({
       !open ||
       !cameraActive ||
       reading ||
-      recognizedPlate ||
-      editedPlate
+      editing ||
+      confirmedPlate
     ) {
       return undefined;
     }
@@ -216,18 +258,19 @@ const PlateCameraScanner = ({
     cameraActive,
     captureFrame,
     currentRequestId,
-    editedPlate,
+    editing,
+    confirmedPlate,
     open,
     reading,
     recognition.requestId,
-    recognizedPlate,
   ]);
 
   useEffect(() => {
     if (
-      !autoApply ||
+      !recognitionMatches ||
+      recognition.loading ||
       !recognizedPlate ||
-      appliedRequestRef.current === currentRequestId
+      processedRequestRef.current === currentRequestId
     ) {
       return;
     }
@@ -235,9 +278,43 @@ const PlateCameraScanner = ({
     const formattedPlate = formatPlateNumber(recognizedPlate);
     if (!formattedPlate) return;
 
-    appliedRequestRef.current = currentRequestId;
-    onScan?.(formattedPlate);
-  }, [autoApply, currentRequestId, onScan, recognizedPlate]);
+    processedRequestRef.current = currentRequestId;
+    const sampleTimer = window.setTimeout(() => {
+      setSamples((current) => [
+        ...current,
+        {
+          confidence: Number(recognition.confidence || 0),
+          plateNumber: formattedPlate,
+          requestId: currentRequestId,
+        },
+      ].slice(-SAMPLE_WINDOW_SIZE));
+    }, 0);
+
+    return () => window.clearTimeout(sampleTimer);
+  }, [
+    currentRequestId,
+    recognition.confidence,
+    recognition.loading,
+    recognitionMatches,
+    recognizedPlate,
+  ]);
+
+  useEffect(() => {
+    if (
+      !consensus ||
+      consensus.count < REQUIRED_MATCHES
+    ) {
+      return;
+    }
+
+    if (
+      autoApply &&
+      appliedPlateRef.current !== consensus.plateNumber
+    ) {
+      appliedPlateRef.current = consensus.plateNumber;
+      onScan?.(consensus.plateNumber);
+    }
+  }, [autoApply, consensus, onScan]);
 
   useEffect(() => () => {
     stopCamera();
@@ -256,19 +333,34 @@ const PlateCameraScanner = ({
     stopCamera();
     setCurrentRequestId(0);
     setEditedPlate(null);
+    setSamples([]);
     setLocalError("");
     setCameraStatus("idle");
-    appliedRequestRef.current = null;
+    appliedPlateRef.current = null;
+    processedRequestRef.current = null;
     dispatch(clearPlateRecognition());
     onClose?.();
+  };
+
+  const scanAgain = () => {
+    operationRef.current += 1;
+    setCurrentRequestId(0);
+    setEditedPlate(null);
+    setSamples([]);
+    setLocalError("");
+    appliedPlateRef.current = null;
+    processedRequestRef.current = null;
+    dispatch(clearPlateRecognition());
   };
 
   if (!open) return null;
 
   const message = reading
     ? "Đang đọc biển số từ khung hình hiện tại..."
-    : recognizedPlate
-      ? "Đã nhận diện và tự động điền biển số vào biểu mẫu."
+    : confirmedPlate
+      ? `Đã xác nhận ${confirmedPlate} qua ${REQUIRED_MATCHES} lần quét trùng khớp.`
+      : consensus
+        ? `Đã khớp ${consensus.count}/${REQUIRED_MATCHES} lần. Giữ camera ổn định thêm một chút.`
       : cameraActive
         ? "Giữ biển số trong khung. Hệ thống sẽ tự đọc liên tục."
         : "Bật camera sau và đưa biển số vào giữa khung.";
@@ -314,8 +406,8 @@ const PlateCameraScanner = ({
           )}
           {cameraActive && <div className="plate-scanner-guide" aria-hidden="true" />}
           {cameraActive && (
-            <span className="plate-scanner-live">
-              <i aria-hidden="true" /> Đang quét
+            <span className={`plate-scanner-live ${confirmedPlate ? "is-confirmed" : ""}`}>
+              <i aria-hidden="true" /> {confirmedPlate ? "Đã xác nhận" : "Đang quét"}
             </span>
           )}
         </div>
@@ -335,14 +427,19 @@ const PlateCameraScanner = ({
         <div className="plate-scanner-result">
           <div className="plate-scanner-result-label">
             <label htmlFor="recognized-plate">Biển số nhận được</label>
-            {recognitionMatches && recognition.confidence > 0 && (
-              <span>Độ rõ {Math.round(recognition.confidence)}%</span>
+            {displayedConfidence > 0 && (
+              <span>
+                Tin cậy {Math.round(displayedConfidence)}%
+                {consensus ? ` · ${Math.min(consensus.count, REQUIRED_MATCHES)}/${REQUIRED_MATCHES} lần` : ""}
+              </span>
             )}
           </div>
           <Input
             id="recognized-plate"
             value={plateNumber}
-            onChange={(event) => setEditedPlate(event.target.value.toUpperCase())}
+            onChange={(event) => {
+              setEditedPlate(event.target.value.toUpperCase());
+            }}
             placeholder="Ví dụ: 51G-123.45"
             disabled={reading}
           />
@@ -353,10 +450,20 @@ const PlateCameraScanner = ({
             type="button"
             variant="outline"
             icon={cameraActive ? ScanLine : Camera}
-            onClick={cameraActive ? captureFrame : startCamera}
+            onClick={
+              cameraActive
+                ? confirmedPlate || editing
+                  ? scanAgain
+                  : captureFrame
+                : startCamera
+            }
             disabled={reading || cameraStatus === "starting"}
           >
-            {cameraActive ? "Đọc ngay" : "Bật camera"}
+            {cameraActive
+              ? confirmedPlate || editing
+                ? "Quét lại"
+                : "Đọc ngay"
+              : "Bật camera"}
           </Button>
           <Button
             type="button"

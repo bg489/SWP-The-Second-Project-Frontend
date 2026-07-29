@@ -223,7 +223,12 @@ const initialState = {
     plateRecognition: {
         requestId: null,
         plateNumber: "",
+        rawText: "",
         confidence: 0,
+        detectionConfidence: 0,
+        ocrConfidence: 0,
+        engine: null,
+        candidates: [],
         loading: false,
         error: null,
     },
@@ -1024,14 +1029,29 @@ const parkingSlice = createSlice({
         recognizePlateRequest: (state, action) => {
             state.plateRecognition.requestId = action.payload?.requestId || null;
             state.plateRecognition.plateNumber = "";
+            state.plateRecognition.rawText = "";
             state.plateRecognition.confidence = 0;
+            state.plateRecognition.detectionConfidence = 0;
+            state.plateRecognition.ocrConfidence = 0;
+            state.plateRecognition.engine = null;
+            state.plateRecognition.candidates = [];
             state.plateRecognition.loading = true;
             state.plateRecognition.error = null;
         },
         recognizePlateSuccess: (state, action) => {
             state.plateRecognition.requestId = action.payload?.requestId || null;
             state.plateRecognition.plateNumber = action.payload?.plateNumber || "";
+            state.plateRecognition.rawText = action.payload?.rawText || "";
             state.plateRecognition.confidence = Number(action.payload?.confidence || 0);
+            state.plateRecognition.detectionConfidence =
+                Number(action.payload?.detectionConfidence || 0);
+            state.plateRecognition.ocrConfidence =
+                Number(action.payload?.ocrConfidence || 0);
+            state.plateRecognition.engine = action.payload?.engine || null;
+            state.plateRecognition.candidates =
+                Array.isArray(action.payload?.candidates)
+                    ? action.payload.candidates
+                    : [];
             state.plateRecognition.loading = false;
             state.plateRecognition.error = null;
         },
@@ -1044,7 +1064,12 @@ const parkingSlice = createSlice({
             state.plateRecognition = {
                 requestId: null,
                 plateNumber: "",
+                rawText: "",
                 confidence: 0,
+                detectionConfidence: 0,
+                ocrConfidence: 0,
+                engine: null,
+                candidates: [],
                 loading: false,
                 error: null,
             };
