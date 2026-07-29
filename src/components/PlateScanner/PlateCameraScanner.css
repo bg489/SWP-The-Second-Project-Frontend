@@ -193,13 +193,9 @@
   font-size: 11px;
 }
 
-.plate-scanner-file-input {
-  display: none;
-}
-
 .plate-scanner-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 18px;
 }

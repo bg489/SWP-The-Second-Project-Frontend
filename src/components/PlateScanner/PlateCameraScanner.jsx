@@ -5,7 +5,6 @@ import {
   Camera,
   CameraOff,
   CheckCircle2,
-  ImagePlus,
   RefreshCcw,
   ScanLine,
   X,
@@ -43,12 +42,9 @@ const PlateCameraScanner = ({
   );
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const fileInputRef = useRef(null);
   const streamRef = useRef(null);
   const operationRef = useRef(0);
   const appliedRequestRef = useRef(null);
-  const previewUrlRef = useRef("");
-  const [previewUrl, setPreviewUrl] = useState("");
   const [editedPlate, setEditedPlate] = useState(null);
   const [localError, setLocalError] = useState("");
   const [currentRequestId, setCurrentRequestId] = useState(0);
@@ -60,15 +56,6 @@ const PlateCameraScanner = ({
   const reading = recognitionMatches && recognition.loading;
   const error = localError || (recognitionMatches ? recognition.error : "");
   const cameraActive = cameraStatus === "active";
-
-  const replacePreviewUrl = useCallback((nextUrl) => {
-    if (previewUrlRef.current) {
-      URL.revokeObjectURL(previewUrlRef.current);
-    }
-
-    previewUrlRef.current = nextUrl;
-    setPreviewUrl(nextUrl);
-  }, []);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -83,7 +70,6 @@ const PlateCameraScanner = ({
 
   const startCamera = useCallback(async () => {
     stopCamera();
-    replacePreviewUrl("");
     setLocalError("");
     setCameraStatus("starting");
     setCurrentRequestId(0);
@@ -92,7 +78,7 @@ const PlateCameraScanner = ({
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraStatus("unavailable");
-      setLocalError("Thiết bị không mở được camera trực tiếp. Bạn có thể chọn ảnh có sẵn.");
+      setLocalError("Thiết bị không mở được camera trực tiếp.");
       return;
     }
 
@@ -123,11 +109,11 @@ const PlateCameraScanner = ({
       setCameraStatus("unavailable");
       setLocalError(
         cameraError?.name === "NotAllowedError"
-          ? "Camera đang bị chặn. Hãy cho phép dùng camera hoặc chọn ảnh có sẵn."
-          : "Không mở được camera sau. Hãy thử lại hoặc chọn ảnh có sẵn."
+          ? "Camera đang bị chặn. Hãy cấp quyền camera cho trang này."
+          : "Không mở được camera sau. Hãy kiểm tra thiết bị rồi thử lại."
       );
     }
-  }, [replacePreviewUrl, stopCamera]);
+  }, [stopCamera]);
 
   const readPlate = useCallback((file) => {
     const requestId = operationRef.current + 1;
@@ -210,9 +196,8 @@ const PlateCameraScanner = ({
       window.clearTimeout(startTimer);
       operationRef.current += 1;
       stopCamera();
-      replacePreviewUrl("");
     };
-  }, [dispatch, open, replacePreviewUrl, startCamera, stopCamera]);
+  }, [dispatch, open, startCamera, stopCamera]);
 
   useEffect(() => {
     if (
@@ -256,32 +241,7 @@ const PlateCameraScanner = ({
 
   useEffect(() => () => {
     stopCamera();
-    if (previewUrlRef.current) {
-      URL.revokeObjectURL(previewUrlRef.current);
-      previewUrlRef.current = "";
-    }
   }, [stopCamera]);
-
-  const handleFile = (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      setLocalError("Vui lòng chọn một ảnh biển số.");
-      return;
-    }
-
-    if (file.size > 8 * 1024 * 1024) {
-      setLocalError("Ảnh lớn hơn 8 MB. Hãy chọn ảnh có dung lượng nhỏ hơn.");
-      return;
-    }
-
-    stopCamera();
-    setCameraStatus("paused");
-    replacePreviewUrl(URL.createObjectURL(file));
-    readPlate(file);
-  };
 
   const confirmPlate = () => {
     const formattedPlate = formatPlateNumber(plateNumber);
@@ -294,7 +254,6 @@ const PlateCameraScanner = ({
   const closeScanner = () => {
     operationRef.current += 1;
     stopCamera();
-    replacePreviewUrl("");
     setCurrentRequestId(0);
     setEditedPlate(null);
     setLocalError("");
@@ -312,9 +271,7 @@ const PlateCameraScanner = ({
       ? "Đã nhận diện và tự động điền biển số vào biểu mẫu."
       : cameraActive
         ? "Giữ biển số trong khung. Hệ thống sẽ tự đọc liên tục."
-        : previewUrl
-          ? "Đã lấy ảnh. Hệ thống đang tìm biển số trong ảnh."
-          : "Bật camera sau hoặc chọn một ảnh biển số có sẵn.";
+        : "Bật camera sau và đưa biển số vào giữa khung.";
 
   return createPortal(
     <div
@@ -339,7 +296,7 @@ const PlateCameraScanner = ({
           </button>
         </div>
 
-        <div className={`plate-scanner-preview ${cameraActive || previewUrl ? "has-image" : ""}`}>
+        <div className={`plate-scanner-preview ${cameraActive ? "has-image" : ""}`}>
           <video
             ref={videoRef}
             className={cameraActive ? "is-visible" : ""}
@@ -348,17 +305,14 @@ const PlateCameraScanner = ({
             playsInline
             aria-label="Hình ảnh trực tiếp từ camera"
           />
-          {previewUrl && !cameraActive && (
-            <img src={previewUrl} alt="Ảnh biển số đang nhận diện" />
-          )}
-          {!cameraActive && !previewUrl && (
+          {!cameraActive && (
             <div className="plate-scanner-empty">
               {cameraStatus === "starting" ? <RefreshCcw className="spin" size={42} /> : <CameraOff size={42} />}
               <strong>{cameraStatus === "starting" ? "Đang mở camera sau" : "Camera chưa hoạt động"}</strong>
               <span>Đưa camera lại gần để biển số nằm trọn trong khung.</span>
             </div>
           )}
-          {(cameraActive || previewUrl) && <div className="plate-scanner-guide" aria-hidden="true" />}
+          {cameraActive && <div className="plate-scanner-guide" aria-hidden="true" />}
           {cameraActive && (
             <span className="plate-scanner-live">
               <i aria-hidden="true" /> Đang quét
@@ -394,14 +348,6 @@ const PlateCameraScanner = ({
           />
         </div>
 
-        <input
-          ref={fileInputRef}
-          className="plate-scanner-file-input"
-          type="file"
-          accept="image/*"
-          onChange={handleFile}
-        />
-
         <div className="plate-scanner-actions">
           <Button
             type="button"
@@ -411,15 +357,6 @@ const PlateCameraScanner = ({
             disabled={reading || cameraStatus === "starting"}
           >
             {cameraActive ? "Đọc ngay" : "Bật camera"}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            icon={ImagePlus}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={reading}
-          >
-            Chọn ảnh
           </Button>
           <Button
             type="button"
