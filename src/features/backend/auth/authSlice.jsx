@@ -33,9 +33,11 @@ const getInitialState = () => {
         registerBuildingsError: null,
 
         passwordResetLoading: false,
+        passwordResetAction: null,
         passwordResetError: null,
         passwordResetNotice: null,
         passwordResetVerified: false,
+        passwordResetCompleted: false,
 
         profileUpdateRequestId: null,
         profileUpdateNotice: null,
@@ -227,30 +229,37 @@ const authSlice = createSlice({
 
         requestPasswordResetRequest: (state) => {
             state.passwordResetLoading = true;
+            state.passwordResetAction = "request";
             state.passwordResetError = null;
             state.passwordResetNotice = null;
             state.passwordResetVerified = false;
+            state.passwordResetCompleted = false;
         },
 
         requestPasswordResetSuccess: (state, action) => {
             state.passwordResetLoading = false;
+            state.passwordResetAction = null;
             state.passwordResetError = null;
             state.passwordResetNotice = action.payload;
         },
 
         requestPasswordResetFailure: (state, action) => {
             state.passwordResetLoading = false;
+            state.passwordResetAction = null;
             state.passwordResetError = action.payload;
         },
 
         verifyPasswordResetRequest: (state) => {
             state.passwordResetLoading = true;
+            state.passwordResetAction = "verify";
             state.passwordResetError = null;
             state.passwordResetVerified = false;
+            state.passwordResetCompleted = false;
         },
 
         verifyPasswordResetSuccess: (state, action) => {
             state.passwordResetLoading = false;
+            state.passwordResetAction = null;
             state.passwordResetError = null;
             state.passwordResetNotice = action.payload;
             state.passwordResetVerified = true;
@@ -258,33 +267,41 @@ const authSlice = createSlice({
 
         verifyPasswordResetFailure: (state, action) => {
             state.passwordResetLoading = false;
+            state.passwordResetAction = null;
             state.passwordResetError = action.payload;
             state.passwordResetVerified = false;
         },
 
         resetPasswordRequest: (state) => {
             state.passwordResetLoading = true;
+            state.passwordResetAction = "reset";
             state.passwordResetError = null;
             state.passwordResetNotice = null;
+            state.passwordResetCompleted = false;
         },
 
         resetPasswordSuccess: (state, action) => {
             state.passwordResetLoading = false;
+            state.passwordResetAction = null;
             state.passwordResetError = null;
             state.passwordResetNotice = action.payload;
             state.passwordResetVerified = false;
+            state.passwordResetCompleted = true;
         },
 
         resetPasswordFailure: (state, action) => {
             state.passwordResetLoading = false;
+            state.passwordResetAction = null;
             state.passwordResetError = action.payload;
         },
 
         clearPasswordResetState: (state) => {
             state.passwordResetLoading = false;
+            state.passwordResetAction = null;
             state.passwordResetError = null;
             state.passwordResetNotice = null;
             state.passwordResetVerified = false;
+            state.passwordResetCompleted = false;
         },
     },
 });
