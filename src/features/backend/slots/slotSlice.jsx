@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { reconcileCollectionById } from "../../../utils/reconcileCollection";
 
 const initialState = {
     slotsByFloor: {},
@@ -20,20 +21,36 @@ const slotSlice = createSlice({
     initialState,
     reducers: {
         fetchSlotsByFloorRequest: (state, action) => {
-            state.loading = true;
-            state.error = null;
-            state.activeFloorId = action.payload.floorId;
+            if (!action.payload?.silent) {
+                state.loading = true;
+                state.error = null;
+                state.activeFloorId = action.payload.floorId;
+            }
         },
 
         fetchSlotsByFloorSuccess: (state, action) => {
-            state.loading = false;
-            state.error = null;
-            state.slotsByFloor[action.payload.floorId] = action.payload.slots || [];
+            const { floorId, silent, slots } = action.payload;
+
+            if (!silent) {
+                state.loading = false;
+                state.error = null;
+            }
+            state.slotsByFloor[floorId] = reconcileCollectionById(
+                state.slotsByFloor[floorId] || [],
+                slots || []
+            );
         },
 
         fetchSlotsByFloorFailure: (state, action) => {
-            state.loading = false;
-            state.error = action.payload;
+            const payload =
+                typeof action.payload === "object"
+                    ? action.payload
+                    : { error: action.payload, silent: false };
+
+            if (!payload.silent) {
+                state.loading = false;
+                state.error = payload.error;
+            }
         },
 
         createSlotRequest: (state) => {

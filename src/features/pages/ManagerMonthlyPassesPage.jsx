@@ -1,6 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { CalendarDays, Clock3, QrCode, RefreshCcw, Search, ShieldCheck } from "lucide-react";
+import {
+  Building2,
+  CalendarDays,
+  Car,
+  Clock3,
+  Eye,
+  Mail,
+  MapPin,
+  Phone,
+  QrCode,
+  RefreshCcw,
+  Search,
+  ShieldCheck,
+  UserRound,
+  X,
+} from "lucide-react";
 
 import Button from "../../components/Button/Button";
 import StatusBanner from "../../components/Feedback/StatusBanner";
@@ -11,7 +27,14 @@ import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
 import { fetchBuildingsRequest } from "../backend/buildings/buildingSlice";
 import { clearParkingNotice, fetchMonthlyPassesRequest } from "../backend/parking/parkingSlice";
-import { formatCurrency } from "../../services/mockParkingData";
+import {
+  formatCurrency,
+  getStatusLabel,
+  getStatusTone,
+  getVehicleTypeLabel,
+  roleLabels,
+} from "../../services/mockParkingData";
+import "./ManagerMonthlyPassesPage.css";
 
 const statusOptions = [
   { value: "", label: "Tất cả" },
@@ -96,6 +119,7 @@ const ManagerMonthlyPassesPage = () => {
     q: "",
     status: "",
   });
+  const [selectedPassId, setSelectedPassId] = useState(null);
 
   useEffect(() => {
     dispatch(fetchBuildingsRequest());
@@ -106,6 +130,23 @@ const ManagerMonthlyPassesPage = () => {
       filters.buildingId ? { buildingId: Number(filters.buildingId) } : undefined
     ));
   }, [dispatch, filters.buildingId]);
+
+  useEffect(() => {
+    if (!selectedPassId) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setSelectedPassId(null);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [selectedPassId]);
 
   const rows = useMemo(() => {
     const keyword = normalizeText(filters.q);
@@ -127,6 +168,8 @@ const ManagerMonthlyPassesPage = () => {
 
       return [
         pass.ownerName,
+        pass.ownerEmail,
+        pass.ownerPhone,
         pass.plateNumber,
         pass.packagePlanName,
         pass.qrCode,
@@ -150,6 +193,13 @@ const ManagerMonthlyPassesPage = () => {
       { active: 0, amount: 0, expired: 0, expiring: 0, total: 0 }
     );
   }, [rows]);
+
+  const selectedPass = useMemo(
+    () => (monthlyPasses.items || []).find(
+      (pass) => Number(pass.id) === Number(selectedPassId)
+    ) || null,
+    [monthlyPasses.items, selectedPassId]
+  );
 
   const columns = [
     {
@@ -210,6 +260,21 @@ const ManagerMonthlyPassesPage = () => {
         return <span className={`pill ${lifeState.tone}`}>{lifeState.label}</span>;
       },
     },
+    {
+      header: "Hồ sơ",
+      key: "ownerProfile",
+      width: "132px",
+      render: (row) => (
+        <Button
+          variant="outline"
+          size="sm"
+          icon={Eye}
+          onClick={() => setSelectedPassId(row.id)}
+        >
+          Xem hồ sơ
+        </Button>
+      ),
+    },
   ];
 
   const refresh = () => {
@@ -220,7 +285,7 @@ const ManagerMonthlyPassesPage = () => {
   };
 
   return (
-    <div className="parking-page">
+    <div className="parking-page manager-monthly-page">
       <section className="page-hero">
         <div className="page-hero-content">
           <div className="page-eyebrow"><QrCode size={16} /> QR tháng</div>
@@ -269,7 +334,7 @@ const ManagerMonthlyPassesPage = () => {
         <div className="section-header">
           <div>
             <h2 className="section-title"><Search size={19} /> Danh sách QR gói tháng</h2>
-            <p className="section-copy">Tìm nhanh theo tên người dùng, biển số, tên gói hoặc mã QR.</p>
+            <p className="section-copy">Tìm nhanh theo tên, email, số điện thoại, biển số, tên gói hoặc mã QR.</p>
           </div>
           <Button variant="outline" icon={RefreshCcw} loading={monthlyPasses.loading} onClick={refresh}>
             Làm mới
@@ -299,7 +364,7 @@ const ManagerMonthlyPassesPage = () => {
             <Input
               value={filters.q}
               onChange={(event) => setFilters((prev) => ({ ...prev, q: event.target.value }))}
-              placeholder="Nhập tên, biển số hoặc mã QR"
+              placeholder="Nhập tên, liên hệ, biển số hoặc mã QR"
             />
           </FormField>
           <FormField label="Trạng thái">
@@ -320,6 +385,142 @@ const ManagerMonthlyPassesPage = () => {
           pageSize={10}
         />
       </section>
+
+      {selectedPass && createPortal(
+        <div
+          className="modal-backdrop monthly-owner-backdrop"
+          role="presentation"
+          onMouseDown={() => setSelectedPassId(null)}
+        >
+          <section
+            className="card monthly-owner-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="monthly-owner-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <header className="monthly-owner-header">
+              <div>
+                <span className="page-eyebrow"><UserRound size={15} /> Hồ sơ chủ thẻ</span>
+                <h2 id="monthly-owner-title">{selectedPass.ownerName || "Chưa có tên"}</h2>
+                <p>Thông tin dùng để đối chiếu người, phương tiện và gói tháng.</p>
+              </div>
+              <button
+                type="button"
+                className="monthly-owner-close"
+                onClick={() => setSelectedPassId(null)}
+                aria-label="Đóng hồ sơ"
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            <div className="monthly-owner-profile">
+              <div className="monthly-owner-avatar">
+                {selectedPass.ownerAvatarUrl ? (
+                  <img
+                    src={selectedPass.ownerAvatarUrl}
+                    alt={`Ảnh đại diện của ${selectedPass.ownerName || "chủ thẻ"}`}
+                    style={{
+                      objectPosition: `${Number(selectedPass.ownerAvatarCropX ?? 50)}% ${Number(selectedPass.ownerAvatarCropY ?? 50)}%`,
+                      transform: `scale(${Number(selectedPass.ownerAvatarCropZoom ?? 1)})`,
+                    }}
+                  />
+                ) : (
+                  <UserRound size={38} />
+                )}
+              </div>
+              <div className="monthly-owner-summary">
+                <span>Chủ thẻ QR gói tháng</span>
+                <strong>{selectedPass.ownerName || "Chưa có tên"}</strong>
+                <div className="monthly-owner-pills">
+                  <span className={`pill ${getStatusTone(selectedPass.ownerStatus)}`}>
+                    {getStatusLabel(selectedPass.ownerStatus)}
+                  </span>
+                  <span className="pill neutral">
+                    {roleLabels[selectedPass.ownerRole] || selectedPass.ownerRole || "Cư dân"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="monthly-owner-section">
+              <h3><UserRound size={17} /> Thông tin cá nhân</h3>
+              <div className="monthly-owner-detail-grid">
+                <div>
+                  <span><Mail size={15} /> Email</span>
+                  <strong>{selectedPass.ownerEmail || "Chưa cập nhật"}</strong>
+                </div>
+                <div>
+                  <span><Phone size={15} /> Số điện thoại</span>
+                  <strong>{selectedPass.ownerPhone || "Chưa cập nhật"}</strong>
+                </div>
+                <div>
+                  <span><Building2 size={15} /> Tòa nhà đang ở</span>
+                  <strong>{selectedPass.ownerBuildingName || "Chưa gán tòa nhà"}</strong>
+                </div>
+                <div>
+                  <span><MapPin size={15} /> Địa chỉ</span>
+                  <strong>{selectedPass.ownerBuildingAddress || "Chưa cập nhật"}</strong>
+                </div>
+                <div>
+                  <span><CalendarDays size={15} /> Ngày tạo tài khoản</span>
+                  <strong>{formatDate(selectedPass.ownerCreatedAt)}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="monthly-owner-section">
+              <h3><Car size={17} /> Phương tiện và gói tháng</h3>
+              <div className="monthly-owner-detail-grid">
+                <div>
+                  <span>Biển số</span>
+                  <strong>{selectedPass.plateNumber || "-"}</strong>
+                </div>
+                <div>
+                  <span>Loại xe</span>
+                  <strong>{getVehicleTypeLabel(selectedPass.vehicleType)}</strong>
+                </div>
+                <div>
+                  <span>Thông tin xe</span>
+                  <strong>
+                    {[selectedPass.vehicleBrand, selectedPass.vehicleColor]
+                      .filter(Boolean)
+                      .join(" - ") || "Chưa cập nhật"}
+                  </strong>
+                </div>
+                <div>
+                  <span>Trạng thái xe</span>
+                  <strong>{getStatusLabel(selectedPass.vehicleStatus)}</strong>
+                </div>
+                <div>
+                  <span>Tòa nhà sử dụng gói</span>
+                  <strong>{selectedPass.buildingName || "-"}</strong>
+                </div>
+                <div>
+                  <span>Tên gói</span>
+                  <strong>{selectedPass.packagePlanName || selectedPass.note || "Gói tháng"}</strong>
+                </div>
+                <div>
+                  <span>Thời hạn</span>
+                  <strong>{formatDate(selectedPass.startDate)} - {formatDate(selectedPass.endDate)}</strong>
+                </div>
+                <div>
+                  <span>Giá trị gói</span>
+                  <strong>{formatCurrency(selectedPass.amount || 0)}</strong>
+                </div>
+              </div>
+            </div>
+
+            <footer className="monthly-owner-footer">
+              <Button variant="primary" onClick={() => setSelectedPassId(null)}>
+                Đóng hồ sơ
+              </Button>
+            </footer>
+          </section>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

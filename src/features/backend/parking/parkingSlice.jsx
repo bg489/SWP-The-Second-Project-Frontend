@@ -11,6 +11,7 @@ import {
     vehicles,
     violations,
 } from "../../../services/mockParkingData";
+import { reconcileCollectionById } from "../../../utils/reconcileCollection";
 
 const pricingPoliciesSeed = [
     {
@@ -34,6 +35,19 @@ const packagePlanSeed = monthlyPackages.map((plan) => ({
     durationDays: Number(String(plan.duration).replace(/\D/g, "")) || 30,
     status: "ACTIVE",
 }));
+
+const readCollectionSyncPayload = (payload) =>
+    Array.isArray(payload)
+        ? { items: payload, silent: false }
+        : {
+            items: Array.isArray(payload?.items) ? payload.items : [],
+            silent: Boolean(payload?.silent),
+        };
+
+const readSyncFailure = (payload) =>
+    typeof payload === "object"
+        ? payload
+        : { error: payload, silent: false };
 
 const buildReportsSeed = () => ({
     traffic: {
@@ -588,17 +602,30 @@ const parkingSlice = createSlice({
             state.monthlyPasses.error = action.payload;
         },
 
-        fetchTempQrCardsRequest: (state) => {
-            state.tempQrCards.loading = true;
-            state.tempQrCards.error = null;
+        fetchTempQrCardsRequest: (state, action) => {
+            if (!action.payload?.silent) {
+                state.tempQrCards.loading = true;
+                state.tempQrCards.error = null;
+            }
         },
         fetchTempQrCardsSuccess: (state, action) => {
-            state.tempQrCards.loading = false;
-            state.tempQrCards.items = action.payload || [];
+            const { items, silent } = readCollectionSyncPayload(action.payload);
+
+            if (!silent) {
+                state.tempQrCards.loading = false;
+            }
+            state.tempQrCards.items = reconcileCollectionById(
+                state.tempQrCards.items,
+                items
+            );
         },
         fetchTempQrCardsFailure: (state, action) => {
-            state.tempQrCards.loading = false;
-            state.tempQrCards.error = action.payload;
+            const payload = readSyncFailure(action.payload);
+
+            if (!payload.silent) {
+                state.tempQrCards.loading = false;
+                state.tempQrCards.error = payload.error;
+            }
         },
 
         createTempQrCardRequest: (state) => {
@@ -834,29 +861,55 @@ const parkingSlice = createSlice({
             state.staffAssignments.error = action.payload;
         },
 
-        fetchWrongSlotCasesRequest: (state) => {
-            state.wrongSlotCases.loading = true;
-            state.wrongSlotCases.error = null;
+        fetchWrongSlotCasesRequest: (state, action) => {
+            if (!action.payload?.silent) {
+                state.wrongSlotCases.loading = true;
+                state.wrongSlotCases.error = null;
+            }
         },
         fetchWrongSlotCasesSuccess: (state, action) => {
-            state.wrongSlotCases.loading = false;
-            state.wrongSlotCases.items = action.payload || [];
+            const { items, silent } = readCollectionSyncPayload(action.payload);
+
+            if (!silent) {
+                state.wrongSlotCases.loading = false;
+            }
+            state.wrongSlotCases.items = reconcileCollectionById(
+                state.wrongSlotCases.items,
+                items
+            );
         },
         fetchWrongSlotCasesFailure: (state, action) => {
-            state.wrongSlotCases.loading = false;
-            state.wrongSlotCases.error = action.payload;
+            const payload = readSyncFailure(action.payload);
+
+            if (!payload.silent) {
+                state.wrongSlotCases.loading = false;
+                state.wrongSlotCases.error = payload.error;
+            }
         },
-        fetchMyWrongSlotCasesRequest: (state) => {
-            state.wrongSlotCases.loading = true;
-            state.wrongSlotCases.error = null;
+        fetchMyWrongSlotCasesRequest: (state, action) => {
+            if (!action.payload?.silent) {
+                state.wrongSlotCases.loading = true;
+                state.wrongSlotCases.error = null;
+            }
         },
         fetchMyWrongSlotCasesSuccess: (state, action) => {
-            state.wrongSlotCases.loading = false;
-            state.wrongSlotCases.myItems = action.payload || [];
+            const { items, silent } = readCollectionSyncPayload(action.payload);
+
+            if (!silent) {
+                state.wrongSlotCases.loading = false;
+            }
+            state.wrongSlotCases.myItems = reconcileCollectionById(
+                state.wrongSlotCases.myItems,
+                items
+            );
         },
         fetchMyWrongSlotCasesFailure: (state, action) => {
-            state.wrongSlotCases.loading = false;
-            state.wrongSlotCases.error = action.payload;
+            const payload = readSyncFailure(action.payload);
+
+            if (!payload.silent) {
+                state.wrongSlotCases.loading = false;
+                state.wrongSlotCases.error = payload.error;
+            }
         },
         reportWrongSlotRequest: (state) => {
             state.wrongSlotCases.reporting = true;
@@ -909,29 +962,55 @@ const parkingSlice = createSlice({
             state.wrongSlotCases.error = action.payload;
         },
 
-        fetchFloorMismatchCasesRequest: (state) => {
-            state.floorMismatchCases.loading = true;
-            state.floorMismatchCases.error = null;
+        fetchFloorMismatchCasesRequest: (state, action) => {
+            if (!action.payload?.silent) {
+                state.floorMismatchCases.loading = true;
+                state.floorMismatchCases.error = null;
+            }
         },
         fetchFloorMismatchCasesSuccess: (state, action) => {
-            state.floorMismatchCases.loading = false;
-            state.floorMismatchCases.items = action.payload || [];
+            const { items, silent } = readCollectionSyncPayload(action.payload);
+
+            if (!silent) {
+                state.floorMismatchCases.loading = false;
+            }
+            state.floorMismatchCases.items = reconcileCollectionById(
+                state.floorMismatchCases.items,
+                items
+            );
         },
         fetchFloorMismatchCasesFailure: (state, action) => {
-            state.floorMismatchCases.loading = false;
-            state.floorMismatchCases.error = action.payload;
+            const payload = readSyncFailure(action.payload);
+
+            if (!payload.silent) {
+                state.floorMismatchCases.loading = false;
+                state.floorMismatchCases.error = payload.error;
+            }
         },
-        fetchMyFloorMismatchCasesRequest: (state) => {
-            state.floorMismatchCases.loading = true;
-            state.floorMismatchCases.error = null;
+        fetchMyFloorMismatchCasesRequest: (state, action) => {
+            if (!action.payload?.silent) {
+                state.floorMismatchCases.loading = true;
+                state.floorMismatchCases.error = null;
+            }
         },
         fetchMyFloorMismatchCasesSuccess: (state, action) => {
-            state.floorMismatchCases.loading = false;
-            state.floorMismatchCases.myItems = action.payload || [];
+            const { items, silent } = readCollectionSyncPayload(action.payload);
+
+            if (!silent) {
+                state.floorMismatchCases.loading = false;
+            }
+            state.floorMismatchCases.myItems = reconcileCollectionById(
+                state.floorMismatchCases.myItems,
+                items
+            );
         },
         fetchMyFloorMismatchCasesFailure: (state, action) => {
-            state.floorMismatchCases.loading = false;
-            state.floorMismatchCases.error = action.payload;
+            const payload = readSyncFailure(action.payload);
+
+            if (!payload.silent) {
+                state.floorMismatchCases.loading = false;
+                state.floorMismatchCases.error = payload.error;
+            }
         },
         reportFloorMismatchRequest: (state) => {
             state.floorMismatchCases.reporting = true;
@@ -990,17 +1069,30 @@ const parkingSlice = createSlice({
             state.floorMismatchCases.error = action.payload;
         },
 
-        fetchActiveParkingSessionsRequest: (state) => {
-            state.parkingSessions.loading = true;
-            state.parkingSessions.error = null;
+        fetchActiveParkingSessionsRequest: (state, action) => {
+            if (!action.payload?.silent) {
+                state.parkingSessions.loading = true;
+                state.parkingSessions.error = null;
+            }
         },
         fetchActiveParkingSessionsSuccess: (state, action) => {
-            state.parkingSessions.loading = false;
-            state.parkingSessions.active = action.payload || [];
+            const { items, silent } = readCollectionSyncPayload(action.payload);
+
+            if (!silent) {
+                state.parkingSessions.loading = false;
+            }
+            state.parkingSessions.active = reconcileCollectionById(
+                state.parkingSessions.active,
+                items
+            );
         },
         fetchActiveParkingSessionsFailure: (state, action) => {
-            state.parkingSessions.loading = false;
-            state.parkingSessions.error = action.payload;
+            const payload = readSyncFailure(action.payload);
+
+            if (!payload.silent) {
+                state.parkingSessions.loading = false;
+                state.parkingSessions.error = payload.error;
+            }
         },
 
         fetchDailyParkingActivityRequest: (state) => {

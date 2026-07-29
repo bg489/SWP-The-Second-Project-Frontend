@@ -37,15 +37,23 @@ const getErrorMessage = (error, fallback) =>
     error?.response?.data?.message || error?.message || fallback;
 
 function* handleFetchFloors(action) {
+    const { silent = false, ...params } = action.payload || {};
+
     try {
         const response = yield call([api, api.get], "/floors", {
-            params: action.payload,
+            params,
         });
 
-        yield put(fetchFloorsSuccess(extractListPayload(response)));
+        yield put(fetchFloorsSuccess({
+            ...extractListPayload(response),
+            silent,
+        }));
     } catch (error) {
         yield put(
-            fetchFloorsFailure(getErrorMessage(error, "Không lấy được danh sách tầng."))
+            fetchFloorsFailure({
+                error: getErrorMessage(error, "Không lấy được danh sách tầng."),
+                silent,
+            })
         );
     }
 }

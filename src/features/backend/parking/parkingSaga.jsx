@@ -224,6 +224,16 @@ const extractList = (response, keys = []) => {
 const getErrorMessage = (error, fallback) =>
     error?.response?.data?.message || error?.message || fallback;
 
+const splitSyncOptions = (payload) => {
+    const { silent = false, ...params } = payload || {};
+    return { params, silent };
+};
+
+const syncCollectionPayload = (items, silent) => ({
+    items,
+    silent,
+});
+
 const shouldUseSample = (error) => !error?.response;
 
 const TEMP_QR_STORAGE_KEY = "parking_temp_qr_cards";
@@ -610,28 +620,37 @@ function* handleContinueMonthlyPassPayment(action) {
 }
 
 function* handleFetchTempQrCards(action) {
+    const { params, silent } = splitSyncOptions(action.payload);
+
     try {
         const response = yield call([api, api.get], "/temp-qr-cards", {
-            params: action.payload,
+            params,
         });
-        yield put(fetchTempQrCardsSuccess(extractList(response, ["tempQrCards", "cards"])));
+        yield put(fetchTempQrCardsSuccess(syncCollectionPayload(
+            extractList(response, ["tempQrCards", "cards"]),
+            silent
+        )));
     } catch (error) {
         if (shouldUseSample(error)) {
-            const status = action.payload?.status;
-            const buildingId = action.payload?.buildingId;
+            const status = params.status;
+            const buildingId = params.buildingId;
             const cards = readStoredTempQrCards();
             yield put(
-                fetchTempQrCardsSuccess(
+                fetchTempQrCardsSuccess(syncCollectionPayload(
                     cards.filter((card) =>
                         (!status || card.status === status) &&
                         (!buildingId || String(card.buildingId || 1) === String(buildingId))
-                    )
-                )
+                    ),
+                    silent
+                ))
             );
             return;
         }
 
-        yield put(fetchTempQrCardsFailure(getErrorMessage(error, "Không lấy được danh sách QR tạm.")));
+        yield put(fetchTempQrCardsFailure({
+            error: getErrorMessage(error, "Không lấy được danh sách QR tạm."),
+            silent,
+        }));
     }
 }
 
@@ -905,31 +924,43 @@ function* handleAssignStaffToBuilding(action) {
 }
 
 function* handleFetchWrongSlotCases(action) {
+    const { params, silent } = splitSyncOptions(action.payload);
+
     try {
         const response = yield call([api, api.get], "/wrong-slot-cases", {
-            params: action.payload,
+            params,
         });
-        yield put(fetchWrongSlotCasesSuccess(extractList(response, ["wrongSlotCases", "cases"])));
+        yield put(fetchWrongSlotCasesSuccess(syncCollectionPayload(
+            extractList(response, ["wrongSlotCases", "cases"]),
+            silent
+        )));
     } catch (error) {
-        yield put(fetchWrongSlotCasesFailure(getErrorMessage(error, "Khong lay duoc danh sach dau sai o.")));
+        yield put(fetchWrongSlotCasesFailure({
+            error: getErrorMessage(error, "Không lấy được danh sách đậu sai ô."),
+            silent,
+        }));
     }
 }
 
 function* handleFetchMyWrongSlotCases(action) {
+    const { params, silent } = splitSyncOptions(action.payload);
+
     try {
         const response = yield call([api, api.get], "/wrong-slot-cases/my", {
-            params: action.payload,
+            params,
         });
         yield put(
-            fetchMyWrongSlotCasesSuccess(
-                extractList(response, ["wrongSlotCases", "cases"])
-            )
+            fetchMyWrongSlotCasesSuccess(syncCollectionPayload(
+                extractList(response, ["wrongSlotCases", "cases"]),
+                silent
+            ))
         );
     } catch (error) {
         yield put(
-            fetchMyWrongSlotCasesFailure(
-                getErrorMessage(error, "Không lấy được tình trạng ô đỗ của bạn.")
-            )
+            fetchMyWrongSlotCasesFailure({
+                error: getErrorMessage(error, "Không lấy được tình trạng ô đỗ của bạn."),
+                silent,
+            })
         );
     }
 }
@@ -958,8 +989,14 @@ function* handleReportWrongSlot(action) {
         const { buildingId, ...payload } = action.payload || {};
         const response = yield call([api, api.post], "/wrong-slot-cases/report", payload);
         yield put(reportWrongSlotSuccess(extractData(response)));
-        yield put(fetchWrongSlotCasesRequest(buildingId ? { buildingId } : undefined));
-        yield put(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
+        yield put(fetchWrongSlotCasesRequest({
+            ...(buildingId ? { buildingId } : {}),
+            silent: true,
+        }));
+        yield put(fetchActiveParkingSessionsRequest({
+            ...(buildingId ? { buildingId } : {}),
+            silent: true,
+        }));
     } catch (error) {
         yield put(reportWrongSlotFailure(getErrorMessage(error, "Ghi nhan dau sai o that bai.")));
     }
@@ -970,8 +1007,14 @@ function* handleConfirmWrongSlot(action) {
         const { buildingId, id, ...payload } = action.payload;
         const response = yield call([api, api.post], `/wrong-slot-cases/${id}/confirm`, payload);
         yield put(confirmWrongSlotSuccess(extractData(response)));
-        yield put(fetchWrongSlotCasesRequest(buildingId ? { buildingId } : undefined));
-        yield put(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
+        yield put(fetchWrongSlotCasesRequest({
+            ...(buildingId ? { buildingId } : {}),
+            silent: true,
+        }));
+        yield put(fetchActiveParkingSessionsRequest({
+            ...(buildingId ? { buildingId } : {}),
+            silent: true,
+        }));
         yield put(fetchViolationsRequest());
     } catch (error) {
         yield put(confirmWrongSlotFailure(getErrorMessage(error, "Xac nhan dau sai o that bai.")));
@@ -979,39 +1022,47 @@ function* handleConfirmWrongSlot(action) {
 }
 
 function* handleFetchFloorMismatchCases(action) {
+    const { params, silent } = splitSyncOptions(action.payload);
+
     try {
         const response = yield call([api, api.get], "/floor-mismatch-cases", {
-            params: action.payload,
+            params,
         });
         yield put(
-            fetchFloorMismatchCasesSuccess(
-                extractList(response, ["floorMismatchCases", "cases"])
-            )
+            fetchFloorMismatchCasesSuccess(syncCollectionPayload(
+                extractList(response, ["floorMismatchCases", "cases"]),
+                silent
+            ))
         );
     } catch (error) {
         yield put(
-            fetchFloorMismatchCasesFailure(
-                getErrorMessage(error, "Không lấy được danh sách xe đậu sai khu.")
-            )
+            fetchFloorMismatchCasesFailure({
+                error: getErrorMessage(error, "Không lấy được danh sách xe đậu sai khu."),
+                silent,
+            })
         );
     }
 }
 
 function* handleFetchMyFloorMismatchCases(action) {
+    const { params, silent } = splitSyncOptions(action.payload);
+
     try {
         const response = yield call([api, api.get], "/floor-mismatch-cases/my", {
-            params: action.payload,
+            params,
         });
         yield put(
-            fetchMyFloorMismatchCasesSuccess(
-                extractList(response, ["floorMismatchCases", "cases"])
-            )
+            fetchMyFloorMismatchCasesSuccess(syncCollectionPayload(
+                extractList(response, ["floorMismatchCases", "cases"]),
+                silent
+            ))
         );
     } catch (error) {
         yield put(
-            fetchMyFloorMismatchCasesFailure(
-                getErrorMessage(error, "Không lấy được tình trạng xe đậu sai khu.")
-            )
+            fetchMyFloorMismatchCasesFailure({
+                error: getErrorMessage(error, "Không lấy được tình trạng xe đậu sai khu."),
+                silent,
+            })
         );
     }
 }
@@ -1039,8 +1090,14 @@ function* handleReportFloorMismatch(action) {
         const { buildingId, ...payload } = action.payload || {};
         const response = yield call([api, api.post], "/floor-mismatch-cases/report", payload);
         yield put(reportFloorMismatchSuccess(extractData(response)));
-        yield put(fetchFloorMismatchCasesRequest(buildingId ? { buildingId } : undefined));
-        yield put(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
+        yield put(fetchFloorMismatchCasesRequest({
+            ...(buildingId ? { buildingId } : {}),
+            silent: true,
+        }));
+        yield put(fetchActiveParkingSessionsRequest({
+            ...(buildingId ? { buildingId } : {}),
+            silent: true,
+        }));
         yield put(fetchViolationsRequest());
     } catch (error) {
         yield put(
@@ -1056,8 +1113,14 @@ function* handleConfirmFloorMismatch(action) {
         const { buildingId, id, ...payload } = action.payload;
         const response = yield call([api, api.post], `/floor-mismatch-cases/${id}/confirm`, payload);
         yield put(confirmFloorMismatchSuccess(extractData(response)));
-        yield put(fetchFloorMismatchCasesRequest(buildingId ? { buildingId } : undefined));
-        yield put(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
+        yield put(fetchFloorMismatchCasesRequest({
+            ...(buildingId ? { buildingId } : {}),
+            silent: true,
+        }));
+        yield put(fetchActiveParkingSessionsRequest({
+            ...(buildingId ? { buildingId } : {}),
+            silent: true,
+        }));
         yield put(fetchViolationsRequest());
     } catch (error) {
         yield put(
@@ -1069,24 +1132,33 @@ function* handleConfirmFloorMismatch(action) {
 }
 
 function* handleFetchActiveParkingSessions(action) {
+    const { params, silent } = splitSyncOptions(action.payload);
+
     try {
         const response = yield call([api, api.get], "/parking-sessions/active", {
-            params: action.payload,
+            params,
         });
-        yield put(fetchActiveParkingSessionsSuccess(extractList(response, ["parkingSessions", "sessions"])));
+        yield put(fetchActiveParkingSessionsSuccess(syncCollectionPayload(
+            extractList(response, ["parkingSessions", "sessions"]),
+            silent
+        )));
     } catch (error) {
         if (shouldUseSample(error)) {
             yield put(
-                fetchActiveParkingSessionsSuccess(
+                fetchActiveParkingSessionsSuccess(syncCollectionPayload(
                     parkingSessions.filter((session) =>
                         ["ACTIVE", "PENDING_PAYMENT"].includes(session.status)
-                    )
-                )
+                    ),
+                    silent
+                ))
             );
             return;
         }
 
-        yield put(fetchActiveParkingSessionsFailure(getErrorMessage(error, "Không lấy được danh sách xe đang gửi.")));
+        yield put(fetchActiveParkingSessionsFailure({
+            error: getErrorMessage(error, "Không lấy được danh sách xe đang gửi."),
+            silent,
+        }));
     }
 }
 
@@ -1153,7 +1225,7 @@ function* handleCheckIn(action) {
     try {
         const response = yield call([api, api.post], "/parking-sessions/check-in", action.payload);
         yield put(checkInSuccess(extractData(response)));
-        yield put(fetchActiveParkingSessionsRequest());
+        yield put(fetchActiveParkingSessionsRequest({ silent: true }));
     } catch (error) {
         if (shouldUseSample(error)) {
             yield put(

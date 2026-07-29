@@ -1,4 +1,4 @@
-import { call, put, takeLatest } from "redux-saga/effects";
+import { call, put, takeEvery, takeLatest } from "redux-saga/effects";
 import api from "../../../services/api";
 import { fetchFloorsRequest } from "../floors/floorSlice";
 import {
@@ -32,22 +32,24 @@ const getErrorMessage = (error, fallback) =>
     error?.response?.data?.message || error?.message || fallback;
 
 function* handleFetchSlotsByFloor(action) {
-    try {
-        const { floorId } = action.payload;
+    const { floorId, silent = false } = action.payload || {};
 
+    try {
         const response = yield call([api, api.get], `/floors/${floorId}/slots`);
 
         yield put(
             fetchSlotsByFloorSuccess({
                 floorId,
+                silent,
                 slots: extractList(response),
             })
         );
     } catch (error) {
         yield put(
-            fetchSlotsByFloorFailure(
-                getErrorMessage(error, "Không lấy được danh sách ô đỗ.")
-            )
+            fetchSlotsByFloorFailure({
+                error: getErrorMessage(error, "Không lấy được danh sách ô đỗ."),
+                silent,
+            })
         );
     }
 }
@@ -124,7 +126,7 @@ function* handleDeleteSlot(action) {
 }
 
 export default function* slotSaga() {
-    yield takeLatest(fetchSlotsByFloorRequest.type, handleFetchSlotsByFloor);
+    yield takeEvery(fetchSlotsByFloorRequest.type, handleFetchSlotsByFloor);
     yield takeLatest(createSlotRequest.type, handleCreateSlot);
     yield takeLatest(updateSlotRequest.type, handleUpdateSlot);
     yield takeLatest(deleteSlotRequest.type, handleDeleteSlot);

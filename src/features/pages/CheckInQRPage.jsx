@@ -115,16 +115,24 @@ const CheckInQRPage = () => {
     const timer = window.setInterval(() => {
       dispatch(fetchFloorsRequest({
         buildingId: currentBuildingId,
+        silent: true,
         status: "ACTIVE",
         limit: 100,
       }));
-      dispatch(fetchActiveParkingSessionsRequest({ buildingId: currentBuildingId }));
+      dispatch(fetchActiveParkingSessionsRequest({
+        buildingId: currentBuildingId,
+        silent: true,
+      }));
       dispatch(fetchTempQrCardsRequest({
         buildingId: currentBuildingId,
+        silent: true,
         status: "READY",
       }));
       if (effectiveCarFloorId) {
-        dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
+        dispatch(fetchSlotsByFloorRequest({
+          floorId: effectiveCarFloorId,
+          silent: true,
+        }));
       }
     }, 5000);
 
@@ -243,17 +251,25 @@ const CheckInQRPage = () => {
       if (currentBuildingId) {
         dispatch(fetchFloorsRequest({
           buildingId: currentBuildingId,
+          silent: true,
           status: "ACTIVE",
           limit: 100,
         }));
-        dispatch(fetchActiveParkingSessionsRequest({ buildingId: currentBuildingId }));
+        dispatch(fetchActiveParkingSessionsRequest({
+          buildingId: currentBuildingId,
+          silent: true,
+        }));
         dispatch(fetchTempQrCardsRequest({
           buildingId: currentBuildingId,
+          silent: true,
           status: "READY",
         }));
       }
       if (effectiveCarFloorId) {
-        dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
+        dispatch(fetchSlotsByFloorRequest({
+          floorId: effectiveCarFloorId,
+          silent: true,
+        }));
       }
     },
   });
