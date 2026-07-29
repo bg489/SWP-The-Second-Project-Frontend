@@ -103,7 +103,7 @@ export const MockAuthProvider = ({ children }) => {
 export const useMockAuth = () => {
   const context = useContext(MockAuthContext);
   if (!context) {
-    throw new Error("useMockAuth phai duoc su dung trong MockAuthProvider");
+	throw new Error("useMockAuth phải được sử dụng trong MockAuthProvider");
   }
   return context;
 };

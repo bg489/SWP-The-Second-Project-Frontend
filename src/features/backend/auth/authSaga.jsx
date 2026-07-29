@@ -194,7 +194,7 @@ function* handleRefreshSession() {
         const { token, user, backendRole, frontendRole } = extractLoginData(response);
 
         if (!token) {
-            throw new Error("Khong the lam moi dang nhap.");
+        throw new Error("Không thể làm mới phiên đăng nhập.");
         }
 
         localStorage.setItem("access_token", token);
@@ -230,7 +230,7 @@ function* handleUpdateAvatar(action) {
         const message =
             error?.response?.data?.message ||
             error?.message ||
-            "Cap nhat anh dai dien that bai.";
+            "Cập nhật ảnh đại diện thất bại.";
 
         yield put(updateAvatarFailure(message));
     }

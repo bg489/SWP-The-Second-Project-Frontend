@@ -26,7 +26,7 @@ import QrCodeImage from "../../components/QrCode/QrCodeImage";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
 import { fetchBuildingsRequest } from "../backend/buildings/buildingSlice";
-import { clearParkingNotice, fetchMonthlyPassesRequest } from "../backend/parking/parkingSlice";
+import { clearParkingNotice, fetchQrPassesRequest } from "../backend/parking/parkingSlice";
 import {
   formatCurrency,
   getStatusLabel,
@@ -64,6 +64,22 @@ const getPassQrValue = (pass) =>
   pass?.code ||
   "";
 
+const getPassStartDate = (pass) =>
+  pass?.startDate || pass?.monthlyPassStartDate || pass?.validFrom;
+
+const getPassEndDate = (pass) =>
+  pass?.endDate || pass?.monthlyPassEndDate || pass?.validTo || pass?.qrValidTo;
+
+const getPackageName = (pass) => {
+  if (pass?.packagePlanName) return pass.packagePlanName;
+
+  if (pass?.passType === "SLOT_REGISTRATION" || pass?.vehicleType === "CAR") {
+    return `Gói tháng ô tô${pass?.slotCode ? ` - ô ${pass.slotCode}` : ""}`;
+  }
+
+  return pass?.note || "Gói tháng xe máy";
+};
+
 const formatDate = (value) => {
   if (!value) return "-";
 
@@ -89,7 +105,7 @@ const getLifeState = (pass) => {
     return { label: "Đã hủy", tone: "danger" };
   }
 
-  const endDate = pass.endDate || pass.qrValidTo;
+  const endDate = getPassEndDate(pass);
   const endTime = endDate ? new Date(endDate).getTime() : 0;
   const now = Date.now();
   const daysLeft = endTime ? Math.ceil((endTime - now) / 86400000) : null;
@@ -107,7 +123,7 @@ const getLifeState = (pass) => {
 
 const ManagerMonthlyPassesPage = () => {
   const dispatch = useDispatch();
-  const { monthlyPasses } = useSelector((state) => state.parking);
+  const { qrPasses } = useSelector((state) => state.parking);
   const { user } = useSelector((state) => state.auth);
   const {
     buildings,
@@ -126,7 +142,7 @@ const ManagerMonthlyPassesPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(fetchMonthlyPassesRequest(
+    dispatch(fetchQrPassesRequest(
       filters.buildingId ? { buildingId: Number(filters.buildingId) } : undefined
     ));
   }, [dispatch, filters.buildingId]);
@@ -151,7 +167,7 @@ const ManagerMonthlyPassesPage = () => {
   const rows = useMemo(() => {
     const keyword = normalizeText(filters.q);
 
-    return (monthlyPasses.items || []).filter((pass) => {
+    return (qrPasses.items || []).filter((pass) => {
       const lifeState = getLifeState(pass);
       const matchesBuilding =
         !filters.buildingId ||
@@ -171,11 +187,13 @@ const ManagerMonthlyPassesPage = () => {
         pass.ownerEmail,
         pass.ownerPhone,
         pass.plateNumber,
-        pass.packagePlanName,
+        getPackageName(pass),
         pass.qrCode,
+        pass.slotCode,
+        pass.slotFloorName,
       ].some((value) => normalizeText(value).includes(keyword));
     });
-  }, [filters.buildingId, filters.q, filters.status, monthlyPasses.items]);
+  }, [filters.buildingId, filters.q, filters.status, qrPasses.items]);
 
   const summary = useMemo(() => {
     return rows.reduce(
@@ -195,10 +213,10 @@ const ManagerMonthlyPassesPage = () => {
   }, [rows]);
 
   const selectedPass = useMemo(
-    () => (monthlyPasses.items || []).find(
+    () => (qrPasses.items || []).find(
       (pass) => Number(pass.id) === Number(selectedPassId)
     ) || null,
-    [monthlyPasses.items, selectedPassId]
+    [qrPasses.items, selectedPassId]
   );
 
   const columns = [
@@ -239,12 +257,12 @@ const ManagerMonthlyPassesPage = () => {
     {
       header: "Gói",
       key: "packagePlanName",
-      render: (row) => row.packagePlanName || row.note || "Gói tháng",
+      render: (row) => getPackageName(row),
     },
     {
       header: "Thời hạn",
       key: "dateRange",
-      render: (row) => `${formatDate(row.startDate)} - ${formatDate(row.endDate)}`,
+      render: (row) => `${formatDate(getPassStartDate(row))} - ${formatDate(getPassEndDate(row))}`,
     },
     {
       header: "Số tiền",
@@ -279,7 +297,7 @@ const ManagerMonthlyPassesPage = () => {
 
   const refresh = () => {
     dispatch(clearParkingNotice());
-    dispatch(fetchMonthlyPassesRequest(
+    dispatch(fetchQrPassesRequest(
       filters.buildingId ? { buildingId: Number(filters.buildingId) } : undefined
     ));
   };
@@ -301,7 +319,7 @@ const ManagerMonthlyPassesPage = () => {
         </div>
       </section>
 
-      <StatusBanner errors={[monthlyPasses.error, buildingsError]} />
+      <StatusBanner errors={[qrPasses.error, buildingsError]} />
 
       <div className="dashboard-grid">
         <div className="card metric-card">
@@ -336,7 +354,7 @@ const ManagerMonthlyPassesPage = () => {
             <h2 className="section-title"><Search size={19} /> Danh sách QR gói tháng</h2>
             <p className="section-copy">Tìm nhanh theo tên, email, số điện thoại, biển số, tên gói hoặc mã QR.</p>
           </div>
-          <Button variant="outline" icon={RefreshCcw} loading={monthlyPasses.loading} onClick={refresh}>
+          <Button variant="outline" icon={RefreshCcw} loading={qrPasses.loading} onClick={refresh}>
             Làm mới
           </Button>
         </div>
@@ -380,7 +398,7 @@ const ManagerMonthlyPassesPage = () => {
         <Table
           columns={columns}
           data={rows}
-          loading={monthlyPasses.loading}
+          loading={qrPasses.loading}
           emptyMessage="Chưa có QR gói tháng phù hợp."
           pageSize={10}
         />
@@ -499,12 +517,24 @@ const ManagerMonthlyPassesPage = () => {
                 </div>
                 <div>
                   <span>Tên gói</span>
-                  <strong>{selectedPass.packagePlanName || selectedPass.note || "Gói tháng"}</strong>
+                  <strong>{getPackageName(selectedPass)}</strong>
                 </div>
                 <div>
                   <span>Thời hạn</span>
-                  <strong>{formatDate(selectedPass.startDate)} - {formatDate(selectedPass.endDate)}</strong>
+                  <strong>
+                    {formatDate(getPassStartDate(selectedPass))} - {formatDate(getPassEndDate(selectedPass))}
+                  </strong>
                 </div>
+                {selectedPass.vehicleType === "CAR" && (
+                  <div>
+                    <span>Vị trí đăng ký</span>
+                    <strong>
+                      {[selectedPass.slotFloorName, selectedPass.slotCode]
+                        .filter(Boolean)
+                        .join(" - ") || "Chưa có thông tin ô đỗ"}
+                    </strong>
+                  </div>
+                )}
                 <div>
                   <span>Giá trị gói</span>
                   <strong>{formatCurrency(selectedPass.amount || 0)}</strong>
