@@ -39,6 +39,7 @@ import StaffWorkProfilePage from "../features/pages/StaffWorkProfilePage";
 import VehicleActivityPage from "../features/pages/VehicleActivityPage";
 import UserNotificationsPage from "../features/pages/UserNotificationsPage";
 import UserParkingIssuesPage from "../features/pages/UserParkingIssuesPage";
+import HourlySlotReservationsPage from "../features/pages/HourlySlotReservationsPage";
 import {
   PAYMENT_RETURN_STORAGE_KEY,
   getStoredPaymentReturnTarget,
@@ -90,6 +91,7 @@ const AppRoutes = () => {
           <Route path="/user/building-change" element={<UserBuildingChangeRequestPage />} />
           <Route path="/user/notifications" element={<UserNotificationsPage />} />
           <Route path="/user/parking-issues" element={<UserParkingIssuesPage />} />
+          <Route path="/user/slot-reservations" element={<HourlySlotReservationsPage />} />
         </Route>
 
         <Route element={<RoleProtectedRoute allowedRoles={["PARKING_STAFF"]} />}>
@@ -98,6 +100,7 @@ const AppRoutes = () => {
           <Route path="/staff/work-profile" element={<StaffWorkProfilePage />} />
           <Route path="/staff/check-in" element={<CheckInQRPage />} />
           <Route path="/staff/check-out" element={<CheckOutQRPage />} />
+          <Route path="/staff/slot-reservations" element={<HourlySlotReservationsPage />} />
           <Route path="/staff/temp-qr-cards" element={<TempQrCardsPage />} />
           <Route path="/staff/violations" element={<StaffViolationsPage />} />
           <Route path="/staff/motorbike-status" element={<MotorbikeFloorStatusPage />} />
