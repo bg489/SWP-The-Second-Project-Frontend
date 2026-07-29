@@ -463,7 +463,7 @@ const ManagerMonthlyPassesPage = () => {
                   <span><MapPin size={15} /> Địa chỉ</span>
                   <strong>{selectedPass.ownerBuildingAddress || "Chưa cập nhật"}</strong>
                 </div>
-                <div>
+                <div className="monthly-owner-detail-wide">
                   <span><CalendarDays size={15} /> Ngày tạo tài khoản</span>
                   <strong>{formatDate(selectedPass.ownerCreatedAt)}</strong>
                 </div>
