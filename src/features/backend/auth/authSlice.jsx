@@ -18,8 +18,12 @@ const getInitialState = () => {
         user,
         frontendRole,
         isAuthenticated: Boolean(token),
+        requiresBuildingSelection: Boolean(
+            user?.requiresBuildingSelection || user?.onboardingCompleted === false
+        ),
 
         loading: false,
+        googleLoading: false,
         error: null,
         loginCompleted: false,
 
@@ -27,6 +31,11 @@ const getInitialState = () => {
         registerError: null,
         registerSuccess: false,
         registeredUser: null,
+        registrationVerificationLoading: false,
+        registrationVerificationAction: null,
+        registrationVerificationError: null,
+        registrationVerificationNotice: null,
+        registrationVerified: false,
 
         registerBuildings: [],
         registerBuildingsLoading: false,
@@ -41,6 +50,9 @@ const getInitialState = () => {
 
         profileUpdateRequestId: null,
         profileUpdateNotice: null,
+
+        onboardingLoading: false,
+        onboardingError: null,
     };
 };
 
@@ -50,6 +62,7 @@ const authSlice = createSlice({
     reducers: {
         loginRequest: (state) => {
             state.loading = true;
+            state.googleLoading = false;
             state.error = null;
             state.loginCompleted = false;
         },
@@ -57,19 +70,42 @@ const authSlice = createSlice({
         loginSuccess: (state, action) => {
             state.loading = false;
             state.error = null;
+            state.googleLoading = false;
             state.token = action.payload.token;
             state.user = action.payload.user;
             state.frontendRole = action.payload.frontendRole;
             state.isAuthenticated = true;
+            state.requiresBuildingSelection = Boolean(
+                action.payload.requiresBuildingSelection
+            );
             state.loginCompleted = true;
         },
 
         loginFailure: (state, action) => {
             state.loading = false;
+            state.googleLoading = false;
             state.error = action.payload;
             state.token = null;
             state.user = null;
             state.isAuthenticated = false;
+            state.requiresBuildingSelection = false;
+            state.loginCompleted = false;
+        },
+
+        googleAuthRequest: (state) => {
+            state.googleLoading = true;
+            state.loading = false;
+            state.error = null;
+            state.loginCompleted = false;
+        },
+
+        googleAuthFailure: (state, action) => {
+            state.googleLoading = false;
+            state.error = action.payload;
+            state.token = null;
+            state.user = null;
+            state.isAuthenticated = false;
+            state.requiresBuildingSelection = false;
             state.loginCompleted = false;
         },
 
@@ -78,6 +114,9 @@ const authSlice = createSlice({
             state.registerError = null;
             state.registerSuccess = false;
             state.registeredUser = null;
+            state.registrationVerificationError = null;
+            state.registrationVerificationNotice = null;
+            state.registrationVerified = false;
         },
 
         registerSuccess: (state, action) => {
@@ -94,11 +133,59 @@ const authSlice = createSlice({
             state.registeredUser = null;
         },
 
+        verifyRegistrationRequest: (state) => {
+            state.registrationVerificationLoading = true;
+            state.registrationVerificationAction = "verify";
+            state.registrationVerificationError = null;
+            state.registrationVerificationNotice = null;
+            state.registrationVerified = false;
+        },
+
+        verifyRegistrationSuccess: (state, action) => {
+            state.registrationVerificationLoading = false;
+            state.registrationVerificationAction = null;
+            state.registrationVerificationError = null;
+            state.registrationVerificationNotice = action.payload;
+            state.registrationVerified = true;
+        },
+
+        verifyRegistrationFailure: (state, action) => {
+            state.registrationVerificationLoading = false;
+            state.registrationVerificationAction = null;
+            state.registrationVerificationError = action.payload;
+            state.registrationVerified = false;
+        },
+
+        resendRegistrationOtpRequest: (state) => {
+            state.registrationVerificationLoading = true;
+            state.registrationVerificationAction = "resend";
+            state.registrationVerificationError = null;
+            state.registrationVerificationNotice = null;
+        },
+
+        resendRegistrationOtpSuccess: (state, action) => {
+            state.registrationVerificationLoading = false;
+            state.registrationVerificationAction = null;
+            state.registrationVerificationError = null;
+            state.registrationVerificationNotice = action.payload;
+        },
+
+        resendRegistrationOtpFailure: (state, action) => {
+            state.registrationVerificationLoading = false;
+            state.registrationVerificationAction = null;
+            state.registrationVerificationError = action.payload;
+        },
+
         clearRegisterState: (state) => {
             state.registerLoading = false;
             state.registerError = null;
             state.registerSuccess = false;
             state.registeredUser = null;
+            state.registrationVerificationLoading = false;
+            state.registrationVerificationAction = null;
+            state.registrationVerificationError = null;
+            state.registrationVerificationNotice = null;
+            state.registrationVerified = false;
         },
 
         logout: (state) => {
@@ -107,8 +194,12 @@ const authSlice = createSlice({
             state.frontendRole = "USER";
             state.isAuthenticated = false;
             state.loading = false;
+            state.googleLoading = false;
             state.error = null;
             state.loginCompleted = false;
+            state.requiresBuildingSelection = false;
+            state.onboardingLoading = false;
+            state.onboardingError = null;
         },
 
         clearLoginRedirect: (state) => {
@@ -143,6 +234,9 @@ const authSlice = createSlice({
             state.user = action.payload.user;
             state.frontendRole = action.payload.frontendRole;
             state.isAuthenticated = Boolean(action.payload.token);
+            state.requiresBuildingSelection = Boolean(
+                action.payload.requiresBuildingSelection
+            );
         },
 
         refreshSessionFailure: (state, action) => {
@@ -151,6 +245,27 @@ const authSlice = createSlice({
             state.token = null;
             state.user = null;
             state.isAuthenticated = false;
+            state.requiresBuildingSelection = false;
+        },
+
+        completeGoogleOnboardingRequest: (state) => {
+            state.onboardingLoading = true;
+            state.onboardingError = null;
+        },
+
+        completeGoogleOnboardingSuccess: (state, action) => {
+            state.onboardingLoading = false;
+            state.onboardingError = null;
+            state.token = action.payload.token;
+            state.user = action.payload.user;
+            state.frontendRole = action.payload.frontendRole;
+            state.isAuthenticated = true;
+            state.requiresBuildingSelection = false;
+        },
+
+        completeGoogleOnboardingFailure: (state, action) => {
+            state.onboardingLoading = false;
+            state.onboardingError = action.payload;
         },
 
         updateAvatarRequest: (state) => {
@@ -310,9 +425,17 @@ export const {
     loginRequest,
     loginSuccess,
     loginFailure,
+    googleAuthRequest,
+    googleAuthFailure,
     registerRequest,
     registerSuccess,
     registerFailure,
+    verifyRegistrationRequest,
+    verifyRegistrationSuccess,
+    verifyRegistrationFailure,
+    resendRegistrationOtpRequest,
+    resendRegistrationOtpSuccess,
+    resendRegistrationOtpFailure,
     clearRegisterState,
     logout,
     clearLoginRedirect,
@@ -322,6 +445,9 @@ export const {
     refreshSessionRequest,
     refreshSessionSuccess,
     refreshSessionFailure,
+    completeGoogleOnboardingRequest,
+    completeGoogleOnboardingSuccess,
+    completeGoogleOnboardingFailure,
     updateAvatarRequest,
     updateAvatarSuccess,
     updateAvatarFailure,
