@@ -170,6 +170,17 @@
   grid-column: 1 / -1;
 }
 
+.reservation-plate-input {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 9px;
+}
+
+.reservation-plate-input .btn {
+  min-width: 168px;
+  white-space: nowrap;
+}
+
 .reservation-note {
   min-height: 86px;
   resize: vertical;
@@ -255,6 +266,14 @@
 
   .reservation-note-field {
     grid-column: auto;
+  }
+
+  .reservation-plate-input {
+    grid-template-columns: 1fr;
+  }
+
+  .reservation-plate-input .btn {
+    width: 100%;
   }
 
   .reservation-slot-heading,
