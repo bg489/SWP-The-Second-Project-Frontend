@@ -40,6 +40,7 @@ import VehicleActivityPage from "../features/pages/VehicleActivityPage";
 import UserNotificationsPage from "../features/pages/UserNotificationsPage";
 import UserParkingIssuesPage from "../features/pages/UserParkingIssuesPage";
 import HourlySlotReservationsPage from "../features/pages/HourlySlotReservationsPage";
+import GoogleBuildingSelectionPage from "../features/pages/GoogleBuildingSelectionPage";
 import {
   PAYMENT_RETURN_STORAGE_KEY,
   getStoredPaymentReturnTarget,
@@ -47,12 +48,20 @@ import {
 
 const DefaultRedirect = () => {
   const { isAuthenticated: contextAuthenticated, role: contextRole } = useMockAuth();
-  const { isAuthenticated: storeAuthenticated, frontendRole } = useSelector((state) => state.auth);
+  const {
+    isAuthenticated: storeAuthenticated,
+    frontendRole,
+    requiresBuildingSelection,
+  } = useSelector((state) => state.auth);
   const isAuthenticated = contextAuthenticated && storeAuthenticated;
   const role = frontendRole || contextRole;
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (requiresBuildingSelection) {
+    return <Navigate to="/choose-building" replace />;
   }
 
   return <Navigate to={roleHomePaths[role] || "/login"} replace />;
@@ -75,6 +84,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/choose-building" element={<GoogleBuildingSelectionPage />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
       <Route element={<MainLayout />}>

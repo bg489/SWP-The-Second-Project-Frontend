@@ -39,6 +39,11 @@ import {
   clearPaymentReturnState,
   getPaymentReturnFromUrl,
 } from "../../utils/paymentReturn";
+import {
+  isValidOptionalVietnamPhone,
+  sanitizeVietnamPhoneInput,
+  VIETNAM_PHONE_ERROR,
+} from "../../utils/phone";
 import "./HourlySlotReservationsPage.css";
 
 const reservationStatusMeta = {
@@ -131,6 +136,7 @@ const HourlySlotReservationsPage = () => {
     note: "",
   });
   const [formError, setFormError] = useState("");
+  const [guestPhoneError, setGuestPhoneError] = useState("");
   const [plateScannerOpen, setPlateScannerOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -310,6 +316,7 @@ const HourlySlotReservationsPage = () => {
     });
     setPlateScannerOpen(false);
     setSelectedSlotId("");
+    setGuestPhoneError("");
   };
 
   const markGuestSubmitted = useResetAfterSuccess({
@@ -345,6 +352,12 @@ const HourlySlotReservationsPage = () => {
         return;
       }
 
+      if (!isValidOptionalVietnamPhone(guestForm.guestPhone)) {
+        setGuestPhoneError(VIETNAM_PHONE_ERROR);
+        return;
+      }
+
+      setGuestPhoneError("");
       markGuestSubmitted();
       dispatch(
         createGuestHourlyReservationRequest({
@@ -695,17 +708,24 @@ const HourlySlotReservationsPage = () => {
                 }
               />
             </FormField>
-            <FormField label="Số điện thoại" required>
+            <FormField
+              label="Số điện thoại"
+              required
+              error={guestPhoneError}
+            >
               <Input
                 type="tel"
                 value={guestForm.guestPhone}
                 placeholder="Nhập số điện thoại"
-                onChange={(event) =>
+                inputMode="numeric"
+                maxLength={10}
+                onChange={(event) => {
+                  setGuestPhoneError("");
                   setGuestForm((current) => ({
                     ...current,
-                    guestPhone: event.target.value,
-                  }))
-                }
+                    guestPhone: sanitizeVietnamPhoneInput(event.target.value),
+                  }));
+                }}
               />
             </FormField>
             <FormField label="Biển số ô tô" required>

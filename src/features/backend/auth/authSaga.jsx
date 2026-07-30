@@ -1,12 +1,17 @@
 import { call, put, takeEvery, takeLatest } from "redux-saga/effects";
 import api from "../../../services/api";
 import {
+    completeGoogleOnboardingFailure,
+    completeGoogleOnboardingRequest,
+    completeGoogleOnboardingSuccess,
     fetchRegisterBuildingsFailure,
     fetchRegisterBuildingsRequest,
     fetchRegisterBuildingsSuccess,
     confirmProfileUpdateFailure,
     confirmProfileUpdateRequest,
     confirmProfileUpdateSuccess,
+    googleAuthFailure,
+    googleAuthRequest,
     loginFailure,
     loginRequest,
     loginSuccess,
@@ -14,6 +19,9 @@ import {
     registerFailure,
     registerRequest,
     registerSuccess,
+    resendRegistrationOtpFailure,
+    resendRegistrationOtpRequest,
+    resendRegistrationOtpSuccess,
     requestPasswordResetFailure,
     requestPasswordResetRequest,
     requestPasswordResetSuccess,
@@ -35,6 +43,9 @@ import {
     verifyPasswordResetFailure,
     verifyPasswordResetRequest,
     verifyPasswordResetSuccess,
+    verifyRegistrationFailure,
+    verifyRegistrationRequest,
+    verifyRegistrationSuccess,
 } from "./authSlice";
 
 const backendToFrontendRole = {
@@ -54,12 +65,18 @@ const extractLoginData = (response) => {
 
     const backendRole = user?.role || payload.role || "USER";
     const frontendRole = backendToFrontendRole[backendRole] || "USER";
+    const requiresBuildingSelection = Boolean(
+        payload.requiresBuildingSelection ||
+        user?.requiresBuildingSelection ||
+        user?.onboardingCompleted === false
+    );
 
     return {
         token,
         user,
         backendRole,
         frontendRole,
+        requiresBuildingSelection,
     };
 };
 
@@ -88,53 +105,103 @@ function* handleFetchRegisterBuildings() {
     }
 }
 
+function* prepareAuthenticatedSession(response) {
+    const {
+        token,
+        user,
+        backendRole: initialBackendRole,
+        frontendRole: initialFrontendRole,
+        requiresBuildingSelection: initialOnboardingRequired,
+    } = extractLoginData(response);
+
+    if (!token) {
+        throw new Error("Đăng nhập chưa hoàn tất. Vui lòng thử lại.");
+    }
+
+    localStorage.setItem("access_token", token);
+
+    let currentUser;
+
+    try {
+        const meResponse = yield call([api, api.get], "/auth/me");
+        currentUser = {
+            ...user,
+            ...(meResponse?.data?.data || meResponse?.data || {}),
+        };
+    } catch {
+        currentUser = user;
+    }
+
+    const backendRole = currentUser?.role || initialBackendRole;
+    const frontendRole =
+        backendToFrontendRole[backendRole] || initialFrontendRole || "USER";
+    const requiresBuildingSelection = Boolean(
+        initialOnboardingRequired ||
+        currentUser?.requiresBuildingSelection ||
+        currentUser?.onboardingCompleted === false
+    );
+    const storedUser = {
+        ...currentUser,
+        requiresBuildingSelection,
+    };
+
+    localStorage.setItem("auth_user", JSON.stringify(storedUser));
+    localStorage.setItem("auth_role", backendRole);
+    localStorage.setItem("mock_role", frontendRole);
+
+    return {
+        frontendRole,
+        requiresBuildingSelection,
+        token,
+        user: storedUser,
+    };
+}
+
+const clearStoredSession = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("auth_user");
+    localStorage.removeItem("auth_role");
+    localStorage.removeItem("mock_role");
+};
+
 function* handleLogin(action) {
     try {
         const response = yield call([api, api.post], "/auth/login", action.payload);
+        const session = yield* prepareAuthenticatedSession(response);
 
-        const { token, user, backendRole, frontendRole } =
-            extractLoginData(response);
-
-        if (!token) {
-            throw new Error("Đăng nhập chưa hoàn tất. Vui lòng thử lại.");
-        }
-
-        localStorage.setItem("access_token", token);
-
-        let currentUser = user;
-
-        try {
-            const meResponse = yield call([api, api.get], "/auth/me");
-            currentUser = {
-                ...user,
-                ...(meResponse?.data?.data || meResponse?.data || {}),
-            };
-        } catch {
-            currentUser = user;
-        }
-
-        localStorage.setItem("auth_user", JSON.stringify(currentUser));
-        localStorage.setItem("auth_role", backendRole);
-        localStorage.setItem("mock_role", frontendRole);
-
-        yield put(
-            loginSuccess({
-                token,
-                user: currentUser,
-                frontendRole,
-            })
-        );
+        yield put(loginSuccess(session));
     } catch (error) {
         const message =
             error?.response?.data?.message ||
             error?.message ||
             "Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản.";
 
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("auth_user");
-        localStorage.removeItem("auth_role");
+        clearStoredSession();
 
         yield put(loginFailure(message));
+    }
+}
+
+function* handleGoogleAuth(action) {
+    try {
+        const response = yield call(
+            [api, api.post],
+            "/auth/google",
+            action.payload
+        );
+        const session = yield* prepareAuthenticatedSession(response);
+
+        yield put(loginSuccess(session));
+    } catch (error) {
+        clearStoredSession();
+        yield put(
+            googleAuthFailure(
+                getErrorMessage(
+                    error,
+                    "Đăng nhập Google thất bại. Vui lòng thử lại."
+                )
+            )
+        );
     }
 }
 
@@ -160,6 +227,59 @@ const getResponseMessage = (response, fallback) =>
 
 const getErrorMessage = (error, fallback) =>
     error?.response?.data?.message || error?.message || fallback;
+
+function* handleVerifyRegistration(action) {
+    try {
+        const response = yield call(
+            [api, api.post],
+            "/auth/verify-registration",
+            action.payload
+        );
+
+        yield put(
+            verifyRegistrationSuccess(
+                getResponseMessage(
+                    response,
+                    "Xác minh email thành công. Bạn có thể đăng nhập ngay."
+                )
+            )
+        );
+    } catch (error) {
+        yield put(
+            verifyRegistrationFailure(
+                getErrorMessage(
+                    error,
+                    "Mã OTP không đúng hoặc đã hết hạn."
+                )
+            )
+        );
+    }
+}
+
+function* handleResendRegistrationOtp(action) {
+    try {
+        const response = yield call(
+            [api, api.post],
+            "/auth/resend-registration-otp",
+            action.payload
+        );
+
+        yield put(
+            resendRegistrationOtpSuccess(
+                getResponseMessage(
+                    response,
+                    "Đã gửi lại mã OTP xác minh tới email của bạn."
+                )
+            )
+        );
+    } catch (error) {
+        yield put(
+            resendRegistrationOtpFailure(
+                getErrorMessage(error, "Không gửi lại được mã OTP xác minh.")
+            )
+        );
+    }
+}
 
 function* handleRequestPasswordReset(action) {
     try {
@@ -191,30 +311,37 @@ function* handleResetPassword(action) {
 function* handleRefreshSession() {
     try {
         const response = yield call([api, api.post], "/auth/refresh");
-        const { token, user, backendRole, frontendRole } = extractLoginData(response);
+        const session = yield* prepareAuthenticatedSession(response);
 
-        if (!token) {
-        throw new Error("Không thể làm mới phiên đăng nhập.");
-        }
-
-        localStorage.setItem("access_token", token);
-        localStorage.setItem("auth_user", JSON.stringify(user));
-        localStorage.setItem("auth_role", backendRole);
-        localStorage.setItem("mock_role", frontendRole);
-
-        yield put(refreshSessionSuccess({ token, user, frontendRole }));
+        yield put(refreshSessionSuccess(session));
     } catch (error) {
         const message =
             error?.response?.data?.message ||
             error?.message ||
-            "Phien dang nhap da het han.";
+            "Phiên đăng nhập đã hết hạn.";
 
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("auth_user");
-        localStorage.removeItem("auth_role");
-        localStorage.removeItem("mock_role");
+        clearStoredSession();
 
         yield put(refreshSessionFailure(message));
+    }
+}
+
+function* handleCompleteGoogleOnboarding(action) {
+    try {
+        const response = yield call(
+            [api, api.post],
+            "/auth/google/complete-onboarding",
+            action.payload
+        );
+        const session = yield* prepareAuthenticatedSession(response);
+
+        yield put(completeGoogleOnboardingSuccess(session));
+    } catch (error) {
+        yield put(
+            completeGoogleOnboardingFailure(
+                getErrorMessage(error, "Không thể lưu tòa nhà đã chọn.")
+            )
+        );
     }
 }
 
@@ -302,11 +429,21 @@ function* handleLogout() {
 
 export default function* authSaga() {
     yield takeLatest(loginRequest.type, handleLogin);
+    yield takeLatest(googleAuthRequest.type, handleGoogleAuth);
     yield takeLatest(registerRequest.type, handleRegister);
+    yield takeLatest(verifyRegistrationRequest.type, handleVerifyRegistration);
+    yield takeLatest(
+        resendRegistrationOtpRequest.type,
+        handleResendRegistrationOtp
+    );
     yield takeLatest(requestPasswordResetRequest.type, handleRequestPasswordReset);
     yield takeLatest(verifyPasswordResetRequest.type, handleVerifyPasswordReset);
     yield takeLatest(resetPasswordRequest.type, handleResetPassword);
     yield takeLatest(refreshSessionRequest.type, handleRefreshSession);
+    yield takeLatest(
+        completeGoogleOnboardingRequest.type,
+        handleCompleteGoogleOnboarding
+    );
     yield takeLatest(updateAvatarRequest.type, handleUpdateAvatar);
     yield takeLatest(updateProfileRequest.type, handleUpdateProfile);
     yield takeLatest(requestProfileUpdateOtpRequest.type, handleRequestProfileUpdateOtp);

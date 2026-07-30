@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
+    BadgeCheck,
     Car,
     Eye,
     EyeOff,
@@ -10,11 +11,13 @@ import {
     Mail,
     Moon,
     QrCode,
+    RefreshCcw,
     Sparkles,
     Sun,
 } from "lucide-react";
 
 import Button from "../../../components/Button/Button";
+import GoogleSignInButton from "../../../components/Auth/GoogleSignInButton";
 import StatusBanner from "../../../components/Feedback/StatusBanner";
 import FormField from "../../../components/Form/FormField";
 import Input from "../../../components/Form/Input";
@@ -24,15 +27,23 @@ import {
     clearRegisterState,
     clearPasswordResetState,
     fetchRegisterBuildingsRequest,
+    googleAuthRequest,
     loginRequest,
     registerRequest,
+    resendRegistrationOtpRequest,
     requestPasswordResetRequest,
     resetPasswordRequest,
     verifyPasswordResetRequest,
+    verifyRegistrationRequest,
 } from "../auth/authSlice";
 import {
     roleHomePaths,
 } from "../../../services/mockParkingData";
+import {
+    isValidOptionalVietnamPhone,
+    sanitizeVietnamPhoneInput,
+    VIETNAM_PHONE_ERROR,
+} from "../../../utils/phone";
 
 const EMPTY_REGISTER_FORM = {
     name: "",
@@ -65,6 +76,11 @@ const Login = () => {
     const [showResetPassword, setShowResetPassword] = useState(false);
 
     const [registerForm, setRegisterForm] = useState(EMPTY_REGISTER_FORM);
+    const [registrationOtp, setRegistrationOtp] = useState("");
+    const [registrationOtpError, setRegistrationOtpError] = useState("");
+    const [manualVerificationEmail, setManualVerificationEmail] = useState("");
+    const [verificationEmailError, setVerificationEmailError] = useState("");
+    const [showManualVerification, setShowManualVerification] = useState(false);
 
     const [registerErrors, setRegisterErrors] = useState({});
     const [resetForm, setResetForm] = useState({
@@ -78,6 +94,7 @@ const Login = () => {
 
     const {
         loading,
+        googleLoading,
         error,
         loginCompleted,
         frontendRole,
@@ -86,6 +103,13 @@ const Login = () => {
         registerLoading,
         registerError,
         registerSuccess,
+        registeredUser,
+        registrationVerificationLoading,
+        registrationVerificationAction,
+        registrationVerificationError,
+        registrationVerificationNotice,
+        registrationVerified,
+        requiresBuildingSelection,
         registerBuildings,
         registerBuildingsLoading,
         registerBuildingsError,
@@ -130,13 +154,18 @@ const Login = () => {
         setErrors({});
         setRegisterErrors({});
         setResetErrors({});
+        setRegistrationOtp("");
+        setRegistrationOtpError("");
+        setManualVerificationEmail("");
+        setVerificationEmailError("");
+        setShowManualVerification(false);
         dispatch(clearRegisterState());
         dispatch(clearPasswordResetState());
     };
 
     const updateRegisterField = (field, value) => {
         const nextValue = field === "phone"
-            ? value.replace(/\D/g, "").slice(0, 10)
+            ? sanitizeVietnamPhoneInput(value)
             : value;
 
         setRegisterForm((prev) => ({
@@ -163,8 +192,8 @@ const Login = () => {
             nextErrors.email = "Email không hợp lệ.";
         }
 
-        if (registerForm.phone.trim() && !/^0\d{9}$/.test(registerForm.phone.trim())) {
-            nextErrors.phone = "Số điện thoại phải có đúng 10 chữ số và bắt đầu bằng 0.";
+        if (!isValidOptionalVietnamPhone(registerForm.phone)) {
+            nextErrors.phone = VIETNAM_PHONE_ERROR;
         }
 
         if (!registerForm.password) {
@@ -211,6 +240,12 @@ const Login = () => {
     });
 
     const [errors, setErrors] = useState({});
+    const verificationEmail =
+        registeredUser?.email || manualVerificationEmail.trim();
+    const verifyingRegistration =
+        registrationVerificationAction === "verify";
+    const resendingRegistrationOtp =
+        registrationVerificationAction === "resend";
 
     const updateResetField = (field, value) => {
         setResetForm((prev) => ({
@@ -241,10 +276,23 @@ const Login = () => {
 
         login(role, user, token);
 
-        navigate(roleHomePaths[role] || "/user/dashboard", {
+        navigate(
+            requiresBuildingSelection
+                ? "/choose-building"
+                : roleHomePaths[role] || "/user/dashboard",
+            {
             replace: true,
-        });
-    }, [loginCompleted, token, frontendRole, user, login, navigate]);
+            }
+        );
+    }, [
+        frontendRole,
+        login,
+        loginCompleted,
+        navigate,
+        requiresBuildingSelection,
+        token,
+        user,
+    ]);
 
     const updateField = (field, value) => {
         setForm((prev) => ({
@@ -288,6 +336,53 @@ const Login = () => {
                 password: form.password,
             })
         );
+    };
+
+    const handleGoogleCredential = (credential) => {
+        dispatch(googleAuthRequest({ credential }));
+    };
+
+    const handleVerifyRegistration = (event) => {
+        event.preventDefault();
+        const otp = registrationOtp.trim();
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(verificationEmail)) {
+            setVerificationEmailError("Email không hợp lệ.");
+            return;
+        }
+
+        if (!/^\d{6}$/.test(otp)) {
+            setRegistrationOtpError("Mã OTP phải có đúng 6 chữ số.");
+            return;
+        }
+
+        setRegistrationOtpError("");
+        dispatch(
+            verifyRegistrationRequest({
+                email: verificationEmail,
+                otp,
+            })
+        );
+    };
+
+    const handleResendRegistrationOtp = () => {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(verificationEmail)) {
+            setVerificationEmailError("Email không hợp lệ.");
+            return;
+        }
+
+        setVerificationEmailError("");
+        setRegistrationOtpError("");
+        dispatch(resendRegistrationOtpRequest({ email: verificationEmail }));
+    };
+
+    const continueToLogin = () => {
+        setForm({
+            emailOrPhone: verificationEmail,
+            password: "",
+        });
+        setRegistrationOtp("");
+        setMode("login");
     };
 
     const validateResetEmail = () => {
@@ -446,12 +541,12 @@ const Login = () => {
                         </Button>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 18 }}>
+                    <div className="auth-mode-tabs">
                         <Button
                             type="button"
                             variant={mode === "login" ? "primary" : "outline"}
                             onClick={() => switchMode("login")}
-                            disabled={loading || registerLoading}
+                            disabled={loading || googleLoading || registerLoading}
                         >
                             Đăng nhập
                         </Button>
@@ -460,7 +555,7 @@ const Login = () => {
                             type="button"
                             variant={mode === "register" ? "primary" : "outline"}
                             onClick={() => switchMode("register")}
-                            disabled={loading || registerLoading}
+                            disabled={loading || googleLoading || registerLoading}
                         >
                             Đăng ký
                         </Button>
@@ -469,13 +564,41 @@ const Login = () => {
                             type="button"
                             variant={mode === "reset" ? "primary" : "outline"}
                             onClick={() => switchMode("reset")}
-                            disabled={loading || registerLoading || passwordResetLoading}
+                            disabled={
+                                loading ||
+                                googleLoading ||
+                                registerLoading ||
+                                passwordResetLoading
+                            }
                         >
                             Quên mật khẩu
                         </Button>
                     </div>
 
-                    <StatusBanner errors={error} />
+                    <StatusBanner
+                        success={
+                            mode === "login" && registrationVerified
+                                ? registrationVerificationNotice
+                                : null
+                        }
+                        errors={error}
+                    />
+
+                    {(mode === "login" ||
+                        (mode === "register" &&
+                            !registerSuccess &&
+                            !showManualVerification)) && (
+                        <div className="google-auth-section">
+                            <GoogleSignInButton
+                                disabled={loading || googleLoading || registerLoading}
+                                isDarkMode={isDarkMode}
+                                onCredential={handleGoogleCredential}
+                            />
+                            <div className="auth-divider">
+                                <span>hoặc dùng email</span>
+                            </div>
+                        </div>
+                    )}
 
                     {mode === "login" && (
                         <>
@@ -492,7 +615,7 @@ const Login = () => {
                                         onChange={(event) =>
                                             updateField("emailOrPhone", event.target.value)
                                         }
-                                        disabled={loading}
+                                        disabled={loading || googleLoading}
                                         autoComplete="username"
                                     />
                                 </FormField>
@@ -506,7 +629,7 @@ const Login = () => {
                                         onChange={(event) =>
                                             updateField("password", event.target.value)
                                         }
-                                        disabled={loading}
+                                        disabled={loading || googleLoading}
                                         autoComplete="current-password"
                                         rightElement={passwordToggle(
                                             showLoginPassword,
@@ -520,10 +643,14 @@ const Login = () => {
                                     type="submit"
                                     size="lg"
                                     loading={loading}
-                                    disabled={loading}
+                                    disabled={loading || googleLoading}
                                     icon={KeyRound}
                                 >
-                                    {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+                                    {loading
+                                        ? "Đang đăng nhập..."
+                                        : googleLoading
+                                          ? "Đang kết nối Google..."
+                                          : "Đăng nhập"}
                                 </Button>
                             </form>
 
@@ -533,10 +660,19 @@ const Login = () => {
                     {mode === "register" && (
                         <>
                             <StatusBanner
-                                success={registerSuccess ? "Đăng ký thành công. Tài khoản đang chờ quản trị viên duyệt trước khi đăng nhập." : null}
-                                errors={registerError}
+                                success={
+                                    registrationVerificationNotice ||
+                                    (registerSuccess
+                                        ? "Tài khoản đã được tạo. Nhập mã OTP trong email để kích hoạt."
+                                        : null)
+                                }
+                                errors={[
+                                    registerError,
+                                    registrationVerificationError,
+                                ]}
                             />
 
+                            {!registerSuccess && !showManualVerification && (
                             <form onSubmit={handleRegisterSubmit} style={{ display: "grid", gap: 16 }}>
                                 <FormField label="Họ tên" required error={registerErrors.name}>
                                     <Input
@@ -560,7 +696,10 @@ const Login = () => {
                                     />
                                 </FormField>
 
-                                <FormField label="Số điện thoại" error={registerErrors.phone}>
+                                <FormField
+                                    label="Số điện thoại (không bắt buộc)"
+                                    error={registerErrors.phone}
+                                >
                                     <Input
                                         placeholder="0901234567"
                                         value={registerForm.phone}
@@ -650,7 +789,159 @@ const Login = () => {
                                 >
                                     {registerLoading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
                                 </Button>
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setManualVerificationEmail(
+                                            registerForm.email.trim()
+                                        );
+                                        setShowManualVerification(true);
+                                    }}
+                                >
+                                    Tôi đã có mã OTP
+                                </Button>
                             </form>
+                            )}
+
+                            {(registerSuccess || showManualVerification) && (
+                                <form
+                                    className="registration-verification-card"
+                                    onSubmit={handleVerifyRegistration}
+                                >
+                                    <div className="registration-verification-heading">
+                                        <span className="metric-icon">
+                                            <BadgeCheck size={20} />
+                                        </span>
+                                        <div>
+                                            <strong>Xác minh email</strong>
+                                            <p className="section-copy">
+                                                Nhập mã gồm 6 số đã được gửi tới
+                                                email đăng ký.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {!registrationVerified ? (
+                                        <>
+                                            {!registeredUser?.email && (
+                                                <FormField
+                                                    label="Email đăng ký"
+                                                    required
+                                                    error={verificationEmailError}
+                                                >
+                                                    <Input
+                                                        icon={Mail}
+                                                        type="email"
+                                                        value={
+                                                            manualVerificationEmail
+                                                        }
+                                                        onChange={(event) => {
+                                                            setManualVerificationEmail(
+                                                                event.target.value
+                                                            );
+                                                            setVerificationEmailError(
+                                                                ""
+                                                            );
+                                                        }}
+                                                        placeholder="user@example.com"
+                                                        disabled={
+                                                            registrationVerificationLoading
+                                                        }
+                                                    />
+                                                </FormField>
+                                            )}
+
+                                            {registeredUser?.email && (
+                                                <div className="soft-panel">
+                                                    <strong>
+                                                        {registeredUser.email}
+                                                    </strong>
+                                                </div>
+                                            )}
+
+                                            <FormField
+                                                label="Mã OTP"
+                                                required
+                                                error={registrationOtpError}
+                                            >
+                                                <Input
+                                                    value={registrationOtp}
+                                                    onChange={(event) => {
+                                                        setRegistrationOtp(
+                                                            event.target.value
+                                                                .replace(/\D/g, "")
+                                                                .slice(0, 6)
+                                                        );
+                                                        setRegistrationOtpError("");
+                                                    }}
+                                                    placeholder="Nhập 6 chữ số"
+                                                    inputMode="numeric"
+                                                    maxLength={6}
+                                                    disabled={
+                                                        registrationVerificationLoading
+                                                    }
+                                                />
+                                            </FormField>
+
+                                            <div className="registration-verification-actions">
+                                                <Button
+                                                    type="submit"
+                                                    loading={verifyingRegistration}
+                                                    disabled={
+                                                        registrationVerificationLoading
+                                                    }
+                                                    icon={BadgeCheck}
+                                                >
+                                                    Xác minh tài khoản
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    loading={resendingRegistrationOtp}
+                                                    disabled={
+                                                        registrationVerificationLoading
+                                                    }
+                                                    icon={RefreshCcw}
+                                                    onClick={
+                                                        handleResendRegistrationOtp
+                                                    }
+                                                >
+                                                    Gửi lại mã
+                                                </Button>
+                                            </div>
+
+                                            {showManualVerification &&
+                                                !registerSuccess && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        onClick={() => {
+                                                            setShowManualVerification(
+                                                                false
+                                                            );
+                                                            setRegistrationOtp(
+                                                                ""
+                                                            );
+                                                        }}
+                                                    >
+                                                        Quay lại đăng ký
+                                                    </Button>
+                                                )}
+                                        </>
+                                    ) : (
+                                        <Button
+                                            type="button"
+                                            size="lg"
+                                            icon={KeyRound}
+                                            onClick={continueToLogin}
+                                        >
+                                            Đăng nhập ngay
+                                        </Button>
+                                    )}
+                                </form>
+                            )}
                         </>
                     )}
 

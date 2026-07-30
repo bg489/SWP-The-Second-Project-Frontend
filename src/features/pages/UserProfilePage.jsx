@@ -20,6 +20,11 @@ import {
 } from "../backend/parking/parkingSlice";
 import { formatDate, getStatusLabel, getStatusTone, getVehicleTypeLabel } from "../../services/mockParkingData";
 import { compressImageFile } from "../../utils/imageFile";
+import {
+  isValidOptionalVietnamPhone,
+  sanitizeVietnamPhoneInput,
+  VIETNAM_PHONE_ERROR,
+} from "../../utils/phone";
 
 const createVehicleForm = () => ({
   plateNumber: "",
@@ -137,6 +142,7 @@ const UserProfilePage = () => {
     avatarUrl: user?.avatarUrl || user?.avatar || "",
   });
   const [profileOtp, setProfileOtp] = useState("");
+  const [profilePhoneError, setProfilePhoneError] = useState("");
   const displayAvatar = profileForm.avatarUrl || user?.avatarUrl || user?.avatar || "";
   const vehicleSubmissionRef = useRef(false);
   const [vehicleImages, setVehicleImages] = useState(createVehicleImageState);
@@ -277,17 +283,29 @@ const UserProfilePage = () => {
   };
 
   const updateProfileForm = (field, value) => {
-    const nextValue = field === "phone" ? value.replace(/\D/g, "").slice(0, 10) : value;
+    const nextValue =
+      field === "phone" ? sanitizeVietnamPhoneInput(value) : value;
+
+    if (field === "phone") {
+      setProfilePhoneError("");
+    }
+
     setProfileForm((prev) => ({ ...prev, [field]: nextValue }));
   };
 
   const handleProfileSubmit = (event) => {
     event.preventDefault();
 
+    if (!isValidOptionalVietnamPhone(profileForm.phone)) {
+      setProfilePhoneError(VIETNAM_PHONE_ERROR);
+      return;
+    }
+
+    setProfilePhoneError("");
     dispatch(
       requestProfileUpdateOtpRequest({
         name: profileForm.name.trim(),
-        phone: profileForm.phone.trim() || undefined,
+        phone: profileForm.phone.trim() || null,
         avatarUrl: profileForm.avatarUrl.trim() || undefined,
         avatarCropX: Number(profileForm.avatarCropX),
         avatarCropY: Number(profileForm.avatarCropY),
@@ -400,11 +418,13 @@ const UserProfilePage = () => {
                 placeholder="Nhập họ tên"
               />
             </FormField>
-            <FormField label="Số điện thoại">
+            <FormField label="Số điện thoại" error={profilePhoneError}>
               <Input
                 value={profileForm.phone}
                 onChange={(event) => updateProfileForm("phone", event.target.value)}
                 placeholder="Ví dụ: 0901234567"
+                inputMode="numeric"
+                maxLength={10}
               />
             </FormField>
             <FormField label="Link ảnh đại diện">
