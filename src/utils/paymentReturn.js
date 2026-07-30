@@ -18,11 +18,22 @@ export const getPaymentReturnFromUrl = ({
   if (!paymentStatus) return null;
 
   const isSuccess = paymentStatus.toUpperCase() === "SUCCESS";
+  const smsStatus = params.get("smsStatus")?.toUpperCase() || "";
+  const smsError = params.get("smsError") || "";
 
   return {
     tone: isSuccess ? "success" : "warning",
     message: isSuccess ? successMessage : failureMessage,
     responseCode: params.get("responseCode"),
+    smsStatus,
+    smsWarning:
+      smsStatus === "FAILED"
+        ? `Thanh toán đã được ghi nhận nhưng chưa gửi được SMS: ${
+            smsError || "Máy chủ chưa kết nối được dịch vụ SMS."
+          }`
+        : smsStatus === "PREVIEW"
+          ? "SMS mới chỉ được kiểm tra thử và chưa gửi đến điện thoại của khách."
+          : "",
     transactionRef: params.get("transactionRef"),
   };
 };
@@ -59,6 +70,8 @@ export const clearPaymentReturnState = () => {
   const url = new URL(window.location.href);
   url.searchParams.delete("paymentStatus");
   url.searchParams.delete("responseCode");
+  url.searchParams.delete("smsError");
+  url.searchParams.delete("smsStatus");
   url.searchParams.delete("transactionRef");
   window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
 };

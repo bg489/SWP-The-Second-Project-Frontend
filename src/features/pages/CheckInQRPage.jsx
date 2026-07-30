@@ -359,8 +359,19 @@ const CheckInQRPage = () => {
 
     if (form.customerType === "REGISTERED_USER") {
       payload.qrCode = form.qrCode.trim();
-    } else if (!hourlyReservation) {
-      payload.tempQrCardCode = effectiveTempQrCardCode;
+    } else {
+      const selectedTempCard = readyCards.find(
+        (card) =>
+          String(card.cardCode || card.id) === String(effectiveTempQrCardCode)
+      );
+
+      if (selectedTempCard?.cardCode) {
+        payload.tempQrCardCode = selectedTempCard.cardCode;
+      } else if (selectedTempCard?.id) {
+        payload.tempQrCardId = Number(selectedTempCard.id);
+      } else if (effectiveTempQrCardCode) {
+        payload.tempQrCardCode = effectiveTempQrCardCode;
+      }
     }
 
     if (form.vehicleType === "CAR") {
