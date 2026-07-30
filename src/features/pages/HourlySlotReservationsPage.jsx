@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   CalendarClock,
+  Camera,
   Car,
   CheckCircle2,
   Clock3,
@@ -18,6 +19,7 @@ import Button from "../../components/Button/Button";
 import StatusBanner from "../../components/Feedback/StatusBanner";
 import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
+import PlateCameraScanner from "../../components/PlateScanner/PlateCameraScanner";
 import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
 import { useMockAuth } from "../../context/MockAuthContext";
@@ -112,6 +114,7 @@ const HourlySlotReservationsPage = () => {
     note: "",
   });
   const [formError, setFormError] = useState("");
+  const [plateScannerOpen, setPlateScannerOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [paymentReturn] = useState(() =>
@@ -255,6 +258,7 @@ const HourlySlotReservationsPage = () => {
       paymentMethod: "CASH",
       note: "",
     });
+    setPlateScannerOpen(false);
     setSelectedSlotId("");
   };
 
@@ -617,16 +621,26 @@ const HourlySlotReservationsPage = () => {
               />
             </FormField>
             <FormField label="Biển số ô tô" required>
-              <Input
-                value={guestForm.plateNumber}
-                placeholder="Ví dụ: 51H-123.45"
-                onChange={(event) =>
-                  setGuestForm((current) => ({
-                    ...current,
-                    plateNumber: event.target.value.toUpperCase(),
-                  }))
-                }
-              />
+              <div className="reservation-plate-input">
+                <Input
+                  value={guestForm.plateNumber}
+                  placeholder="Ví dụ: 51H-123.45"
+                  onChange={(event) =>
+                    setGuestForm((current) => ({
+                      ...current,
+                      plateNumber: event.target.value.toUpperCase(),
+                    }))
+                  }
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  icon={Camera}
+                  onClick={() => setPlateScannerOpen(true)}
+                >
+                  Quét bằng camera
+                </Button>
+              </div>
             </FormField>
             <FormField label="Hình thức thanh toán" required>
               <Select
@@ -765,6 +779,22 @@ const HourlySlotReservationsPage = () => {
           emptyMessage="Chưa có lượt đặt ô theo giờ."
         />
       </section>
+
+      {isStaff && (
+        <PlateCameraScanner
+          autoApply={false}
+          open={plateScannerOpen}
+          title="Quét biển số khách đặt ô"
+          onClose={() => setPlateScannerOpen(false)}
+          onScan={(plateNumber) => {
+            setGuestForm((current) => ({
+              ...current,
+              plateNumber,
+            }));
+            setPlateScannerOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };
