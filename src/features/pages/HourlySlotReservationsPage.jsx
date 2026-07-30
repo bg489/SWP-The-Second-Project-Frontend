@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Clock3,
   CreditCard,
+  Layers3,
   MapPin,
   RefreshCcw,
   Search,
@@ -79,6 +80,22 @@ const createDefaultPeriod = () => {
   return {
     startAt: toLocalDateTimeInput(start),
     endAt: toLocalDateTimeInput(end),
+  };
+};
+
+const createReservationBounds = () => {
+  const minimum = new Date();
+  const maximum = new Date();
+
+  minimum.setSeconds(0, 0);
+  maximum.setMonth(maximum.getMonth() + 2);
+  maximum.setSeconds(59, 999);
+
+  return {
+    maximum,
+    maximumInput: toLocalDateTimeInput(maximum),
+    minimum,
+    minimumInput: toLocalDateTimeInput(minimum),
   };
 };
 
@@ -194,7 +211,28 @@ const HourlySlotReservationsPage = () => {
     });
   }, [reservations, search, statusFilter]);
 
-  const availableSlots = hourlyReservations.availability.slots || [];
+  const availableSlots = useMemo(
+    () => hourlyReservations.availability.slots || [],
+    [hourlyReservations.availability.slots]
+  );
+  const slotsByFloor = useMemo(() => {
+    const groups = new Map();
+
+    availableSlots.forEach((slot) => {
+      const key = String(slot.floorId || slot.floorName || "unknown");
+      const current = groups.get(key) || {
+        floorId: slot.floorId,
+        floorName: slot.floorName || "Tầng chưa xác định",
+        slots: [],
+      };
+
+      current.slots.push(slot);
+      groups.set(key, current);
+    });
+
+    return Array.from(groups.values());
+  }, [availableSlots]);
+  const reservationBounds = createReservationBounds();
   const selectedSlot = availableSlots.find(
     (slot) => String(slot.id) === String(selectedSlotId)
   );
@@ -218,6 +256,18 @@ const HourlySlotReservationsPage = () => {
 
     if (endAt <= startAt) {
       setFormError("Thời gian kết thúc phải sau thời gian bắt đầu.");
+      return null;
+    }
+
+    const { maximum, minimum } = createReservationBounds();
+
+    if (startAt < minimum) {
+      setFormError("Thời gian bắt đầu không được nằm trong quá khứ.");
+      return null;
+    }
+
+    if (startAt > maximum || endAt > maximum) {
+      setFormError("Bạn chỉ có thể đặt ô trước tối đa 2 tháng.");
       return null;
     }
 
@@ -438,9 +488,19 @@ const HourlySlotReservationsPage = () => {
           paymentReturn?.tone === "success" ? paymentReturn.message : null,
           notice,
         ]}
-        warning={
-          paymentReturn?.tone === "warning" ? paymentReturn.message : null
-        }
+        warning={[
+          paymentReturn?.tone === "warning" ? paymentReturn.message : null,
+          paymentReturn?.smsWarning,
+          hourlyReservations.lastCreated?.sms?.status === "FAILED"
+            ? `Đã giữ ô nhưng chưa gửi được SMS: ${
+                hourlyReservations.lastCreated.sms.error ||
+                "Máy chủ chưa kết nối được dịch vụ SMS."
+              }`
+            : null,
+          hourlyReservations.lastCreated?.sms?.status === "PREVIEW"
+            ? "SMS mới chỉ được kiểm tra thử và chưa gửi đến điện thoại của khách."
+            : null,
+        ]}
         errors={[formError, hourlyReservations.error]}
       />
 
@@ -469,6 +529,8 @@ const HourlySlotReservationsPage = () => {
           <FormField label="Bắt đầu" required>
             <Input
               type="datetime-local"
+              min={reservationBounds.minimumInput}
+              max={reservationBounds.maximumInput}
               value={period.startAt}
               onChange={(event) =>
                 handlePeriodChange("startAt", event.target.value)
@@ -478,6 +540,8 @@ const HourlySlotReservationsPage = () => {
           <FormField label="Kết thúc" required>
             <Input
               type="datetime-local"
+              min={period.startAt || reservationBounds.minimumInput}
+              max={reservationBounds.maximumInput}
               value={period.endAt}
               onChange={(event) =>
                 handlePeriodChange("endAt", event.target.value)
@@ -526,37 +590,61 @@ const HourlySlotReservationsPage = () => {
         </div>
 
         {availableSlots.length > 0 ? (
-          <div className="hourly-slot-grid">
-            {availableSlots.map((slot) => {
-              const isSelected =
-                String(slot.id) === String(selectedSlotId);
+          <div className="hourly-floor-groups">
+            {slotsByFloor.map((floor) => {
+              const availableCount = floor.slots.filter(
+                (slot) => slot.isAvailable
+              ).length;
 
               return (
-                <button
-                  type="button"
-                  key={slot.id}
-                  className={`hourly-slot ${
-                    slot.isAvailable ? "available" : "unavailable"
-                  } ${isSelected ? "selected" : ""}`}
-                  disabled={!slot.isAvailable}
-                  onClick={() => {
-                    dispatch(clearParkingNotice());
-                    setFormError("");
-                    setSelectedSlotId(String(slot.id));
-                  }}
-                  title={slot.unavailableReason || "Có thể đặt"}
+                <section
+                  className="hourly-floor-group"
+                  key={floor.floorId || floor.floorName}
                 >
-                  <strong>{slot.slotCode}</strong>
-                  <span>{slot.floorName}</span>
-                  <small>
-                    {isSelected
-                      ? "Đang chọn"
-                      : slot.isAvailable
-                        ? "Còn trống"
-                        : slot.unavailableReason}
-                  </small>
-                  {isSelected && <CheckCircle2 size={18} />}
-                </button>
+                  <div className="hourly-floor-heading">
+                    <div>
+                      <Layers3 size={18} />
+                      <strong>{floor.floorName}</strong>
+                    </div>
+                    <span>
+                      {availableCount}/{floor.slots.length} ô có thể đặt
+                    </span>
+                  </div>
+                  <div className="hourly-slot-grid">
+                    {floor.slots.map((slot) => {
+                      const isSelected =
+                        String(slot.id) === String(selectedSlotId);
+
+                      return (
+                        <button
+                          type="button"
+                          key={slot.id}
+                          className={`hourly-slot ${
+                            slot.isAvailable ? "available" : "unavailable"
+                          } ${isSelected ? "selected" : ""}`}
+                          disabled={!slot.isAvailable}
+                          onClick={() => {
+                            dispatch(clearParkingNotice());
+                            setFormError("");
+                            setSelectedSlotId(String(slot.id));
+                          }}
+                          title={slot.unavailableReason || "Có thể đặt"}
+                        >
+                          <strong>{slot.slotCode}</strong>
+                          <span>{floor.floorName}</span>
+                          <small>
+                            {isSelected
+                              ? "Đang chọn"
+                              : slot.isAvailable
+                                ? "Còn trống"
+                                : slot.unavailableReason}
+                          </small>
+                          {isSelected && <CheckCircle2 size={18} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
               );
             })}
           </div>
