@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình UserDashboard, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -24,26 +30,63 @@ import {
 } from "../backend/parking/parkingSlice";
 import { Bell, Building2, Calendar, Car, Clock, CreditCard, Plus, QrCode, ShieldCheck } from "lucide-react";
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `normalizePlateQrValue` (normalize plate qr value). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function normalizePlateQrValue
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const normalizePlateQrValue = (value) =>
   String(value || "")
     .trim()
     .toUpperCase()
     .replace(/[\s.-]/g, "");
 
+/**
+ * Lấy nghiệp vụ `getPassQrValue` (get pass qr value). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getPassQrValue
+ * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getPassQrValue = (pass) =>
   normalizePlateQrValue(pass?.plateNumber || pass?.vehiclePlateNumber) || pass?.qrCode || pass?.code || "";
+/**
+ * Lấy nghiệp vụ `getPassName` (get pass name). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getPassName
+ * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getPassName = (pass) => pass?.packagePlanName || pass?.packageName || pass?.planName || "Gói tháng";
+/**
+ * Lấy nghiệp vụ `getPassTime` (get pass time). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getPassTime
+ * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getPassTime = (pass) =>
   new Date(pass?.updatedAt || pass?.createdAt || pass?.startDate || pass?.validFrom || 0).getTime();
 
+/**
+ * Thực hiện nghiệp vụ `UserDashboard` (user dashboard). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function UserDashboard
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const UserDashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user: mockUser } = useMockAuth();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { user: authUser } = useSelector((state) => state.auth);
   const user = authUser || mockUser;
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { vehicles, monthlyPasses, notifications, packagePlans, qrPasses, slotRegistrations } = useSelector((state) => state.parking);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchMyVehiclesRequest());
     dispatch(fetchMyMonthlyPassesRequest());
@@ -55,32 +98,65 @@ const UserDashboard = () => {
 
   const myVehicles = vehicles.mine;
   const myPasses = monthlyPasses.mine;
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const latestQrPass = useMemo(() => {
     const source = qrPasses.mine.length > 0 ? qrPasses.mine : myPasses;
 
     return [...source]
+      /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       .filter((pass) => getPassQrValue(pass))
+      /* Callback nội bộ của lời gọi `sort`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       .sort((a, b) => getPassTime(b) - getPassTime(a))[0] || null;
   }, [myPasses, qrPasses.mine]);
 
   const pendingPayment = [...slotRegistrations.mine, ...myPasses].find(
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (item) => item.status === "PENDING_PAYMENT"
   );
 
   const columns = [
     { header: "Biển số", key: "plateNumber" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Loại xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Hãng / màu", key: "brand", render: (row) => `${row.brand || "-"} - ${row.color || "-"}` },
     {
       header: "Duyệt xe",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => <span className={`pill ${getStatusTone(row.status)}`}>{getStatusLabel(row.status)}</span>,
     },
     {
       header: "Gói tháng",
       key: "pass",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => {
         const activePass = myPasses.find(
+          /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
           (pass) => Number(pass.vehicleId) === Number(row.id) && pass.status === "ACTIVE"
         );
 

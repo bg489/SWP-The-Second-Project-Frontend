@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Cung cấp component giao diện tái sử dụng Header và hành vi hiển thị liên quan.
+ *
+ * Luồng chính: Props đầu vào -> xử lý trạng thái cục bộ khi cần -> trả về phần giao diện tái sử dụng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { Bell, Mail, MailX, Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,10 +17,19 @@ import {
 import { roleLabels } from "../../services/mockParkingData";
 import "./Layout.css";
 
+/**
+ * Thực hiện nghiệp vụ `Header` (header). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function Header
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const Header = ({ toggleSidebar, sidebarHidden, toggleSidebarHidden }) => {
   const { role: contextRole, user: contextUser, isDarkMode, toggleDarkMode, isAuthenticated } = useMockAuth();
   const dispatch = useDispatch();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { user: authUser, frontendRole, isAuthenticated: storeAuthenticated } = useSelector((state) => state.auth);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { notifications } = useSelector((state) => state.parking);
   const [isNotificationOpen, setNotificationOpen] = useState(false);
   const user = authUser || contextUser;
@@ -23,12 +38,15 @@ const Header = ({ toggleSidebar, sidebarHidden, toggleSidebarHidden }) => {
   const avatarUrl = user?.avatarUrl || user?.avatar || "";
   const initials = String(user?.name || "U").slice(0, 1).toUpperCase();
   const recentNotifications = useMemo(
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => (notifications.mine || []).slice(0, 6),
     [notifications.mine]
   );
+  /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const unreadCount = (notifications.mine || []).filter((item) => item.status !== "READ").length;
   const emailEnabled = notifications.preferences.emailNotificationsEnabled;
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!loggedIn) return;
 
@@ -36,6 +54,13 @@ const Header = ({ toggleSidebar, sidebarHidden, toggleSidebarHidden }) => {
     dispatch(fetchNotificationPreferencesRequest());
   }, [dispatch, loggedIn, user?.id]);
 
+  /**
+   * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `formatNotificationTime` (format notification time). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function formatNotificationTime
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const formatNotificationTime = (value) => {
     if (!value) return "";
 
@@ -51,6 +76,12 @@ const Header = ({ toggleSidebar, sidebarHidden, toggleSidebarHidden }) => {
     }
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleEmailToggle` (handle email toggle). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleEmailToggle
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleEmailToggle = () => {
     dispatch(
       updateNotificationPreferencesRequest({

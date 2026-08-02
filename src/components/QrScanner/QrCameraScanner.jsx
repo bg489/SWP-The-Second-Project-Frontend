@@ -1,13 +1,27 @@
+/**
+ * @fileoverview Cung cấp component giao diện tái sử dụng QrCameraScanner và hành vi hiển thị liên quan.
+ *
+ * Luồng chính: Props đầu vào -> xử lý trạng thái cục bộ khi cần -> trả về phần giao diện tái sử dụng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useRef, useState } from "react";
 import { Camera, X } from "lucide-react";
 
 import Button from "../Button/Button";
 
+/**
+ * Thực hiện nghiệp vụ `QrCameraScanner` (qr camera scanner). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function QrCameraScanner
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const QrCameraScanner = ({ open, title = "Quét QR", onClose, onScan }) => {
   const videoRef = useRef(null);
   const lastValueRef = useRef("");
   const [message, setMessage] = useState("Đưa mã QR vào giữa khung camera.");
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!open) return undefined;
 
@@ -15,10 +29,22 @@ const QrCameraScanner = ({ open, title = "Quét QR", onClose, onScan }) => {
     let active = true;
     lastValueRef.current = "";
 
+    /**
+     * Thực hiện nghiệp vụ `stopCamera` (stop camera). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function stopCamera
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const stopCamera = () => {
       controls?.stop?.();
     };
 
+    /**
+     * Thực hiện nghiệp vụ `startCamera` (start camera). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function startCamera
+     * @returns {Promise<*>} Promise chứa kết quả khi toàn bộ thao tác bất đồng bộ hoàn tất.
+     */
     const startCamera = async () => {
       try {
         if (!window.navigator?.mediaDevices?.getUserMedia) {
@@ -48,6 +74,7 @@ const QrCameraScanner = ({ open, title = "Quét QR", onClose, onScan }) => {
             },
           },
           videoRef.current,
+          /* Callback nội bộ của lời gọi `decodeFromConstraints`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
           (result) => {
             const value = (result?.getText?.() || result?.text || "").trim();
 
@@ -72,6 +99,7 @@ const QrCameraScanner = ({ open, title = "Quét QR", onClose, onScan }) => {
 
     startCamera();
 
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => {
       active = false;
       stopCamera();

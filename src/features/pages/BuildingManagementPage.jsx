@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình BuildingManagementPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -23,12 +29,27 @@ import {
   updateBuildingRequest,
 } from "../backend/buildings/buildingSlice";
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `normalizeText` (normalize text). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function normalizeText
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const normalizeText = (value) =>
   String(value ?? "")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
+/**
+ * Lấy nghiệp vụ `getBuildingSearchValue` (get building search value). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getBuildingSearchValue
+ * @param {*} building - Giá trị `building` được hàm sử dụng trong quá trình xử lý.
+ * @param {*} column - Giá trị `column` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getBuildingSearchValue = (building, column) => {
   const values = {
     id: building.id,
@@ -44,6 +65,12 @@ const getBuildingSearchValue = (building, column) => {
   return values[column] ?? "";
 };
 
+/**
+ * Tạo nghiệp vụ `BuildingManagementPage` (building management page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function BuildingManagementPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const BuildingManagementPage = () => {
   const dispatch = useDispatch();
   const formSectionRef = useRef(null);
@@ -62,6 +89,7 @@ const BuildingManagementPage = () => {
     deletingId,
     mutationError,
     mutationSuccess,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.buildings);
 
   const [editingId, setEditingId] = useState(null);
@@ -76,11 +104,14 @@ const BuildingManagementPage = () => {
   const [formErrors, setFormErrors] = useState({});
 
   const totalBuildings = buildings.length;
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const newestBuilding = useMemo(() => buildings[0] || null, [buildings]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const filteredBuildings = useMemo(() => {
     const search = normalizeText(buildingFilters.searchText);
 
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return buildings.filter((building) => {
       if (!search) return true;
 
@@ -90,7 +121,14 @@ const BuildingManagementPage = () => {
     });
   }, [buildings, buildingFilters]);
 
+  /**
+   * Thực hiện nghiệp vụ `scrollToForm` (scroll to form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function scrollToForm
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const scrollToForm = () => {
+    /* Callback nội bộ của lời gọi `setTimeout`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setTimeout(() => {
       formSectionRef.current?.scrollIntoView({
         behavior: "smooth",
@@ -99,16 +137,27 @@ const BuildingManagementPage = () => {
     }, 80);
   };
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchBuildingsRequest());
   }, [dispatch]);
 
+  /**
+   * Cập nhật nghiệp vụ `updateField` (update field). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function updateField
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const updateField = (field, value) => {
+    /* Callback nội bộ của lời gọi `setForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setForm((prev) => ({
       ...prev,
       [field]: value,
     }));
 
+    /* Callback nội bộ của lời gọi `setFormErrors`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setFormErrors((prev) => ({
       ...prev,
       [field]: "",
@@ -117,13 +166,28 @@ const BuildingManagementPage = () => {
     dispatch(clearBuildingNotice());
   };
 
+  /**
+   * Cập nhật nghiệp vụ `updateFilter` (update filter). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function updateFilter
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const updateFilter = (field, value) => {
+    /* Callback nội bộ của lời gọi `setBuildingFilters`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setBuildingFilters((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
+  /**
+   * Kiểm tra nghiệp vụ `validateForm` (validate form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function validateForm
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const validateForm = () => {
     const nextErrors = {};
 
@@ -141,6 +205,7 @@ const BuildingManagementPage = () => {
         ["carHourlyPrice", "Vui lòng nhập giá ô tô một giờ."],
         ["motorbikeMonthlyPrice", "Vui lòng nhập giá gói tháng xe máy."],
         ["carMonthlyPrice", "Vui lòng nhập giá gói tháng ô tô."],
+      /* Callback nội bộ của lời gọi `forEach`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       ].forEach(([field, message]) => {
         if (!Number.isInteger(Number(form[field])) || Number(form[field]) <= 0) {
           nextErrors[field] = message;
@@ -152,6 +217,12 @@ const BuildingManagementPage = () => {
     return Object.keys(nextErrors).length === 0;
   };
 
+  /**
+   * Xóa hoặc đặt lại nghiệp vụ `resetForm` (reset form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function resetForm
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const resetForm = () => {
     setEditingId(null);
     setForm({
@@ -172,6 +243,13 @@ const BuildingManagementPage = () => {
     onSuccess: resetForm,
   });
 
+  /**
+   * Xử lý nghiệp vụ `handleSubmit` (handle submit). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleSubmit
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleSubmit = (event) => {
     event.preventDefault();
 
@@ -202,6 +280,13 @@ const BuildingManagementPage = () => {
     }
   };
 
+  /**
+   * Thực hiện nghiệp vụ `startEdit` (start edit). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function startEdit
+   * @param {*} building - Giá trị `building` được hàm sử dụng trong quá trình xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const startEdit = (building) => {
     dispatch(clearBuildingNotice());
     setEditingId(building.id);
@@ -216,6 +301,13 @@ const BuildingManagementPage = () => {
     scrollToForm();
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleDelete` (handle delete). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleDelete
+   * @param {*} building - Giá trị `building` được hàm sử dụng trong quá trình xử lý.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleDelete = (building) => {
     const ok = window.confirm(
       `Bạn chắc muốn xóa tòa nhà "${building.name}" không?`
@@ -226,27 +318,68 @@ const BuildingManagementPage = () => {
     dispatch(deleteBuildingRequest({ id: building.id }));
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleRefresh` (handle refresh). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleRefresh
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleRefresh = () => {
     dispatch(clearBuildingNotice());
     dispatch(fetchBuildingsRequest());
   };
 
   const columns = [
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} building - Giá trị `building` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Mã", key: "id", render: (building) => `#${building.id}` },
     {
       header: "Tên tòa nhà",
       key: "name",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} building - Giá trị `building` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (building) => <strong>{building.name}</strong>,
     },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} building - Giá trị `building` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Địa chỉ", key: "address", render: (building) => building.address || "-" },
     {
       header: "QR tạm",
       key: "tempQrCardCount",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} building - Giá trị `building` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (building) => `${Number(building.tempQrCardCount || 0)} thẻ`,
     },
     {
       header: "Ngày tạo",
       key: "createdAt",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} building - Giá trị `building` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (building) =>
         building.createdAt || building.created_at
           ? new Date(building.createdAt || building.created_at).toLocaleDateString("vi-VN")
@@ -255,6 +388,13 @@ const BuildingManagementPage = () => {
     {
       header: "Thao tác",
       key: "actions",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} building - Giá trị `building` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (building) => (
         <div className="action-row">
           <Button

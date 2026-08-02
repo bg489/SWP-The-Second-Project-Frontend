@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình CheckOutQRPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AlertTriangle, ArrowUpRight, Camera, CreditCard, QrCode, ReceiptText, ShieldCheck } from "lucide-react";
@@ -29,11 +35,22 @@ import {
 import { formatPlateNumber, normalizePlateSearch } from "../../utils/licensePlate";
 import "./CheckOutQRPage.css";
 
+/**
+ * Khai báo `paymentOptions` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/CheckOutQRPage.jsx.
+ */
 const paymentOptions = [
   { value: "CASH", label: "Tiền mặt" },
   { value: "VNPAY", label: "VNPay" },
 ];
 
+/**
+ * Lấy nghiệp vụ `getSessionQrCodes` (get session qr codes). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getSessionQrCodes
+ * @param {*} session - Giá trị `session` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getSessionQrCodes = (session) => {
   return [
     session.sessionQrCode,
@@ -46,25 +63,51 @@ const getSessionQrCodes = (session) => {
     session.plateNumber,
   ]
     .filter(Boolean)
+    /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     .map((value) => String(value).trim());
 };
 
+/**
+ * Lấy nghiệp vụ `findSessionByQrCode` (find session by qr code). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function findSessionByQrCode
+ * @param {*} sessions - Giá trị `sessions` được hàm sử dụng trong quá trình xử lý.
+ * @param {*} qrCode - Giá trị `qrCode` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const findSessionByQrCode = (sessions, qrCode) => {
   const normalizedCode = normalizePlateSearch(qrCode);
   if (!normalizedCode) return null;
 
+  /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   return sessions.find((session) =>
+    /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     getSessionQrCodes(session).some((value) => normalizePlateSearch(value) === normalizedCode)
   ) || null;
 };
 
+/**
+ * Lấy nghiệp vụ `getViolationAmount` (get violation amount). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getViolationAmount
+ * @param {*} violation - Giá trị `violation` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getViolationAmount = (violation) =>
   Number(violation?.penaltyFee ?? violation?.fine ?? 0);
 
+/**
+ * Thực hiện nghiệp vụ `ViolationFeeList` (violation fee list). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function ViolationFeeList
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const ViolationFeeList = ({ items = [] }) => {
   if (!items.length) return null;
 
   const total = items.reduce(
+    /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (sum, violation) => sum + getViolationAmount(violation),
     0
   );
@@ -108,15 +151,31 @@ const ViolationFeeList = ({ items = [] }) => {
   );
 };
 
+/**
+ * Lấy nghiệp vụ `getPaymentMethodLabel` (get payment method label). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getPaymentMethodLabel
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getPaymentMethodLabel = (value) => {
   if (value === "NO_PAYMENT") return "Không cần thanh toán";
   if (value === "MONTHLY_PASS") return "Gói tháng";
+  /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   return paymentOptions.find((item) => item.value === value)?.label || value || "-";
 };
 
+/**
+ * Kiểm tra nghiệp vụ `CheckOutQRPage` (check out qrpage). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function CheckOutQRPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const CheckOutQRPage = () => {
   const dispatch = useDispatch();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { parkingSessions, pricingPolicies, violations, notice } = useSelector((state) => state.parking);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { user } = useSelector((state) => state.auth);
 
   const [selectedSessionId, setSelectedSessionId] = useState("");
@@ -126,6 +185,7 @@ const CheckOutQRPage = () => {
   const [checkoutMode, setCheckoutMode] = useState("SESSION");
   const [scannerOpen, setScannerOpen] = useState(false);
   const [plateScannerOpen, setPlateScannerOpen] = useState(false);
+  /* Callback nội bộ của lời gọi `useState`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const [paymentReturn] = useState(() =>
     getPaymentReturnFromUrl({
       successMessage: "Thanh toán thành công. Lượt xe ra đã được hoàn tất.",
@@ -133,12 +193,14 @@ const CheckOutQRPage = () => {
     })
   );
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchActiveParkingSessionsRequest(user?.buildingId ? { buildingId: user.buildingId } : undefined));
     dispatch(fetchPricingPoliciesRequest({ status: "ACTIVE" }));
     dispatch(fetchViolationsRequest());
   }, [dispatch, user?.buildingId]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!paymentReturn) return;
 
@@ -147,27 +209,34 @@ const CheckOutQRPage = () => {
     clearPaymentReturnState();
   }, [dispatch, paymentReturn, user?.buildingId]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const filteredSessions = useMemo(() => {
     const keyword = normalizePlateSearch(sessionSearch);
     if (!keyword) return parkingSessions.active;
 
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return parkingSessions.active.filter((session) =>
       normalizePlateSearch(session.plateNumber).includes(keyword)
     );
   }, [parkingSessions.active, sessionSearch]);
 
   const effectiveSessionId = selectedSessionId || filteredSessions[0]?.id || "";
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const scannedSession = useMemo(() => {
     return findSessionByQrCode(parkingSessions.active, qrCode);
   }, [parkingSessions.active, qrCode]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const currentSession = useMemo(() => {
     if (checkoutMode === "QR") return scannedSession;
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return parkingSessions.active.find((session) => String(session.id) === String(effectiveSessionId));
   }, [checkoutMode, effectiveSessionId, parkingSessions.active, scannedSession]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const checkoutTime = useMemo(() => new Date(), []);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const feeDetails = useMemo(() => {
     if (!currentSession) return null;
 
@@ -176,11 +245,13 @@ const CheckOutQRPage = () => {
       Boolean(currentSession.monthlyPassId);
     const checkIn = new Date(currentSession.checkInAt);
     const hours = Math.max(1, Math.ceil((checkoutTime - checkIn) / (1000 * 60 * 60)));
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const storedViolations = violations.items.filter((item) =>
       String(item.parkingSessionId || item.sessionId) === String(currentSession.id)
       && ["OPEN", "RESOLVED", "UNPAID"].includes(item.status)
     );
     const embeddedViolations = Array.isArray(currentSession.violations)
+      /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       ? currentSession.violations.filter((item) =>
           !item.status || ["OPEN", "RESOLVED", "UNPAID"].includes(item.status)
         )
@@ -188,12 +259,15 @@ const CheckOutQRPage = () => {
     const sessionViolations = storedViolations.length > 0
       ? storedViolations
       : embeddedViolations;
+    /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const violationFee = sessionViolations.reduce((sum, item) => sum + Number(item.penaltyFee || item.fine || 0), 0);
 
     const motorbikePolicy = pricingPolicies.items.find(
+      /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       (item) => item.vehicleType === "MOTORBIKE" && item.pricingType === "TURN" && item.status === "ACTIVE"
     );
     const carPolicy = pricingPolicies.items.find(
+      /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       (item) => item.vehicleType === "CAR" && item.pricingType === "HOURLY" && item.status === "ACTIVE"
     );
     const motorbikeTurnAmount = Number(motorbikePolicy?.amount || 4000);
@@ -219,6 +293,12 @@ const CheckOutQRPage = () => {
     submitting: parkingSessions.checkingOut,
     success: parkingSessions.checkoutResult,
     error: parkingSessions.error,
+    /**
+     * Xử lý nghiệp vụ `onSuccess` (on success). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function onSuccess
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     onSuccess: () => {
       setSelectedSessionId("");
       setSessionSearch("");
@@ -230,6 +310,12 @@ const CheckOutQRPage = () => {
     },
   });
 
+  /**
+   * Lấy nghiệp vụ `getCheckoutPayload` (get checkout payload). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function getCheckoutPayload
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const getCheckoutPayload = () => {
     const totalAmount = Number(feeDetails?.total || 0);
 
@@ -239,6 +325,12 @@ const CheckOutQRPage = () => {
     };
   };
 
+  /**
+   * Xử lý nghiệp vụ `confirmCheckout` (confirm checkout). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function confirmCheckout
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const confirmCheckout = () => {
     if (checkoutMode === "QR") {
       if (!qrCode.trim()) return;
@@ -264,12 +356,25 @@ const CheckOutQRPage = () => {
     );
   };
 
+  /**
+   * Hiển thị nghiệp vụ `openQrScanner` (open qr scanner). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function openQrScanner
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const openQrScanner = () => {
     dispatch(fetchActiveParkingSessionsRequest());
     setCheckoutMode("QR");
     setScannerOpen(true);
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleQrScan` (handle qr scan). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleQrScan
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleQrScan = (value) => {
     const scannedValue = value.trim();
     const foundSession = findSessionByQrCode(parkingSessions.active, scannedValue);
@@ -281,9 +386,17 @@ const CheckOutQRPage = () => {
     }
   };
 
+  /**
+   * Xử lý nghiệp vụ `handlePlateScan` (handle plate scan). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handlePlateScan
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handlePlateScan = (value) => {
     const plateNumber = formatPlateNumber(value);
     const normalizedPlate = normalizePlateSearch(plateNumber);
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const foundSession = parkingSessions.active.find((session) =>
       normalizePlateSearch(session.plateNumber) === normalizedPlate
     );
@@ -310,6 +423,7 @@ const CheckOutQRPage = () => {
   const receiptViolationFee = Number(
     receiptFeeDetail.violationFee ??
       receiptViolations.reduce(
+        /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         (sum, violation) => sum + getViolationAmount(violation),
         0
       )

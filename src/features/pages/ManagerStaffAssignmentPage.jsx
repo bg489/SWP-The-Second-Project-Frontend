@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình ManagerStaffAssignmentPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -28,6 +34,10 @@ import {
   submitStaffRoleRequest,
 } from "../backend/staffRoleRequests/staffRoleRequestSlice";
 
+/**
+ * Khai báo `emptyForm` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/ManagerStaffAssignmentPage.jsx.
+ */
 const emptyForm = {
   name: "",
   email: "",
@@ -37,6 +47,10 @@ const emptyForm = {
   managerNote: "",
 };
 
+/**
+ * Khai báo `requestStatus` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/ManagerStaffAssignmentPage.jsx.
+ */
 const requestStatus = {
   PENDING: { label: "Đang chờ duyệt", className: "warning" },
   APPROVED: { label: "Đã tạo tài khoản", className: "success" },
@@ -44,6 +58,13 @@ const requestStatus = {
   CANCELLED: { label: "Đã hủy", className: "neutral" },
 };
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `formatDate` (format date). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function formatDate
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const formatDate = (value) => {
   if (!value) return "-";
   return new Date(value).toLocaleString("vi-VN", {
@@ -52,9 +73,16 @@ const formatDate = (value) => {
   });
 };
 
+/**
+ * Thực hiện nghiệp vụ `ManagerStaffAssignmentPage` (manager staff assignment page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function ManagerStaffAssignmentPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const ManagerStaffAssignmentPage = () => {
   const dispatch = useDispatch();
   const { buildings, loading: buildingsLoading, error: buildingsError } = useSelector(
+    /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (state) => state.buildings
   );
   const {
@@ -63,6 +91,7 @@ const ManagerStaffAssignmentPage = () => {
     managerRequests,
     notice,
     submitting,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.staffRoleRequests);
   const [selectedBuildingId, setSelectedBuildingId] = useState("");
   const [form, setForm] = useState(emptyForm);
@@ -71,13 +100,16 @@ const ManagerStaffAssignmentPage = () => {
 
   const activeBuildingId = selectedBuildingId || String(buildings[0]?.id || "");
   const selectedBuilding = buildings.find(
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (building) => Number(building.id) === Number(activeBuildingId)
   ) || null;
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchBuildingsRequest());
   }, [dispatch]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!activeBuildingId) return;
     dispatch(fetchManagerStaffRoleRequestsRequest({
@@ -86,37 +118,65 @@ const ManagerStaffAssignmentPage = () => {
   }, [activeBuildingId, dispatch]);
 
   const buildingOptions = useMemo(
+    /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => buildings.map((building) => ({
       value: String(building.id),
       label: `${building.name}${building.address ? ` - ${building.address}` : ""}`,
     })),
     [buildings]
   );
+  /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const pendingCount = managerRequests.filter((request) => request.status === "PENDING").length;
+  /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const approvedCount = managerRequests.filter((request) => request.status === "APPROVED").length;
 
   const markSubmitted = useResetAfterSuccess({
     submitting,
     success: notice,
     error,
+    /**
+     * Xử lý nghiệp vụ `onSuccess` (on success). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function onSuccess
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     onSuccess: () => {
       setForm(emptyForm);
       setFormErrors({});
     },
   });
 
+  /**
+   * Cập nhật nghiệp vụ `updateForm` (update form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function updateForm
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const updateForm = (field, value) => {
     dispatch(clearStaffRoleRequestNotice());
+    /* Callback nội bộ của lời gọi `setForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setForm((current) => ({ ...current, [field]: value }));
+    /* Callback nội bộ của lời gọi `setFormErrors`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setFormErrors((current) => ({ ...current, [field]: "" }));
   };
 
+  /**
+   * Xử lý nghiệp vụ `handlePortrait` (handle portrait). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handlePortrait
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {Promise<*>} Promise chứa kết quả khi toàn bộ thao tác bất đồng bộ hoàn tất.
+   */
   const handlePortrait = async (event) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
 
     setProcessingImage(true);
+    /* Callback nội bộ của lời gọi `setFormErrors`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setFormErrors((current) => ({ ...current, portraitImageUrl: "" }));
     try {
       const portraitImageUrl = await compressImageFile(file, {
@@ -126,7 +186,9 @@ const ManagerStaffAssignmentPage = () => {
       });
       updateForm("portraitImageUrl", portraitImageUrl);
     } catch (imageError) {
+      /* Callback nội bộ của lời gọi `setForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       setForm((current) => ({ ...current, portraitImageUrl: "" }));
+      /* Callback nội bộ của lời gọi `setFormErrors`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       setFormErrors((current) => ({
         ...current,
         portraitImageUrl: imageError.message || "Không chuẩn bị được ảnh chân dung.",
@@ -136,6 +198,12 @@ const ManagerStaffAssignmentPage = () => {
     }
   };
 
+  /**
+   * Kiểm tra nghiệp vụ `validate` (validate). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function validate
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const validate = () => {
     const nextErrors = {};
     if (!activeBuildingId) nextErrors.buildingId = "Vui lòng chọn tòa nhà làm việc.";
@@ -152,6 +220,13 @@ const ManagerStaffAssignmentPage = () => {
     return Object.keys(nextErrors).length === 0;
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleSubmit` (handle submit). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleSubmit
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleSubmit = (event) => {
     event.preventDefault();
     dispatch(clearStaffRoleRequestNotice());
@@ -175,6 +250,13 @@ const ManagerStaffAssignmentPage = () => {
       header: "Nhân viên đề nghị",
       key: "userName",
       minWidth: "220px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (request) => (
         <div className="request-person-copy">
           <strong>{request.userName}</strong>
@@ -187,6 +269,13 @@ const ManagerStaffAssignmentPage = () => {
       header: "Tòa nhà làm việc",
       key: "buildingName",
       minWidth: "190px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (request) => (
         <>
           <strong>{request.buildingName}</strong>
@@ -198,11 +287,25 @@ const ManagerStaffAssignmentPage = () => {
     {
       header: "Tài khoản Staff",
       key: "userId",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (request) => request.userId ? `#${request.userId}` : "Chưa được tạo",
     },
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (request) => {
         const meta = requestStatus[request.status] || requestStatus.PENDING;
         return <span className={`pill ${meta.className}`}>{meta.label}</span>;
@@ -211,6 +314,13 @@ const ManagerStaffAssignmentPage = () => {
     {
       header: "Ngày gửi",
       key: "createdAt",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (request) => formatDate(request.createdAt),
     },
   ];

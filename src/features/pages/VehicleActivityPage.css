@@ -1,7 +1,13 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/features/pages/VehicleActivityPage.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-filter-card`. */
 .activity-filter-card {
   overflow: visible;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-filter-grid`. */
 .activity-filter-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(180px, 1fr));
@@ -9,12 +15,16 @@
   align-items: end;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-fixed-building,
+.activity-scan-control`. */
 .activity-fixed-building,
 .activity-scan-control {
   display: grid;
   gap: 7px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-fixed-building > span,
+.activity-scan-control > span`. */
 .activity-fixed-building > span,
 .activity-scan-control > span {
   color: var(--text-secondary);
@@ -22,6 +32,7 @@
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-fixed-building strong`. */
 .activity-fixed-building strong {
   display: flex;
   min-height: 46px;
@@ -33,18 +44,21 @@
   background: var(--surface-soft);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-summary-grid`. */
 .activity-summary-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-metric-card`. */
 .activity-metric-card {
   position: relative;
   overflow: hidden;
   padding: 20px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-metric-card::before`. */
 .activity-metric-card::before {
   content: "";
   position: absolute;
@@ -53,17 +67,20 @@
   background: linear-gradient(90deg, var(--pink), var(--orange));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-metric-head`. */
 .activity-metric-head {
   display: flex;
   align-items: center;
   gap: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-metric-head .metric-icon`. */
 .activity-metric-head .metric-icon {
   flex: 0 0 auto;
   margin: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-metric-breakdown`. */
 .activity-metric-breakdown {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -71,6 +88,7 @@
   margin-top: 15px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-metric-breakdown span`. */
 .activity-metric-breakdown span {
   display: flex;
   align-items: baseline;
@@ -83,28 +101,33 @@
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-metric-breakdown strong`. */
 .activity-metric-breakdown strong {
   color: var(--text-primary);
   font-size: 17px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-section`. */
 .activity-building-section {
   display: grid;
   gap: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-grid`. */
 .activity-building-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
   gap: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-card`. */
 .activity-building-card {
   position: relative;
   overflow: hidden;
   padding: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-card::before`. */
 .activity-building-card::before {
   content: "";
   position: absolute;
@@ -113,6 +136,7 @@
   background: linear-gradient(90deg, var(--pink), var(--orange));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-header`. */
 .activity-building-header {
   display: flex;
   min-width: 0;
@@ -122,25 +146,31 @@
   background: linear-gradient(135deg, var(--accent-light), var(--primary-light));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-header > div:last-child`. */
 .activity-building-header > div:last-child {
   min-width: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-header h3,
+.activity-building-header p`. */
 .activity-building-header h3,
 .activity-building-header p {
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-header h3`. */
 .activity-building-header h3 {
   margin-bottom: 3px;
   font-size: 17px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-header p`. */
 .activity-building-header p {
   color: var(--text-secondary);
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-icon`. */
 .activity-building-icon {
   display: grid;
   flex: 0 0 auto;
@@ -153,20 +183,24 @@
   color: var(--orange);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-metrics`. */
 .activity-building-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-metric`. */
 .activity-building-metric {
   min-width: 0;
   padding: 15px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-metric + .activity-building-metric`. */
 .activity-building-metric + .activity-building-metric {
   border-left: 1px solid var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-metric-title`. */
 .activity-building-metric-title {
   display: flex;
   align-items: center;
@@ -175,6 +209,7 @@
   margin-bottom: 11px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-metric-title span`. */
 .activity-building-metric-title span {
   display: flex;
   align-items: center;
@@ -184,16 +219,19 @@
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-metric-title strong`. */
 .activity-building-metric-title strong {
   color: var(--text-primary);
   font-size: 22px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-vehicle-counts`. */
 .activity-building-vehicle-counts {
   display: grid;
   gap: 6px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-vehicle-counts span`. */
 .activity-building-vehicle-counts span {
   display: flex;
   align-items: center;
@@ -203,44 +241,54 @@
   font-size: 11px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-vehicle-counts strong`. */
 .activity-building-vehicle-counts strong {
   color: var(--text-primary);
   font-size: 13px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-empty`. */
 .activity-building-empty {
   padding: 24px;
   color: var(--text-secondary);
   text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-plate-cell,
+.activity-owner-cell`. */
 .activity-plate-cell,
 .activity-owner-cell {
   display: grid;
   gap: 3px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-plate-cell strong`. */
 .activity-plate-cell strong {
   font-size: 15px;
   letter-spacing: 0.03em;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-plate-cell span,
+.activity-owner-cell span`. */
 .activity-plate-cell span,
 .activity-owner-cell span {
   color: var(--text-muted);
   font-size: 11px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-badges`. */
 .activity-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-detail-backdrop`. */
 .activity-detail-backdrop {
   z-index: 1250;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-detail-modal`. */
 .activity-detail-modal {
   width: min(760px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
@@ -248,6 +296,7 @@
   padding: 24px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-detail-header`. */
 .activity-detail-header {
   display: flex;
   align-items: flex-start;
@@ -255,11 +304,13 @@
   gap: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-detail-header h2`. */
 .activity-detail-header h2 {
   margin-bottom: 8px;
   font-size: 28px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-detail-header button`. */
 .activity-detail-header button {
   display: grid;
   width: 40px;
@@ -272,6 +323,7 @@
   cursor: pointer;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-detail-grid`. */
 .activity-detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 0.72fr);
@@ -279,6 +331,7 @@
   margin: 18px 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-person-panel`. */
 .activity-person-panel {
   display: flex;
   align-items: center;
@@ -289,12 +342,15 @@
   background: linear-gradient(135deg, var(--accent-light), var(--primary-light));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-person-panel > div:last-child`. */
 .activity-person-panel > div:last-child {
   display: grid;
   gap: 3px;
   min-width: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-person-panel span,
+.activity-person-panel p`. */
 .activity-person-panel span,
 .activity-person-panel p {
   overflow-wrap: anywhere;
@@ -302,10 +358,12 @@
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-person-panel strong`. */
 .activity-person-panel strong {
   font-size: 18px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-avatar`. */
 .activity-avatar {
   display: grid;
   flex: 0 0 auto;
@@ -319,12 +377,14 @@
   color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-avatar img`. */
 .activity-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-plate-image`. */
 .activity-plate-image {
   min-height: 130px;
   overflow: hidden;
@@ -333,12 +393,14 @@
   background: var(--surface-soft);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-plate-image img`. */
 .activity-plate-image img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-detail-rows`. */
 .activity-detail-rows {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -347,6 +409,7 @@
   border-radius: var(--radius-sm);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-detail-rows > div`. */
 .activity-detail-rows > div {
   display: grid;
   gap: 5px;
@@ -354,14 +417,17 @@
   border-bottom: 1px solid var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-detail-rows > div:nth-child(odd)`. */
 .activity-detail-rows > div:nth-child(odd) {
   border-right: 1px solid var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-detail-rows > div:nth-last-child(-n + 2)`. */
 .activity-detail-rows > div:nth-last-child(-n + 2) {
   border-bottom: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-detail-rows span`. */
 .activity-detail-rows span {
   display: flex;
   align-items: center;
@@ -372,45 +438,58 @@
   text-transform: uppercase;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.activity-detail-rows strong`. */
 .activity-detail-rows strong {
   overflow-wrap: anywhere;
   font-size: 13px;
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 980px)`. */
 @media (max-width: 980px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.activity-filter-grid`. */
   .activity-filter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.activity-summary-grid`. */
   .activity-summary-grid {
     grid-template-columns: 1fr;
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 640px)`. */
 @media (max-width: 640px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.activity-filter-grid,
+  .activity-detail-grid,
+  .activity-detail-rows`. */
   .activity-filter-grid,
   .activity-detail-grid,
   .activity-detail-rows {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-metrics`. */
   .activity-building-metrics {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.activity-building-metric + .activity-building-metric`. */
   .activity-building-metric + .activity-building-metric {
     border-top: 1px solid var(--border-color);
     border-left: 0;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.activity-detail-rows > div:nth-child(odd)`. */
   .activity-detail-rows > div:nth-child(odd) {
     border-right: 0;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.activity-detail-rows > div:nth-last-child(2)`. */
   .activity-detail-rows > div:nth-last-child(2) {
     border-bottom: 1px solid var(--border-color);
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.activity-person-panel`. */
   .activity-person-panel {
     align-items: flex-start;
   }

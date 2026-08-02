@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình MyQRPassPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -45,31 +51,87 @@ import {
 } from "../../utils/paymentReturn";
 import "./MyQRPassPage.css";
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `normalizePlateQrValue` (normalize plate qr value). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function normalizePlateQrValue
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const normalizePlateQrValue = (value) =>
   String(value || "")
     .trim()
     .toUpperCase()
     .replace(/[\s.-]/g, "");
 
+/**
+ * Lấy nghiệp vụ `getPassQrValue` (get pass qr value). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getPassQrValue
+ * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getPassQrValue = (pass) =>
   normalizePlateQrValue(pass?.plateNumber || pass?.vehiclePlateNumber) || pass?.qrCode || pass?.code || "";
 
+/**
+ * Lấy nghiệp vụ `getPassPackageName` (get pass package name). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getPassPackageName
+ * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getPassPackageName = (pass) =>
   pass?.packagePlanName || pass?.packageName || pass?.planName || "Gói tháng";
 
+/**
+ * Lấy nghiệp vụ `getPassStartDate` (get pass start date). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getPassStartDate
+ * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getPassStartDate = (pass) => pass?.monthlyPassStartDate || pass?.startDate || pass?.validFrom;
 
+/**
+ * Lấy nghiệp vụ `getPassEndDate` (get pass end date). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getPassEndDate
+ * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getPassEndDate = (pass) => pass?.monthlyPassEndDate || pass?.endDate || pass?.validTo;
 
+/**
+ * Lấy nghiệp vụ `getPassTypeLabel` (get pass type label). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getPassTypeLabel
+ * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getPassTypeLabel = (pass) =>
   pass?.passType === "SLOT_REGISTRATION" ? "Gói tháng có ô ô tô" : "Gói tháng theo xe";
 
+/**
+ * Lấy nghiệp vụ `getPassLocation` (get pass location). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getPassLocation
+ * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getPassLocation = (pass) =>
   [pass?.slotFloorName, pass?.slotCode ? `Ô ${pass.slotCode}` : null]
     .filter(Boolean)
     .join(" - ") ||
   (pass?.vehicleType === "CAR" ? "Chưa gán ô đỗ" : "Khu xe máy");
 
+/**
+ * Thực hiện nghiệp vụ `PassInformation` (pass information). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function PassInformation
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const PassInformation = ({ pass, compact = false }) => (
   <div className={`qr-pass-information ${compact ? "compact" : ""}`}>
     <div>
@@ -107,6 +169,12 @@ const PassInformation = ({ pass, compact = false }) => (
   </div>
 );
 
+/**
+ * Thực hiện nghiệp vụ `MyQRPassPage` (my qrpass page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function MyQRPassPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const MyQRPassPage = () => {
   const dispatch = useDispatch();
   const {
@@ -116,22 +184,27 @@ const MyQRPassPage = () => {
     slotRegistrations,
     vehicles,
     notice,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.parking);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { user } = useSelector((state) => state.auth);
   const {
     floors,
     loading: floorsLoading,
     error: floorsError,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.floors);
   const {
     slotsByFloor,
     activeFloorId,
     loading: slotsLoading,
     error: slotsError,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.slots);
   const userBuildingId = user?.buildingId || user?.building_id;
 
   const [selectedPass, setSelectedPass] = useState(null);
+  /* Callback nội bộ của lời gọi `useState`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const [paymentReturn] = useState(() =>
     getPaymentReturnFromUrl({
       successMessage: "Thanh toán thành công. Gói tháng của bạn đang được cập nhật.",
@@ -145,6 +218,7 @@ const MyQRPassPage = () => {
     carFloorId: "",
   });
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchMyQrPassesRequest());
     dispatch(fetchMyMonthlyPassesRequest());
@@ -153,6 +227,7 @@ const MyQRPassPage = () => {
     dispatch(fetchMySlotRegistrationsRequest());
   }, [dispatch, userBuildingId]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!userBuildingId) return;
     dispatch(fetchFloorsRequest({
@@ -163,6 +238,7 @@ const MyQRPassPage = () => {
     }));
   }, [dispatch, userBuildingId]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!paymentReturn) return;
 
@@ -172,34 +248,45 @@ const MyQRPassPage = () => {
     clearPaymentReturnState();
   }, [dispatch, paymentReturn]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const approvedVehicles = useMemo(() => {
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return vehicles.mine.filter((vehicle) => ["APPROVED", "ACTIVE"].includes(vehicle.status));
   }, [vehicles.mine]);
 
   const effectiveVehicleId = purchaseForm.vehicleId || approvedVehicles[0]?.id || "";
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const selectedVehicle = useMemo(() => {
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return approvedVehicles.find((vehicle) => String(vehicle.id) === String(effectiveVehicleId));
   }, [approvedVehicles, effectiveVehicleId]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const availablePackagePlans = useMemo(() => {
     return packagePlans.items.filter(
+      /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       (plan) => !selectedVehicle || plan.vehicleType === selectedVehicle.vehicleType
     );
   }, [packagePlans.items, selectedVehicle]);
 
   const effectivePackagePlanId =
     purchaseForm.packagePlanId &&
+    /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     availablePackagePlans.some((plan) => String(plan.id) === String(purchaseForm.packagePlanId))
       ? purchaseForm.packagePlanId
       : availablePackagePlans[0]?.id || "";
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const selectedPackage = useMemo(() => {
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return availablePackagePlans.find((plan) => String(plan.id) === String(effectivePackagePlanId));
   }, [availablePackagePlans, effectivePackagePlanId]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const carFloors = useMemo(() => {
     return floors.filter(
+      /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       (floor) =>
         Number(floor.buildingId || floor.building_id) === Number(userBuildingId) &&
         String(floor.floorType || floor.floor_type).toUpperCase() === "CAR" &&
@@ -209,12 +296,15 @@ const MyQRPassPage = () => {
 
   const effectiveCarFloorId =
     purchaseForm.carFloorId &&
+    /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     carFloors.some((floor) => String(floor.id) === String(purchaseForm.carFloorId))
       ? purchaseForm.carFloorId
       : (carFloors[0]?.id ? String(carFloors[0].id) : "");
   const selectedCarFloor = carFloors.find(
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (floor) => String(floor.id) === String(effectiveCarFloorId)
   );
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const carSlotsInFloor = useMemo(() => {
     if (!effectiveCarFloorId) return [];
 
@@ -224,26 +314,45 @@ const MyQRPassPage = () => {
     return Array.isArray(selectedCarFloor?.slots) ? selectedCarFloor.slots : [];
   }, [effectiveCarFloorId, selectedCarFloor, slotsByFloor]);
   const availableCarSlots = useMemo(
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => carSlotsInFloor.filter(
+      /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       (slot) => String(slot.status).toUpperCase() === "AVAILABLE"
     ),
     [carSlotsInFloor]
   );
   const effectiveSlotId =
+    /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     purchaseForm.slotId && availableCarSlots.some((slot) => String(slot.id) === String(purchaseForm.slotId))
       ? purchaseForm.slotId
       : String(availableCarSlots[0]?.id || "");
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!effectiveCarFloorId) return;
     dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
   }, [dispatch, effectiveCarFloorId]);
 
+  /**
+   * Cập nhật nghiệp vụ `updatePurchaseForm` (update purchase form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function updatePurchaseForm
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const updatePurchaseForm = (field, value) => {
     dispatch(clearParkingNotice());
+    /* Callback nội bộ của lời gọi `setPurchaseForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setPurchaseForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  /**
+   * Thực hiện nghiệp vụ `buyPackage` (buy package). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function buyPackage
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const buyPackage = () => {
     if (!selectedPackage || !selectedVehicle) return;
 
@@ -269,6 +378,13 @@ const MyQRPassPage = () => {
     );
   };
 
+  /**
+   * Thực hiện nghiệp vụ `continueMonthlyPayment` (continue monthly payment). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function continueMonthlyPayment
+   * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const continueMonthlyPayment = (pass) => {
     dispatch(
       continueMonthlyPassPaymentRequest({
@@ -279,7 +395,9 @@ const MyQRPassPage = () => {
     );
   };
 
+  /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const activePassCount = qrPasses.mine.filter((pass) => (pass.status || "ACTIVE") === "ACTIVE").length;
+  /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const pendingMonthlyPasses = monthlyPasses.mine.filter((pass) =>
     ["PENDING_PAYMENT", "CANCELLED"].includes(pass.status)
   );

@@ -1,3 +1,8 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/features/pages/CheckOutQRPage.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.checkout-violation-list`. */
 .checkout-violation-list {
   display: grid;
   gap: 10px;
@@ -7,6 +12,9 @@
   background: color-mix(in srgb, var(--danger) 5%, var(--surface));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.checkout-violation-heading,
+.checkout-violation-total,
+.checkout-receipt-total`. */
 .checkout-violation-heading,
 .checkout-violation-total,
 .checkout-receipt-total {
@@ -16,6 +24,7 @@
   gap: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.checkout-violation-heading > span`. */
 .checkout-violation-heading > span {
   display: inline-flex;
   align-items: center;
@@ -24,6 +33,7 @@
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.checkout-violation-item`. */
 .checkout-violation-item {
   min-width: 0;
   display: grid;
@@ -34,6 +44,7 @@
   border-top: 1px dashed var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.checkout-violation-number`. */
 .checkout-violation-number {
   width: 28px;
   height: 28px;
@@ -45,6 +56,8 @@
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.checkout-violation-item p,
+.checkout-violation-item small`. */
 .checkout-violation-item p,
 .checkout-violation-item small {
   display: block;
@@ -54,23 +67,27 @@
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.checkout-violation-amount`. */
 .checkout-violation-amount {
   color: var(--danger);
   white-space: nowrap;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.checkout-violation-total`. */
 .checkout-violation-total {
   padding-top: 12px;
   border-top: 1px solid var(--border-color);
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.checkout-receipt-breakdown`. */
 .checkout-receipt-breakdown {
   margin-top: 18px;
   display: grid;
   gap: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.checkout-receipt-total`. */
 .checkout-receipt-total {
   padding: 16px;
   border-radius: 8px;
@@ -80,16 +97,22 @@
   font-weight: 900;
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 520px)`. */
 @media (max-width: 520px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.checkout-violation-item`. */
   .checkout-violation-item {
     grid-template-columns: 28px minmax(0, 1fr);
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.checkout-violation-amount`. */
   .checkout-violation-amount {
     grid-column: 2;
     justify-self: start;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.checkout-violation-heading,
+  .checkout-violation-total,
+  .checkout-receipt-total`. */
   .checkout-violation-heading,
   .checkout-violation-total,
   .checkout-receipt-total {

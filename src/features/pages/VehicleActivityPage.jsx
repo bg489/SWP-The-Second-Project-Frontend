@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình VehicleActivityPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -35,6 +41,12 @@ import {
 import { formatPlateNumber } from "../../utils/licensePlate";
 import "./VehicleActivityPage.css";
 
+/**
+ * Lấy nghiệp vụ `getVietnamDate` (get vietnam date). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getVietnamDate
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getVietnamDate = () =>
   new Intl.DateTimeFormat("en-CA", {
     day: "2-digit",
@@ -43,12 +55,20 @@ const getVietnamDate = () =>
     year: "numeric",
   }).format(new Date());
 
+/**
+ * Khai báo `EMPTY_SUMMARY` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/VehicleActivityPage.jsx.
+ */
 const EMPTY_SUMMARY = {
   currentlyParked: { total: 0, motorbike: 0, car: 0 },
   enteredToday: { total: 0, motorbike: 0, car: 0 },
   exitedToday: { total: 0, motorbike: 0, car: 0 },
 };
 
+/**
+ * Khai báo `activityOptions` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/VehicleActivityPage.jsx.
+ */
 const activityOptions = [
   { value: "ALL", label: "Tất cả hoạt động" },
   { value: "CURRENTLY_PARKED", label: "Đang gửi trong bãi" },
@@ -56,12 +76,23 @@ const activityOptions = [
   { value: "EXITED", label: "Đã ra trong ngày" },
 ];
 
+/**
+ * Khai báo `vehicleOptions` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/VehicleActivityPage.jsx.
+ */
 const vehicleOptions = [
   { value: "", label: "Tất cả loại xe" },
   { value: "MOTORBIKE", label: "Xe máy" },
   { value: "CAR", label: "Ô tô" },
 ];
 
+/**
+ * Thực hiện nghiệp vụ `ActivityBadges` (activity badges). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function ActivityBadges
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const ActivityBadges = ({ session }) => (
   <div className="activity-badges">
     {session.currentlyParked && <span className="pill success">Đang gửi</span>}
@@ -70,6 +101,13 @@ const ActivityBadges = ({ session }) => (
   </div>
 );
 
+/**
+ * Thực hiện nghiệp vụ `ActivityMetric` (activity metric). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function ActivityMetric
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const ActivityMetric = ({ icon: Icon, label, summary, note }) => (
   <article className="card activity-metric-card">
     <div className="activity-metric-head">
@@ -87,6 +125,13 @@ const ActivityMetric = ({ icon: Icon, label, summary, note }) => (
   </article>
 );
 
+/**
+ * Tạo nghiệp vụ `BuildingActivityCard` (building activity card). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function BuildingActivityCard
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const BuildingActivityCard = ({ building }) => {
   const metrics = [
     { key: "currentlyParked", label: "Đang gửi", icon: Car },
@@ -126,13 +171,23 @@ const BuildingActivityCard = ({ building }) => {
   );
 };
 
+/**
+ * Thực hiện nghiệp vụ `VehicleActivityPage` (vehicle activity page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function VehicleActivityPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const VehicleActivityPage = () => {
   const dispatch = useDispatch();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { user, frontendRole } = useSelector((state) => state.auth);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { buildings, error: buildingsError } = useSelector((state) => state.buildings);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const dailyActivity = useSelector((state) => state.parking.parkingSessions.dailyActivity);
   const isManager = frontendRole === "PARKING_MANAGER" || user?.role === "MANAGER";
   const isStaff = frontendRole === "PARKING_STAFF" || user?.role === "STAFF";
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const today = useMemo(() => getVietnamDate(), []);
   const [filters, setFilters] = useState({
     activity: "ALL",
@@ -146,11 +201,14 @@ const VehicleActivityPage = () => {
   const staffBuildingId = isStaff && user?.buildingId ? String(user.buildingId) : "";
   const effectiveBuildingId = isStaff ? staffBuildingId : filters.buildingId;
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (isManager) dispatch(fetchBuildingsRequest());
   }, [dispatch, isManager]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
+    /* Callback nội bộ của lời gọi `setTimeout`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const timer = window.setTimeout(() => {
       dispatch(fetchDailyParkingActivityRequest({
         activity: filters.activity,
@@ -161,6 +219,7 @@ const VehicleActivityPage = () => {
       }));
     }, filters.search ? 350 : 0);
 
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => window.clearTimeout(timer);
   }, [dispatch, effectiveBuildingId, filters]);
 
@@ -170,15 +229,23 @@ const VehicleActivityPage = () => {
     : [];
   const summary = dailyActivity?.summary || EMPTY_SUMMARY;
   const selectedSession = sessions.find(
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (session) => String(session.id) === String(selectedSessionId)
   );
   const selectedBuilding = buildings.find(
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (building) => String(building.id) === String(effectiveBuildingId)
   );
   const scopeLabel = isStaff
     ? user?.buildingName || selectedBuilding?.name || "Tòa nhà đang làm việc"
     : selectedBuilding?.name || "Tất cả tòa nhà";
 
+  /**
+   * Thực hiện nghiệp vụ `requestData` (request data). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function requestData
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const requestData = () => {
     dispatch(fetchDailyParkingActivityRequest({
       activity: filters.activity,
@@ -189,6 +256,12 @@ const VehicleActivityPage = () => {
     }));
   };
 
+  /**
+   * Xóa hoặc đặt lại nghiệp vụ `resetFilters` (reset filters). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function resetFilters
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const resetFilters = () => {
     setFilters({
       activity: "ALL",
@@ -199,7 +272,15 @@ const VehicleActivityPage = () => {
     });
   };
 
+  /**
+   * Xử lý nghiệp vụ `handlePlateScan` (handle plate scan). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handlePlateScan
+   * @param {*} plateNumber - Giá trị `plateNumber` được hàm sử dụng trong quá trình xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handlePlateScan = (plateNumber) => {
+    /* Callback nội bộ của lời gọi `setFilters`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setFilters((current) => ({
       ...current,
       search: formatPlateNumber(plateNumber),
@@ -211,6 +292,13 @@ const VehicleActivityPage = () => {
       header: "Biển số",
       key: "plateNumber",
       minWidth: 125,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div className="activity-plate-cell">
           <strong>{row.plateNumber}</strong>
@@ -222,12 +310,26 @@ const VehicleActivityPage = () => {
       header: "Hoạt động",
       key: "activity",
       minWidth: 170,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => <ActivityBadges session={row} />,
     },
     {
       header: "Chủ xe",
       key: "ownerName",
       minWidth: 180,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div className="activity-owner-cell">
           <strong>{row.ownerName || "Khách vãng lai"}</strong>
@@ -239,6 +341,13 @@ const VehicleActivityPage = () => {
       header: "Tòa nhà / vị trí",
       key: "buildingName",
       minWidth: 190,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div className="activity-owner-cell">
           <strong>{row.buildingName}</strong>
@@ -250,12 +359,26 @@ const VehicleActivityPage = () => {
       header: "Giờ vào",
       key: "checkInAt",
       minWidth: 150,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => formatDateTime(row.checkInAt),
     },
     {
       header: "Giờ ra",
       key: "checkOutAt",
       minWidth: 150,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => row.status === "COMPLETED" && row.checkOutAt
         ? formatDateTime(row.checkOutAt)
         : "Chưa ra",
@@ -264,6 +387,13 @@ const VehicleActivityPage = () => {
       header: "Trạng thái",
       key: "status",
       minWidth: 130,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <span className={`pill ${getStatusTone(row.status)}`}>{getStatusLabel(row.status)}</span>
       ),
@@ -271,6 +401,13 @@ const VehicleActivityPage = () => {
     {
       header: "Chi tiết",
       key: "detail",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <Button size="sm" variant="outline" icon={Eye} onClick={() => setSelectedSessionId(row.id)}>
           Xem

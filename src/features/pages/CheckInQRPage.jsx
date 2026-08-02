@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình CheckInQRPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { ArrowDownLeft, Camera, Car, Layers, QrCode, ShieldCheck } from "lucide-react";
@@ -30,7 +36,21 @@ import {
   getVehicleTypeLabel,
 } from "../../services/mockParkingData";
 
+/**
+ * Thực hiện nghiệp vụ `slotClassName` (slot class name). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function slotClassName
+ * @param {*} status - Giá trị `status` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const slotClassName = (status) => String(status || "AVAILABLE").toLowerCase();
+/**
+ * Lấy nghiệp vụ `getCarSlotCount` (get car slot count). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getCarSlotCount
+ * @param {*} floor - Giá trị `floor` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getCarSlotCount = (floor) => Number(
   floor?.slotCount ??
   floor?.slotsCount ??
@@ -39,12 +59,23 @@ const getCarSlotCount = (floor) => Number(
   0
 );
 
+/**
+ * Kiểm tra nghiệp vụ `CheckInQRPage` (check in qrpage). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function CheckInQRPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const CheckInQRPage = () => {
   const dispatch = useDispatch();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { user } = useSelector((state) => state.auth);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { hourlyReservations, parkingSessions, qrPasses, tempQrCards, notice } = useSelector((state) => state.parking);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { buildings, error: buildingsError } = useSelector((state) => state.buildings);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { floors, loading: floorsLoading, error: floorsError } = useSelector((state) => state.floors);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { slotsByFloor, loading: slotsLoading, error: slotsError } = useSelector((state) => state.slots);
 
   const [form, setForm] = useState({
@@ -62,7 +93,9 @@ const CheckInQRPage = () => {
   const [formError, setFormError] = useState("");
 
   const currentBuildingId = user?.buildingId;
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const currentBuilding = useMemo(() => {
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return buildings.find((building) => Number(building.id) === Number(currentBuildingId)) || {
       id: currentBuildingId,
       name: user?.buildingName || "Chưa có tòa nhà",
@@ -70,15 +103,21 @@ const CheckInQRPage = () => {
     };
   }, [buildings, currentBuildingId, user?.buildingAddress, user?.buildingName]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const buildingFloors = useMemo(() => {
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return floors.filter((floor) => Number(floor.buildingId) === Number(currentBuildingId));
   }, [floors, currentBuildingId]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const motorbikeFloors = useMemo(() => {
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return buildingFloors.filter((floor) => floor.floorType === "MOTORBIKE" && floor.status === "ACTIVE");
   }, [buildingFloors]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const carFloors = useMemo(() => {
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return buildingFloors.filter((floor) => floor.floorType === "CAR" && floor.status === "ACTIVE");
   }, [buildingFloors]);
 
@@ -95,13 +134,16 @@ const CheckInQRPage = () => {
     (form.customerType === "REGISTERED_USER" && registeredSlotFloorId ? registeredSlotFloorId : "") ||
     selectedCarFloorId ||
     (carFloors[0]?.id ? String(carFloors[0].id) : "");
+  /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const firstAvailableMotorbikeFloor = motorbikeFloors.find((floor) => Number(floor.currentCount || 0) < Number(floor.capacity || 0));
   const effectiveMotorbikeFloorId = selectedMotorbikeFloorId || (firstAvailableMotorbikeFloor?.id ? String(firstAvailableMotorbikeFloor.id) : "");
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchBuildingsRequest());
   }, [dispatch]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!currentBuildingId) return;
 
@@ -110,11 +152,13 @@ const CheckInQRPage = () => {
     dispatch(fetchTempQrCardsRequest({ buildingId: currentBuildingId, status: "READY" }));
   }, [currentBuildingId, dispatch]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!effectiveCarFloorId) return;
     dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
   }, [dispatch, effectiveCarFloorId]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     const plateNumber = form.plateNumber.trim();
 
@@ -127,6 +171,7 @@ const CheckInQRPage = () => {
       return undefined;
     }
 
+    /* Callback nội bộ của lời gọi `setTimeout`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const timer = window.setTimeout(() => {
       dispatch(
         fetchHourlyCheckInMatchRequest({
@@ -136,12 +181,15 @@ const CheckInQRPage = () => {
       );
     }, 450);
 
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => window.clearTimeout(timer);
   }, [currentBuildingId, dispatch, form.plateNumber, form.vehicleType]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!currentBuildingId) return undefined;
 
+    /* Callback nội bộ của lời gọi `setInterval`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const timer = window.setInterval(() => {
       dispatch(fetchFloorsRequest({
         buildingId: currentBuildingId,
@@ -166,14 +214,24 @@ const CheckInQRPage = () => {
       }
     }, 5000);
 
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => window.clearInterval(timer);
   }, [currentBuildingId, dispatch, effectiveCarFloorId]);
 
+  /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const readyCards = tempQrCards.items.filter((card) => card.status === "READY");
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const currentCarSlots = useMemo(() => {
     return effectiveCarFloorId ? slotsByFloor[effectiveCarFloorId] || [] : [];
   }, [effectiveCarFloorId, slotsByFloor]);
   const isRegisteredCustomer = form.customerType === "REGISTERED_USER";
+  /**
+   * Kiểm tra nghiệp vụ `isSelectableCarSlot` (is selectable car slot). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function isSelectableCarSlot
+   * @param {*} slot - Giá trị `slot` được hàm sử dụng trong quá trình xử lý.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const isSelectableCarSlot = (slot) =>
     (Boolean(hourlyReservedSlotId) &&
       ["AVAILABLE", "RESERVED"].includes(slot.status) &&
@@ -184,28 +242,37 @@ const CheckInQRPage = () => {
       ["AVAILABLE", "RESERVED"].includes(slot.status) &&
       String(slot.id) === registeredReservedSlotId);
   const selectableCarSlots = currentCarSlots.filter(isSelectableCarSlot);
+  /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const availableCarSlots = currentCarSlots.filter((slot) => slot.status === "AVAILABLE");
   const preferredCarSlot = registeredReservedSlotId
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     ? selectableCarSlots.find((slot) => String(slot.id) === registeredReservedSlotId)
     : null;
   const hourlyPreferredCarSlot = hourlyReservedSlotId
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     ? selectableCarSlots.find((slot) => String(slot.id) === hourlyReservedSlotId)
     : null;
   const fallbackCarSlot = isRegisteredCustomer && !hourlyReservation ? null : selectableCarSlots[0];
+  /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const formSlotStillAvailable = selectableCarSlots.some((slot) => String(slot.id) === String(form.slotId));
   const selectedCarSlotId = String(
     (formSlotStillAvailable
       ? form.slotId
       : hourlyPreferredCarSlot?.id || preferredCarSlot?.id || fallbackCarSlot?.id) || ""
   );
+  /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const selectedSlot = currentCarSlots.find((slot) => String(slot.id) === selectedCarSlotId);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const motorbikeFloor = useMemo(() => {
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return motorbikeFloors.find((floor) => String(floor.id) === String(effectiveMotorbikeFloorId));
   }, [effectiveMotorbikeFloorId, motorbikeFloors]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const motorbikeCapacity = useMemo(() => {
     return motorbikeFloors.reduce(
+      /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       (sum, floor) => ({
         capacity: sum.capacity + Number(floor.capacity || 0),
         current: sum.current + Number(floor.currentCount || 0),
@@ -214,8 +281,10 @@ const CheckInQRPage = () => {
     );
   }, [motorbikeFloors]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const carSummary = useMemo(() => {
     return currentCarSlots.reduce(
+      /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       (sum, slot) => {
         const status = slot.status || "AVAILABLE";
         return {
@@ -230,7 +299,9 @@ const CheckInQRPage = () => {
     );
   }, [currentCarSlots]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const tempQrOptions = useMemo(() => {
+    /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const options = readyCards.map((card) => ({
       value: card.cardCode || card.id,
       label: `${card.cardCode || card.id} - ${card.label || "Sẵn sàng"}`,
@@ -239,6 +310,7 @@ const CheckInQRPage = () => {
       readyCards[0]?.cardCode ||
       (readyCards[0]?.id ? String(readyCards[0].id) : "");
 
+    /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     if (selectedCode && !options.some((option) => option.value === selectedCode)) {
       options.unshift({
         value: selectedCode,
@@ -252,9 +324,18 @@ const CheckInQRPage = () => {
     readyCards[0]?.cardCode ||
     (readyCards[0]?.id ? String(readyCards[0].id) : "");
 
+  /**
+   * Cập nhật nghiệp vụ `updateForm` (update form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function updateForm
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const updateForm = (field, value) => {
     dispatch(clearParkingNotice());
     setFormError("");
+    /* Callback nội bộ của lời gọi `setForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setForm((prev) => {
       const next = { ...prev, [field]: value };
       if (field === "vehicleType" && value === "MOTORBIKE") {
@@ -271,6 +352,12 @@ const CheckInQRPage = () => {
     submitting: parkingSessions.checkingIn,
     success: parkingSessions.lastCheckIn,
     error: parkingSessions.error,
+    /**
+     * Xử lý nghiệp vụ `onSuccess` (on success). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function onSuccess
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     onSuccess: () => {
       setForm({
         plateNumber: "",
@@ -313,15 +400,35 @@ const CheckInQRPage = () => {
     },
   });
 
+  /**
+   * Kiểm tra nghiệp vụ `validateQr` (validate qr). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function validateQr
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const validateQr = () => {
     if (!form.qrCode.trim()) return;
     dispatch(validateQrPassRequest({ buildingId: currentBuildingId, qrCode: form.qrCode.trim() }));
   };
 
+  /**
+   * Hiển thị nghiệp vụ `openScanner` (open scanner). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function openScanner
+   * @param {*} target - Giá trị `target` được hàm sử dụng trong quá trình xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const openScanner = (target) => {
     setScannerTarget(target);
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleQrScan` (handle qr scan). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleQrScan
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleQrScan = (value) => {
     const scannedValue = value.trim();
 
@@ -330,6 +437,7 @@ const CheckInQRPage = () => {
     if (scannerTarget === "MONTHLY") {
       dispatch(clearParkingNotice());
       setFormError("");
+      /* Callback nội bộ của lời gọi `setForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       setForm((prev) => ({
         ...prev,
         plateNumber: "",
@@ -342,6 +450,13 @@ const CheckInQRPage = () => {
     updateForm("tempQrCardCode", scannedValue.toUpperCase());
   };
 
+  /**
+   * Thực hiện nghiệp vụ `submitCheckIn` (submit check in). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function submitCheckIn
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const submitCheckIn = (event) => {
     event.preventDefault();
     setFormError("");
@@ -361,6 +476,7 @@ const CheckInQRPage = () => {
       payload.qrCode = form.qrCode.trim();
     } else {
       const selectedTempCard = readyCards.find(
+        /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         (card) =>
           String(card.cardCode || card.id) === String(effectiveTempQrCardCode)
       );
@@ -408,14 +524,49 @@ const CheckInQRPage = () => {
 
   const columns = [
     { header: "Lượt gửi", key: "id" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Biển số", key: "plateNumber", render: (row) => <strong>{row.plateNumber}</strong> },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Loại xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
     {
       header: "Thẻ QR",
       key: "sessionQrCode",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => row.tempQrCardCode || row.sessionQrCode || row.qrCode || "-",
     },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Vị trí", key: "slotCode", render: (row) => row.slotCode || "Khu xe máy" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Giờ vào", key: "checkInAt", render: (row) => formatDateTime(row.checkInAt) },
   ];
 

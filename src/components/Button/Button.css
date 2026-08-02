@@ -1,3 +1,8 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/components/Button/Button.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn`. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -18,95 +23,115 @@
     color var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn:hover:not(:disabled)`. */
 .btn:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn:active:not(:disabled)`. */
 .btn:active:not(:disabled) {
   transform: translateY(0) scale(0.98);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn:disabled`. */
 .btn:disabled {
   cursor: not-allowed;
   opacity: 0.58;
   transform: none;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-sm`. */
 .btn-sm {
   min-height: 34px;
   padding: 7px 12px;
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-md`. */
 .btn-md {
   min-height: 42px;
   padding: 10px 16px;
   font-size: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-lg`. */
 .btn-lg {
   min-height: 48px;
   padding: 12px 22px;
   font-size: 15px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-primary`. */
 .btn-primary {
   background: linear-gradient(135deg, var(--orange), var(--pink-strong));
   color: #fff;
   box-shadow: 0 10px 24px rgba(237, 153, 81, 0.28);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-primary:hover:not(:disabled)`. */
 .btn-primary:hover:not(:disabled) {
   box-shadow: 0 14px 34px rgba(237, 153, 81, 0.34);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-primary:focus-visible,
+.btn-outline:focus-visible,
+.btn-secondary:focus-visible`. */
 .btn-primary:focus-visible,
 .btn-outline:focus-visible,
 .btn-secondary:focus-visible {
   box-shadow: 0 0 0 4px var(--primary-glow);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-secondary`. */
 .btn-secondary {
   background: linear-gradient(135deg, rgba(255, 184, 245, 0.26), rgba(237, 153, 81, 0.16));
   color: var(--text-primary);
   border-color: var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-secondary:hover:not(:disabled)`. */
 .btn-secondary:hover:not(:disabled) {
   border-color: rgba(237, 153, 81, 0.44);
   box-shadow: var(--shadow-sm);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-outline`. */
 .btn-outline {
   background: rgba(255, 255, 255, 0.52);
   color: var(--text-primary);
   border-color: var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-outline:hover:not(:disabled)`. */
 .btn-outline:hover:not(:disabled) {
   background: var(--surface);
   border-color: rgba(237, 153, 81, 0.44);
   box-shadow: var(--shadow-sm);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-danger`. */
 .btn-danger {
   background: var(--danger);
   color: #fff;
   box-shadow: 0 10px 24px rgba(220, 74, 74, 0.2);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-danger:hover:not(:disabled)`. */
 .btn-danger:hover:not(:disabled) {
   background: #c93636;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-icon`. */
 .btn-icon {
   flex-shrink: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-loading`. */
 .btn-loading {
   cursor: wait;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-spinner`. */
 .btn-spinner {
   width: 16px;
   height: 16px;
@@ -116,7 +141,9 @@
   animation: btn-spin 0.65s linear infinite;
 }
 
+/* Định nghĩa các bước chuyển động cho hiệu ứng `btn-spin`. */
 @keyframes btn-spin {
+  /* Áp dụng bố cục và hình thức hiển thị cho `to`. */
   to {
     transform: rotate(360deg);
   }

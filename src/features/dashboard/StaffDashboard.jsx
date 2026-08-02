@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình StaffDashboard, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Button from "../../components/Button/Button";
@@ -19,16 +25,26 @@ import {
 import { fetchFloorsRequest } from "../backend/floors/floorSlice";
 import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Building2, Car, Layers, QrCode, ShieldCheck } from "lucide-react";
 
+/**
+ * Thực hiện nghiệp vụ `StaffDashboard` (staff dashboard). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function StaffDashboard
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const StaffDashboard = () => {
   const dispatch = useDispatch();
   const { user: mockUser } = useMockAuth();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { user: authUser } = useSelector((state) => state.auth);
   const user = authUser || mockUser;
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { floors, loading: floorsLoading } = useSelector((state) => state.floors);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { parkingSessions, tempQrCards, violations } = useSelector((state) => state.parking);
 
   const buildingId = user?.buildingId;
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchActiveParkingSessionsRequest(buildingId ? { buildingId } : undefined));
     dispatch(fetchFloorsRequest({ buildingId, status: "ACTIVE", limit: 100 }));
@@ -37,23 +53,31 @@ const StaffDashboard = () => {
   }, [buildingId, dispatch]);
 
   const activeSessions = parkingSessions.active;
+  /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const motorbikeFloors = floors.filter((floor) => floor.floorType === "MOTORBIKE");
+  /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const carFloors = floors.filter((floor) => floor.floorType === "CAR");
   const motorbikeLeft = motorbikeFloors.reduce(
+    /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (sum, floor) => sum + Math.max(Number(floor.capacity || 0) - Number(floor.currentCount || 0), 0),
     0
   );
+  /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const availableCarSlots = carFloors.reduce((sum, floor) => {
     const availableFromSlots = Array.isArray(floor.slots)
+      /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       ? floor.slots.filter((slot) => slot.status === "AVAILABLE").length
       : 0;
     return sum + Number(floor.availableSlotCount || availableFromSlots || 0);
   }, 0);
+  /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const readyQr = tempQrCards.items.filter((card) => card.status === "READY").length;
+  /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const openViolations = violations.items.filter((violation) =>
     ["OPEN", "UNPAID", "RESOLVED"].includes(violation.status)
   );
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const queue = useMemo(() => {
     const rows = [];
     const newestSession = activeSessions[0];
@@ -92,9 +116,37 @@ const StaffDashboard = () => {
   const sessionColumns = [
     { header: "Phiên", key: "id" },
     { header: "Biển số", key: "plateNumber" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Loại khách", key: "customerType", render: (row) => (row.customerType === "REGISTERED_USER" ? "Cư dân" : "Khách vãng lai") },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Vị trí", key: "slotCode", render: (row) => row.slotCode || "Khu xe máy" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Giờ vào", key: "checkInAt", render: (row) => formatDateTime(row.checkInAt) },
   ];
 

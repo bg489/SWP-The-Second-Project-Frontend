@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình ManagerMonthlyPassesPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -36,6 +42,10 @@ import {
 } from "../../services/mockParkingData";
 import "./ManagerMonthlyPassesPage.css";
 
+/**
+ * Khai báo `statusOptions` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/ManagerMonthlyPassesPage.jsx.
+ */
 const statusOptions = [
   { value: "", label: "Tất cả" },
   { value: "ACTIVE", label: "Còn hạn" },
@@ -45,6 +55,13 @@ const statusOptions = [
   { value: "CANCELLED", label: "Đã hủy" },
 ];
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `normalizeText` (normalize text). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function normalizeText
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const normalizeText = (value) =>
   String(value || "")
     .toLowerCase()
@@ -52,24 +69,59 @@ const normalizeText = (value) =>
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[\s.-]/g, "");
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `normalizePlateQrValue` (normalize plate qr value). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function normalizePlateQrValue
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const normalizePlateQrValue = (value) =>
   String(value || "")
     .trim()
     .toUpperCase()
     .replace(/[\s.-]/g, "");
 
+/**
+ * Lấy nghiệp vụ `getPassQrValue` (get pass qr value). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getPassQrValue
+ * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getPassQrValue = (pass) =>
   normalizePlateQrValue(pass?.plateNumber || pass?.vehiclePlateNumber) ||
   pass?.qrCode ||
   pass?.code ||
   "";
 
+/**
+ * Lấy nghiệp vụ `getPassStartDate` (get pass start date). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getPassStartDate
+ * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getPassStartDate = (pass) =>
   pass?.startDate || pass?.monthlyPassStartDate || pass?.validFrom;
 
+/**
+ * Lấy nghiệp vụ `getPassEndDate` (get pass end date). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getPassEndDate
+ * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getPassEndDate = (pass) =>
   pass?.endDate || pass?.monthlyPassEndDate || pass?.validTo || pass?.qrValidTo;
 
+/**
+ * Lấy nghiệp vụ `getPackageName` (get package name). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getPackageName
+ * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getPackageName = (pass) => {
   if (pass?.packagePlanName) return pass.packagePlanName;
 
@@ -80,6 +132,13 @@ const getPackageName = (pass) => {
   return pass?.note || "Gói tháng xe máy";
 };
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `formatDate` (format date). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function formatDate
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const formatDate = (value) => {
   if (!value) return "-";
 
@@ -94,6 +153,13 @@ const formatDate = (value) => {
   }
 };
 
+/**
+ * Lấy nghiệp vụ `getLifeState` (get life state). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getLifeState
+ * @param {*} pass - Giá trị `pass` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getLifeState = (pass) => {
   const status = pass.status || "ACTIVE";
 
@@ -121,14 +187,23 @@ const getLifeState = (pass) => {
   return { label: "Còn hạn", tone: "success" };
 };
 
+/**
+ * Thực hiện nghiệp vụ `ManagerMonthlyPassesPage` (manager monthly passes page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function ManagerMonthlyPassesPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const ManagerMonthlyPassesPage = () => {
   const dispatch = useDispatch();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { qrPasses } = useSelector((state) => state.parking);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { user } = useSelector((state) => state.auth);
   const {
     buildings,
     error: buildingsError,
     loading: buildingsLoading,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.buildings);
   const [filters, setFilters] = useState({
     buildingId: "",
@@ -137,20 +212,30 @@ const ManagerMonthlyPassesPage = () => {
   });
   const [selectedPassId, setSelectedPassId] = useState(null);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchBuildingsRequest());
   }, [dispatch]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchQrPassesRequest(
       filters.buildingId ? { buildingId: Number(filters.buildingId) } : undefined
     ));
   }, [dispatch, filters.buildingId]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!selectedPassId) return undefined;
 
     const previousOverflow = document.body.style.overflow;
+    /**
+     * Xóa hoặc đặt lại nghiệp vụ `closeOnEscape` (close on escape). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function closeOnEscape
+     * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const closeOnEscape = (event) => {
       if (event.key === "Escape") setSelectedPassId(null);
     };
@@ -158,15 +243,18 @@ const ManagerMonthlyPassesPage = () => {
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", closeOnEscape);
 
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", closeOnEscape);
     };
   }, [selectedPassId]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const rows = useMemo(() => {
     const keyword = normalizeText(filters.q);
 
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return (qrPasses.items || []).filter((pass) => {
       const lifeState = getLifeState(pass);
       const matchesBuilding =
@@ -191,12 +279,15 @@ const ManagerMonthlyPassesPage = () => {
         pass.qrCode,
         pass.slotCode,
         pass.slotFloorName,
+      /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       ].some((value) => normalizeText(value).includes(keyword));
     });
   }, [filters.buildingId, filters.q, filters.status, qrPasses.items]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const summary = useMemo(() => {
     return rows.reduce(
+      /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       (result, pass) => {
         const lifeState = getLifeState(pass);
         result.total += 1;
@@ -213,7 +304,9 @@ const ManagerMonthlyPassesPage = () => {
   }, [rows]);
 
   const selectedPass = useMemo(
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => (qrPasses.items || []).find(
+      /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       (pass) => Number(pass.id) === Number(selectedPassId)
     ) || null,
     [qrPasses.items, selectedPassId]
@@ -224,6 +317,13 @@ const ManagerMonthlyPassesPage = () => {
       header: "QR",
       key: "qrCode",
       width: "96px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => {
         const qrValue = getPassQrValue(row);
 
@@ -237,6 +337,13 @@ const ManagerMonthlyPassesPage = () => {
     {
       header: "Người dùng",
       key: "ownerName",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div>
           <strong>{row.ownerName || "Chưa có tên"}</strong>
@@ -247,6 +354,13 @@ const ManagerMonthlyPassesPage = () => {
     {
       header: "Xe",
       key: "plateNumber",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div>
           <strong>{row.plateNumber || "-"}</strong>
@@ -257,21 +371,49 @@ const ManagerMonthlyPassesPage = () => {
     {
       header: "Gói",
       key: "packagePlanName",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => getPackageName(row),
     },
     {
       header: "Thời hạn",
       key: "dateRange",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => `${formatDate(getPassStartDate(row))} - ${formatDate(getPassEndDate(row))}`,
     },
     {
       header: "Số tiền",
       key: "amount",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => formatCurrency(row.amount || 0),
     },
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => {
         const lifeState = getLifeState(row);
 
@@ -282,6 +424,13 @@ const ManagerMonthlyPassesPage = () => {
       header: "Hồ sơ",
       key: "ownerProfile",
       width: "132px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <Button
           variant="outline"
@@ -295,6 +444,12 @@ const ManagerMonthlyPassesPage = () => {
     },
   ];
 
+  /**
+   * Thực hiện nghiệp vụ `refresh` (refresh). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function refresh
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const refresh = () => {
     dispatch(clearParkingNotice());
     dispatch(fetchQrPassesRequest(

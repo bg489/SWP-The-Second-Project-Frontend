@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình StaffViolationsPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AlertTriangle, Camera, CheckCircle2, Clock, Layers, RefreshCcw, Save, ShieldAlert } from "lucide-react";
@@ -28,8 +34,19 @@ import { fetchSlotsByFloorRequest } from "../backend/slots/slotSlice";
 import { formatCurrency, formatDateTime, getStatusLabel, getVehicleTypeLabel } from "../../services/mockParkingData";
 import { compressImageFile } from "../../utils/imageFile";
 
+/**
+ * Thực hiện nghiệp vụ `slotClassName` (slot class name). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function slotClassName
+ * @param {*} status - Giá trị `status` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const slotClassName = (status) => String(status || "AVAILABLE").toLowerCase();
 
+/**
+ * Khai báo `wrongSlotStatusLabel` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/StaffViolationsPage.jsx.
+ */
 const wrongSlotStatusLabel = {
   ALLOWED: "Được phép đậu",
   WAITING_USER: "Chờ dời xe",
@@ -38,6 +55,10 @@ const wrongSlotStatusLabel = {
   CANCELLED: "Đã hủy",
 };
 
+/**
+ * Khai báo `floorMismatchStatusLabel` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/StaffViolationsPage.jsx.
+ */
 const floorMismatchStatusLabel = {
   LOCKED_AND_PENALIZED: "Đã khóa xe và tính phí",
   WAITING_USER: "Chờ dời xe",
@@ -46,22 +67,41 @@ const floorMismatchStatusLabel = {
   CANCELLED: "Đã hủy",
 };
 
+/**
+ * Khai báo `floorMismatchTypeLabel` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/StaffViolationsPage.jsx.
+ */
 const floorMismatchTypeLabel = {
   MOTORBIKE_IN_CAR_FLOOR: "Xe máy vào khu ô tô",
   CAR_IN_MOTORBIKE_FLOOR: "Ô tô vào khu xe máy",
 };
 
+/**
+ * Khai báo `specialViolationNames` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/StaffViolationsPage.jsx.
+ */
 const specialViolationNames = {
   WRONG_SLOT: "Ô tô đậu sai ô",
   MOTORBIKE_WRONG_FLOOR: "Xe máy đậu sai khu",
   CAR_WRONG_FLOOR_TOW: "Ô tô đậu sai khu",
 };
+/**
+ * Khai báo `specialViolationCodes` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/StaffViolationsPage.jsx.
+ */
 const specialViolationCodes = new Set([
   "WRONG_SLOT",
   "MOTORBIKE_WRONG_FLOOR",
   "CAR_WRONG_FLOOR_TOW",
 ]);
 
+/**
+ * Lấy nghiệp vụ `getViolationTypeName` (get violation type name). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getViolationTypeName
+ * @param {*} type - Giá trị `type` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getViolationTypeName = (type) => {
   const legacyNames = ["WRONG_SLOT", "Xe may vao khu oto", "Keo oto do sai khu"];
   if (type?.code && specialViolationNames[type.code] && legacyNames.includes(type.name)) {
@@ -71,15 +111,25 @@ const getViolationTypeName = (type) => {
   return type?.name || "Vi phạm bãi xe";
 };
 
+/**
+ * Thực hiện nghiệp vụ `StaffViolationsPage` (staff violations page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function StaffViolationsPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const StaffViolationsPage = () => {
   const dispatch = useDispatch();
   const { user: mockUser } = useMockAuth();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { user: authUser } = useSelector((state) => state.auth);
   const user = authUser || mockUser;
   const buildingId = user?.buildingId;
 
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { violationTypes, parkingSessions, violations, wrongSlotCases, floorMismatchCases, notice } = useSelector((state) => state.parking);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { floors, loading: floorsLoading, error: floorsError } = useSelector((state) => state.floors);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { slotsByFloor, loading: slotsLoading, error: slotsError } = useSelector((state) => state.slots);
 
   const [selectedSessionId, setSelectedSessionId] = useState("");
@@ -102,6 +152,7 @@ const StaffViolationsPage = () => {
   const [floorMismatchNote, setFloorMismatchNote] = useState("");
   const [formError, setFormError] = useState("");
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchViolationTypesRequest());
     dispatch(fetchViolationsRequest());
@@ -113,20 +164,26 @@ const StaffViolationsPage = () => {
     }
   }, [buildingId, dispatch]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const carFloors = useMemo(() => {
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return floors.filter((floor) => floor.floorType === "CAR" && (!buildingId || Number(floor.buildingId) === Number(buildingId)));
   }, [buildingId, floors]);
   const effectiveCarFloorId = selectedCarFloorId || (carFloors[0]?.id ? String(carFloors[0].id) : "");
   const currentCarSlots = effectiveCarFloorId ? slotsByFloor[effectiveCarFloorId] || [] : [];
   const effectiveTargetCarFloorId = targetCarFloorId || (carFloors[0]?.id ? String(carFloors[0].id) : "");
   const targetCarSlots = effectiveTargetCarFloorId ? slotsByFloor[effectiveTargetCarFloorId] || [] : [];
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const activeFloors = useMemo(() => {
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return floors.filter((floor) => !buildingId || Number(floor.buildingId) === Number(buildingId));
   }, [buildingId, floors]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!buildingId) return undefined;
 
+    /* Callback nội bộ của lời gọi `setInterval`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const timer = window.setInterval(() => {
       dispatch(fetchActiveParkingSessionsRequest({ buildingId, silent: true }));
       dispatch(fetchWrongSlotCasesRequest({ buildingId, silent: true }));
@@ -137,30 +194,47 @@ const StaffViolationsPage = () => {
         status: "ACTIVE",
         limit: 100,
       }));
+      /* Callback nội bộ của lời gọi `forEach`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       carFloors.forEach((floor) => {
         dispatch(fetchSlotsByFloorRequest({ floorId: floor.id, silent: true }));
       });
     }, 5000);
 
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => window.clearInterval(timer);
   }, [buildingId, carFloors, dispatch]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!effectiveCarFloorId) return;
     dispatch(fetchSlotsByFloorRequest({ floorId: effectiveCarFloorId }));
   }, [dispatch, effectiveCarFloorId]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!effectiveTargetCarFloorId || effectiveTargetCarFloorId === effectiveCarFloorId) return;
     dispatch(fetchSlotsByFloorRequest({ floorId: effectiveTargetCarFloorId }));
   }, [dispatch, effectiveCarFloorId, effectiveTargetCarFloorId]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const activeSessions = useMemo(() => parkingSessions.active || [], [parkingSessions.active]);
+  /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const carSessions = useMemo(() => activeSessions.filter((session) => session.vehicleType === "CAR"), [activeSessions]);
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const selectedFloorMismatchSession = useMemo(() => {
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return activeSessions.find((session) => String(session.id) === String(floorMismatchSessionId));
   }, [activeSessions, floorMismatchSessionId]);
+  /**
+   * Lấy nghiệp vụ `getConfiguredPenalty` (get configured penalty). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function getConfiguredPenalty
+   * @param {*} code - Giá trị `code` được hàm sử dụng trong quá trình xử lý.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const getConfiguredPenalty = (code) => {
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const type = violationTypes.items.find((item) => item.code === code);
     return type ? Number(type.defaultPenaltyFee ?? type.penaltyFee ?? 0) : null;
   };
@@ -168,25 +242,34 @@ const StaffViolationsPage = () => {
   const floorMismatchPenalty = selectedFloorMismatchSession?.vehicleType === "CAR"
     ? getConfiguredPenalty("CAR_WRONG_FLOOR_TOW")
     : getConfiguredPenalty("MOTORBIKE_WRONG_FLOOR");
+  /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const carFloorIds = useMemo(() => carFloors.map((floor) => floor.id), [carFloors]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const sessionOptions = useMemo(() => {
+    /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return activeSessions.map((session) => ({
       value: session.id,
       label: `${session.plateNumber} (${getVehicleTypeLabel(session.vehicleType)} - ${session.slotCode || "Khu xe máy"})`,
     }));
   }, [activeSessions]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const carSessionOptions = useMemo(() => {
+    /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return carSessions.map((session) => ({
       value: session.id,
       label: `${session.plateNumber} - đang ghi nhận ở ${session.slotCode || "chưa có ô"}`,
     }));
   }, [carSessions]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const typeOptions = useMemo(() => {
     return (violationTypes.items || [])
+      /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       .filter((type) => !specialViolationCodes.has(type.code))
+      /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       .map((type) => ({
         value: type.id,
         label: `${getViolationTypeName(type)} - ${formatCurrency(
@@ -195,12 +278,27 @@ const StaffViolationsPage = () => {
       }));
   }, [violationTypes.items]);
 
+  /**
+   * Xử lý nghiệp vụ `handleViolationTypeChange` (handle violation type change). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleViolationTypeChange
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleViolationTypeChange = (value) => {
     setViolationTypeId(value);
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const selectedType = violationTypes.items.find((type) => String(type.id) === String(value));
     setPenaltyFee(selectedType?.defaultPenaltyFee || selectedType?.penaltyFee || "");
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleModeChange` (handle mode change). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleModeChange
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleModeChange = (event) => {
     const customChecked = event.target.checked;
     setIsCustom(customChecked);
@@ -209,8 +307,16 @@ const StaffViolationsPage = () => {
     setPenaltyFee("");
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleFloorMismatchSessionChange` (handle floor mismatch session change). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleFloorMismatchSessionChange
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleFloorMismatchSessionChange = (event) => {
     const sessionId = event.target.value;
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const session = activeSessions.find((item) => String(item.id) === String(sessionId));
 
     setFloorMismatchSessionId(sessionId);
@@ -223,6 +329,12 @@ const StaffViolationsPage = () => {
     );
   };
 
+  /**
+   * Xóa hoặc đặt lại nghiệp vụ `resetViolationForm` (reset violation form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function resetViolationForm
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const resetViolationForm = () => {
     setSelectedSessionId("");
     setIsCustom(false);
@@ -233,6 +345,12 @@ const StaffViolationsPage = () => {
     setFormError("");
   };
 
+  /**
+   * Xóa hoặc đặt lại nghiệp vụ `resetWrongSlotForm` (reset wrong slot form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function resetWrongSlotForm
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const resetWrongSlotForm = () => {
     setSelectedCarFloorId("");
     setWrongSlotSessionId("");
@@ -242,6 +360,12 @@ const StaffViolationsPage = () => {
     setFormError("");
   };
 
+  /**
+   * Xóa hoặc đặt lại nghiệp vụ `resetFloorMismatchForm` (reset floor mismatch form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function resetFloorMismatchForm
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const resetFloorMismatchForm = () => {
     setFloorMismatchSessionId("");
     setObservedFloorId("");
@@ -263,8 +387,15 @@ const StaffViolationsPage = () => {
     submitting: wrongSlotCases.reporting,
     success: wrongSlotCases.lastCase,
     error: wrongSlotCases.error,
+    /**
+     * Xử lý nghiệp vụ `onSuccess` (on success). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function onSuccess
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     onSuccess: () => {
       resetWrongSlotForm();
+      /* Callback nội bộ của lời gọi `forEach`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       carFloors.forEach((floor) => {
         dispatch(fetchSlotsByFloorRequest({ floorId: floor.id, silent: true }));
       });
@@ -275,19 +406,34 @@ const StaffViolationsPage = () => {
     submitting: floorMismatchCases.reporting,
     success: floorMismatchCases.lastCase,
     error: floorMismatchCases.error,
+    /**
+     * Xử lý nghiệp vụ `onSuccess` (on success). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function onSuccess
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     onSuccess: () => {
       resetFloorMismatchForm();
+      /* Callback nội bộ của lời gọi `forEach`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       carFloors.forEach((floor) => {
         dispatch(fetchSlotsByFloorRequest({ floorId: floor.id, silent: true }));
       });
     },
   });
 
+  /**
+   * Xử lý nghiệp vụ `handleRecordViolation` (handle record violation). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleRecordViolation
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleRecordViolation = (event) => {
     event.preventDefault();
     if (!selectedSessionId || !penaltyFee) return;
     if (isCustom && !customName.trim()) return;
 
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const selectedType = violationTypes.items.find((type) => String(type.id) === String(violationTypeId));
 
     markViolationSubmitted();
@@ -302,6 +448,13 @@ const StaffViolationsPage = () => {
     );
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleEvidenceFile` (handle evidence file). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleEvidenceFile
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {Promise<*>} Promise chứa kết quả khi toàn bộ thao tác bất đồng bộ hoàn tất.
+   */
   const handleEvidenceFile = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -317,6 +470,13 @@ const StaffViolationsPage = () => {
     }
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleFloorEvidenceFile` (handle floor evidence file). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleFloorEvidenceFile
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {Promise<*>} Promise chứa kết quả khi toàn bộ thao tác bất đồng bộ hoàn tất.
+   */
   const handleFloorEvidenceFile = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -332,6 +492,13 @@ const StaffViolationsPage = () => {
     }
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleReportWrongSlot` (handle report wrong slot). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleReportWrongSlot
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleReportWrongSlot = (event) => {
     event.preventDefault();
 
@@ -358,6 +525,13 @@ const StaffViolationsPage = () => {
     );
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleReportFloorMismatch` (handle report floor mismatch). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleReportFloorMismatch
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleReportFloorMismatch = (event) => {
     event.preventDefault();
 
@@ -385,6 +559,14 @@ const StaffViolationsPage = () => {
     );
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleConfirmMoved` (handle confirm moved). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleConfirmMoved
+   * @param {*} item - Giá trị `item` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} type - Giá trị `type` được hàm sử dụng trong quá trình xử lý.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleConfirmMoved = (item, type) => {
     const confirmed = window.confirm(
       `Xác nhận xe ${item.plateNumber || ""} đã được dời đúng vị trí trước thời hạn?`
@@ -406,30 +588,107 @@ const StaffViolationsPage = () => {
   };
 
   const violationColumns = [
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Biển số", key: "plateNumber", render: (row) => <strong>{row.plateNumber}</strong> },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Nội dung", key: "violationType", render: (row) => row.violationType || row.violationTypeName },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Tiền phạt", key: "penaltyFee", render: (row) => <span className="text-danger">{formatCurrency(row.penaltyFee || row.fine || 0)}</span> },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Thời gian", key: "detectedAt", render: (row) => formatDateTime(row.detectedAt || row.createdAt) },
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => row.status === "COLLECTED" ? <span className="pill success">Đã thu</span> : <span className="pill danger">Chưa thu</span>,
     },
   ];
 
   const wrongSlotColumns = [
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Xe đậu sai", key: "plateNumber", render: (row) => <strong>{row.plateNumber || `#${row.parkingSessionId}`}</strong> },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Ô cũ", key: "originalSlotCode", render: (row) => row.originalSlotCode || "-" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Ô đang đậu", key: "observedSlotCode", render: (row) => row.observedSlotCode || "-" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Xe đã đặt ô", key: "reservedPlateNumber", render: (row) => row.reservedPlateNumber || "Chưa có" },
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => <span className={`pill ${row.status === "ALLOWED" ? "success" : row.status === "PENALIZED" ? "danger" : "warning"}`}>{wrongSlotStatusLabel[row.status] || row.status}</span>,
     },
     {
       header: "Hạn dời xe",
       key: "notifyUntil",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) =>
         row.status === "WAITING_USER" ? (
           <DeadlineCountdown compact deadline={row.notifyUntil} status={row.status} />
@@ -438,11 +697,25 @@ const StaffViolationsPage = () => {
     {
       header: "Bằng chứng",
       key: "evidenceUrl",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => row.evidenceUrl ? <img className="evidence-thumb" src={row.evidenceUrl} alt="Bằng chứng" /> : "-",
     },
     {
       header: "Xử lý",
       key: "actions",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => {
         if (row.status !== "WAITING_USER") {
           return row.reassignedSlotCode || "-";
@@ -470,14 +743,56 @@ const StaffViolationsPage = () => {
   ];
 
   const floorMismatchColumns = [
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Xe", key: "plateNumber", render: (row) => <strong>{row.plateNumber || `#${row.parkingSessionId}`}</strong> },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Tình huống", key: "mismatchType", render: (row) => floorMismatchTypeLabel[row.mismatchType] || row.mismatchType },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Tầng đúng", key: "originalFloorName", render: (row) => row.originalFloorName || "-" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Tầng đang đậu", key: "observedFloorName", render: (row) => row.observedFloorName || "-" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Ô chỉ định", key: "targetSlotCode", render: (row) => row.targetSlotCode || "-" },
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <span className={`pill ${row.status === "WAITING_USER" ? "warning" : row.status === "TOWED" || row.status === "LOCKED_AND_PENALIZED" ? "danger" : "success"}`}>
           {floorMismatchStatusLabel[row.status] || row.status}
@@ -487,6 +802,13 @@ const StaffViolationsPage = () => {
     {
       header: "Hạn dời xe",
       key: "notifyUntil",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) =>
         row.status === "WAITING_USER" ? (
           <DeadlineCountdown compact deadline={row.notifyUntil} status={row.status} />
@@ -495,11 +817,25 @@ const StaffViolationsPage = () => {
     {
       header: "Bằng chứng",
       key: "evidenceUrl",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => row.evidenceUrl ? <img className="evidence-thumb" src={row.evidenceUrl} alt="Bằng chứng" /> : "-",
     },
     {
       header: "Xử lý",
       key: "actions",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => {
         if (row.status !== "WAITING_USER") {
           return row.violationId ? `#${row.violationId}` : "-";

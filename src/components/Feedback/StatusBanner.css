@@ -1,8 +1,14 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/components/Feedback/StatusBanner.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-stack`. */
 .status-stack {
   display: grid;
   gap: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-banner`. */
 .status-banner {
   position: relative;
   display: flex;
@@ -17,6 +23,7 @@
   animation: status-slide-in 0.42s cubic-bezier(0.2, 0.9, 0.2, 1) both;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-banner::before`. */
 .status-banner::before {
   content: "";
   position: absolute;
@@ -25,6 +32,7 @@
   background: currentColor;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-banner::after`. */
 .status-banner::after {
   content: "";
   position: absolute;
@@ -36,6 +44,7 @@
   opacity: 0.08;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-banner.success`. */
 .status-banner.success {
   color: var(--success);
   border-color: rgba(22, 166, 103, 0.28);
@@ -45,6 +54,7 @@
     var(--card-bg);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-banner.error`. */
 .status-banner.error {
   color: var(--danger);
   border-color: rgba(220, 74, 74, 0.28);
@@ -54,6 +64,7 @@
     var(--card-bg);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-banner.warning`. */
 .status-banner.warning {
   color: var(--warning);
   border-color: rgba(207, 138, 20, 0.28);
@@ -63,6 +74,7 @@
     var(--card-bg);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-banner.info`. */
 .status-banner.info {
   color: var(--info);
   border-color: rgba(90, 123, 231, 0.24);
@@ -72,6 +84,7 @@
     var(--card-bg);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-icon`. */
 .status-icon {
   position: relative;
   z-index: 1;
@@ -86,6 +99,7 @@
   animation: status-pop 0.5s cubic-bezier(0.2, 1.4, 0.3, 1) both;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-content`. */
 .status-content {
   position: relative;
   z-index: 1;
@@ -94,6 +108,7 @@
   min-width: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-title`. */
 .status-title {
   color: currentColor;
   font-size: 13px;
@@ -102,15 +117,18 @@
   text-transform: uppercase;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-banner.success .status-title`. */
 .status-banner.success .status-title {
   font-size: 15px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-messages`. */
 .status-messages {
   display: grid;
   gap: 4px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-messages p`. */
 .status-messages p {
   margin: 0;
   color: var(--text-primary);
@@ -119,44 +137,55 @@
   line-height: 1.45;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-banner.success .status-messages p`. */
 .status-banner.success .status-messages p {
   color: var(--success);
   font-size: 18px;
   font-weight: 900;
 }
 
+/* Định nghĩa các bước chuyển động cho hiệu ứng `status-slide-in`. */
 @keyframes status-slide-in {
+  /* Áp dụng bố cục và hình thức hiển thị cho `from`. */
   from {
     opacity: 0;
     transform: translateY(-12px) scale(0.985);
   }
+  /* Áp dụng bố cục và hình thức hiển thị cho `to`. */
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
+/* Định nghĩa các bước chuyển động cho hiệu ứng `status-pop`. */
 @keyframes status-pop {
+  /* Áp dụng bố cục và hình thức hiển thị cho `from`. */
   from {
     opacity: 0;
     transform: scale(0.72) rotate(-8deg);
   }
+  /* Áp dụng bố cục và hình thức hiển thị cho `to`. */
   to {
     opacity: 1;
     transform: scale(1) rotate(0);
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 640px)`. */
 @media (max-width: 640px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.status-banner`. */
   .status-banner {
     padding: 16px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.status-icon`. */
   .status-icon {
     width: 38px;
     height: 38px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.status-banner.success .status-messages p`. */
   .status-banner.success .status-messages p {
     font-size: 16px;
   }

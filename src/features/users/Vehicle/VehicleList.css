@@ -1,3 +1,8 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/features/users/Vehicle/VehicleList.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-container`. */
 .vehicle-container {
     display: flex;
     justify-content: center;
@@ -7,6 +12,7 @@
     font-family: system-ui, -apple-system, sans-serif;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-card`. */
 .vehicle-card {
     background: #1a1a1a;
     border: 1px solid #333;
@@ -18,6 +24,7 @@
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-header`. */
 .vehicle-header {
     display: flex;
     justify-content: space-between;
@@ -27,6 +34,7 @@
     padding-bottom: 20px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-header h2`. */
 .vehicle-header h2 {
     margin: 0 0 6px 0;
     color: #fff;
@@ -34,6 +42,7 @@
     letter-spacing: 0.5px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.sub-title`. */
 .sub-title {
     color: #777;
     font-size: 13px;
@@ -54,6 +63,7 @@
     transition: background 0.2s ease;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.create-vehicle-btn:hover`. */
 .create-vehicle-btn:hover {
     background-color: #27ae60;
 }
@@ -63,12 +73,14 @@
     overflow-x: auto;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-table`. */
 .vehicle-table {
     width: 100%;
     border-collapse: collapse;
     text-align: left;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-table th`. */
 .vehicle-table th {
     background-color: #242424;
     color: #aaa;
@@ -80,6 +92,7 @@
     border-bottom: 2px solid #333;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-table td`. */
 .vehicle-table td {
     padding: 14px;
     border-bottom: 1px solid #2d2d2d;
@@ -88,6 +101,7 @@
     vertical-align: middle;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-table tr:hover td`. */
 .vehicle-table tr:hover td {
     background-color: #222;
     /* Hiệu ứng hover nhẹ khi rê chuột vào dòng */
@@ -114,24 +128,28 @@
     font-weight: 600;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-approved`. */
 .status-approved {
     background-color: rgba(46, 204, 113, 0.15);
     color: #2ecc71;
     border: 1px solid #2ecc71;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-pending`. */
 .status-pending {
     background-color: rgba(241, 196, 15, 0.15);
     color: #f1c40f;
     border: 1px solid #f1c40f;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-rejected`. */
 .status-rejected {
     background-color: rgba(231, 76, 60, 0.15);
     color: #e74c3c;
     border: 1px solid #e74c3c;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.package-text`. */
 .package-text {
     color: #646cff;
     /* Sử dụng màu xanh Vite làm điểm nhấn gói vip */
@@ -150,6 +168,7 @@
     transition: all 0.2s ease;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.detail-btn:hover`. */
 .detail-btn:hover {
     background-color: #646cff;
     border-color: #646cff;
@@ -180,6 +199,7 @@
     padding: 15px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.modal-content`. */
 .modal-content {
     background-color: #1a1a1a;
     border: 1px solid #333;
@@ -191,18 +211,22 @@
     animation: fadeIn 0.3s ease-in-out;
 }
 
+/* Định nghĩa các bước chuyển động cho hiệu ứng `fadeIn`. */
 @keyframes fadeIn {
+    /* Áp dụng bố cục và hình thức hiển thị cho `from`. */
     from {
         opacity: 0;
         transform: scale(0.95);
     }
 
+    /* Áp dụng bố cục và hình thức hiển thị cho `to`. */
     to {
         opacity: 1;
         transform: scale(1);
     }
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.modal-header`. */
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -212,12 +236,14 @@
     margin-bottom: 20px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.modal-header h3`. */
 .modal-header h3 {
     margin: 0;
     color: #fff;
     font-size: 18px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.close-modal-btn`. */
 .close-modal-btn {
     background: none;
     border: none;
@@ -227,6 +253,7 @@
     padding: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.close-modal-btn:hover`. */
 .close-modal-btn:hover {
     color: #fff;
 }
@@ -238,6 +265,7 @@
     gap: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.form-group`. */
 .form-group {
     display: flex;
     flex-direction: column;
@@ -245,12 +273,15 @@
     text-align: left;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.form-group label`. */
 .form-group label {
     color: #bbb;
     font-size: 13px;
     font-weight: 500;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.form-group input[type="text"],
+.form-group textarea`. */
 .form-group input[type="text"],
 .form-group textarea {
     background: #242424;
@@ -262,6 +293,8 @@
     font-family: inherit;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.form-group input[type="text"]:focus,
+.form-group textarea:focus`. */
 .form-group input[type="text"]:focus,
 .form-group textarea:focus {
     outline: none;
@@ -275,6 +308,7 @@
     margin-top: 5px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.radio-label`. */
 .radio-label {
     display: flex;
     align-items: center;
@@ -284,6 +318,7 @@
     font-size: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.radio-label input[type="radio"]`. */
 .radio-label input[type="radio"] {
     cursor: pointer;
     accent-color: #646cff;
@@ -313,6 +348,7 @@
     padding-top: 15px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.cancel-btn`. */
 .cancel-btn {
     background: #2d2d2d;
     color: #aaa;
@@ -324,11 +360,13 @@
     font-weight: 500;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.cancel-btn:hover`. */
 .cancel-btn:hover {
     background: #3a3a3a;
     color: #fff;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.save-btn`. */
 .save-btn {
     background: #646cff;
     color: #fff;
@@ -340,6 +378,7 @@
     font-weight: 600;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.save-btn:hover`. */
 .save-btn:hover {
     background: #535bf2;
 }

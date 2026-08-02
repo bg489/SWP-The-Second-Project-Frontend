@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Điều phối các tác vụ bất đồng bộ của slotSaga, gọi API và phát action kết quả về Redux.
+ *
+ * Luồng chính: Action yêu cầu -> Saga gọi API -> action thành công/thất bại -> reducer cập nhật giao diện.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { call, put, takeEvery, takeLatest } from "redux-saga/effects";
 import api from "../../../services/api";
 import { fetchFloorsRequest } from "../floors/floorSlice";
@@ -16,8 +22,22 @@ import {
     updateSlotSuccess,
 } from "./slotSlice";
 
+/**
+ * Thực hiện nghiệp vụ `extractData` (extract data). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function extractData
+ * @param {*} response - Giá trị `response` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const extractData = (response) => response?.data?.data || response?.data || null;
 
+/**
+ * Thực hiện nghiệp vụ `extractList` (extract list). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function extractList
+ * @param {*} response - Giá trị `response` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const extractList = (response) => {
     const data = extractData(response);
 
@@ -28,9 +48,24 @@ const extractList = (response) => {
     return [];
 };
 
+/**
+ * Lấy nghiệp vụ `getErrorMessage` (get error message). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function getErrorMessage
+ * @param {*} error - Giá trị `error` được hàm sử dụng trong quá trình xử lý.
+ * @param {*} fallback - Giá trị `fallback` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getErrorMessage = (error, fallback) =>
     error?.response?.data?.message || error?.message || fallback;
 
+/**
+ * Xử lý nghiệp vụ `handleFetchSlotsByFloor` (handle fetch slots by floor). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchSlotsByFloor
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchSlotsByFloor(action) {
     const { floorId, silent = false } = action.payload || {};
 
@@ -54,6 +89,13 @@ function* handleFetchSlotsByFloor(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleCreateSlot` (handle create slot). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleCreateSlot
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleCreateSlot(action) {
     try {
         const { floorId, ...payload } = action.payload;
@@ -82,6 +124,13 @@ function* handleCreateSlot(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleUpdateSlot` (handle update slot). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleUpdateSlot
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleUpdateSlot(action) {
     try {
         const { id, floorId, ...payload } = action.payload;
@@ -103,6 +152,13 @@ function* handleUpdateSlot(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleDeleteSlot` (handle delete slot). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleDeleteSlot
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleDeleteSlot(action) {
     try {
         const { id, floorId } = action.payload;
@@ -125,6 +181,12 @@ function* handleDeleteSlot(action) {
     }
 }
 
+/**
+ * Thực hiện nghiệp vụ `slotSaga` (slot saga). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function slotSaga
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 export default function* slotSaga() {
     yield takeEvery(fetchSlotsByFloorRequest.type, handleFetchSlotsByFloor);
     yield takeLatest(createSlotRequest.type, handleCreateSlot);

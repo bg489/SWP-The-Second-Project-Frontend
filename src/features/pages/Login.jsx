@@ -1,9 +1,19 @@
+/**
+ * @fileoverview Xây dựng màn hình Login, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button/Button";
 import { useMockAuth } from "../../context/MockAuthContext";
 import { buildingInfo, floors, roleHomePaths, roleLabels } from "../../services/mockParkingData";
 import { ArrowRight, Building2, Car, Layers, QrCode, ShieldCheck, Sparkles, User } from "lucide-react";
 
+/**
+ * Khai báo `roleCards` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/Login.jsx.
+ */
 const roleCards = [
   {
     key: "USER",
@@ -31,18 +41,34 @@ const roleCards = [
   },
 ];
 
+/**
+ * Thực hiện nghiệp vụ `Login` (login). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function Login
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const Login = () => {
   const { login, isDarkMode, toggleDarkMode } = useMockAuth();
   const navigate = useNavigate();
 
+  /**
+   * Xử lý nghiệp vụ `handleRoleSelect` (handle role select). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleRoleSelect
+   * @param {*} role - Giá trị `role` được hàm sử dụng trong quá trình xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleRoleSelect = (role) => {
     const nextPath = login(role) || roleHomePaths[role];
     navigate(nextPath);
   };
 
   const motorbikeCapacity = floors
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     .filter((floor) => floor.floorType === "MOTORBIKE")
+    /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     .reduce((sum, floor) => sum + floor.capacity, 0);
+  /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const carSlots = floors.find((floor) => floor.floorType === "CAR")?.slotsCount || 0;
 
   return (

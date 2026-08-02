@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình AdminVehicleApprovalPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,6 +23,10 @@ import {
 } from "../backend/parking/parkingSlice";
 import { getStatusLabel, getStatusTone, getVehicleTypeLabel } from "../../services/mockParkingData";
 
+/**
+ * Khai báo `statusOptions` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/AdminVehicleApprovalPage.jsx.
+ */
 const statusOptions = [
   { value: "PENDING", label: "Chờ duyệt" },
   { value: "APPROVED", label: "Đã duyệt" },
@@ -24,10 +34,24 @@ const statusOptions = [
   { value: "", label: "Tất cả" },
 ];
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `formatDate` (format date). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function formatDate
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString("vi-VN") : "-");
 
+/**
+ * Thực hiện nghiệp vụ `AdminVehicleApprovalPage` (admin vehicle approval page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function AdminVehicleApprovalPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const AdminVehicleApprovalPage = () => {
   const dispatch = useDispatch();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { vehicles, notice } = useSelector((state) => state.parking);
 
   const [filters, setFilters] = useState({
@@ -36,14 +60,23 @@ const AdminVehicleApprovalPage = () => {
   });
   const [selectedReviewImage, setSelectedReviewImage] = useState(null);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchAllVehiclesRequest({ status: filters.status || undefined }));
   }, [dispatch, filters.status]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!selectedReviewImage) return undefined;
 
     const previousOverflow = document.body.style.overflow;
+    /**
+     * Xóa hoặc đặt lại nghiệp vụ `closeOnEscape` (close on escape). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function closeOnEscape
+     * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const closeOnEscape = (event) => {
       if (event.key === "Escape") setSelectedReviewImage(null);
     };
@@ -51,20 +84,24 @@ const AdminVehicleApprovalPage = () => {
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", closeOnEscape);
 
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", closeOnEscape);
     };
   }, [selectedReviewImage]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const rows = useMemo(() => {
     const search = filters.q.trim().toLowerCase();
     const byStatus = filters.status
+      /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       ? vehicles.all.filter((vehicle) => vehicle.status === filters.status)
       : vehicles.all;
 
     if (!search) return byStatus;
 
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return byStatus.filter((vehicle) =>
       [vehicle.plateNumber, vehicle.owner, vehicle.ownerName, vehicle.brand, vehicle.color]
         .join(" ")
@@ -73,20 +110,42 @@ const AdminVehicleApprovalPage = () => {
     );
   }, [filters.q, filters.status, vehicles.all]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const pendingCount = useMemo(() => {
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return vehicles.all.filter((vehicle) => vehicle.status === "PENDING").length;
   }, [vehicles.all]);
 
+  /**
+   * Thực hiện nghiệp vụ `refresh` (refresh). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function refresh
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const refresh = () => {
     dispatch(clearParkingNotice());
     dispatch(fetchAllVehiclesRequest({ status: filters.status || undefined }));
   };
 
   const columns = [
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Biển số", key: "plateNumber", render: (row) => <strong>{row.plateNumber}</strong> },
     {
       header: "Chủ xe",
       key: "ownerName",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <>
           <strong>{row.ownerName || row.owner || "-"}</strong>
@@ -100,6 +159,13 @@ const AdminVehicleApprovalPage = () => {
     {
       header: "Tòa nhà",
       key: "buildingName",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <>
           <strong>{row.buildingName || "Chưa gán tòa"}</strong>
@@ -108,12 +174,33 @@ const AdminVehicleApprovalPage = () => {
         </>
       ),
     },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Loại xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Thông tin xe", key: "brand", render: (row) => `${row.brand || "-"}${row.color ? `, ${row.color}` : ""}` },
     {
       header: "Bộ ảnh xác minh",
       key: "vehicleImages",
       minWidth: "350px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => {
         const reviewImages = [
           { label: "Biển số", src: row.plateImageUrl },
@@ -152,11 +239,25 @@ const AdminVehicleApprovalPage = () => {
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => <span className={`pill ${getStatusTone(row.status)}`}>{getStatusLabel(row.status)}</span>,
     },
     {
       header: "Thao tác",
       key: "actions",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div className="action-row">
           <Button

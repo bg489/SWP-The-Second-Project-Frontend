@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình Login, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -45,6 +51,10 @@ import {
     VIETNAM_PHONE_ERROR,
 } from "../../../utils/phone";
 
+/**
+ * Khai báo `EMPTY_REGISTER_FORM` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/backend/pages/Login.jsx.
+ */
 const EMPTY_REGISTER_FORM = {
     name: "",
     email: "",
@@ -54,6 +64,10 @@ const EMPTY_REGISTER_FORM = {
     buildingId: "",
 };
 
+/**
+ * Khai báo `EMPTY_RESET_FORM` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/backend/pages/Login.jsx.
+ */
 const EMPTY_RESET_FORM = {
     email: "",
     otp: "",
@@ -62,6 +76,12 @@ const EMPTY_RESET_FORM = {
     confirmPassword: "",
 };
 
+/**
+ * Thực hiện nghiệp vụ `Login` (login). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function Login
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const Login = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -119,6 +139,7 @@ const Login = () => {
         passwordResetNotice,
         passwordResetVerified,
         passwordResetCompleted,
+    /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     } = useSelector((state) => state.auth);
     const requestingPasswordReset = passwordResetAction === "request";
     const verifyingPasswordReset = passwordResetAction === "verify";
@@ -127,6 +148,12 @@ const Login = () => {
         submitting: registerLoading,
         success: registerSuccess,
         error: registerError,
+        /**
+         * Xử lý nghiệp vụ `onSuccess` (on success). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+         *
+         * @function onSuccess
+         * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+         */
         onSuccess: () => {
             setRegisterForm(EMPTY_REGISTER_FORM);
             setRegisterErrors({});
@@ -138,6 +165,12 @@ const Login = () => {
         submitting: changingPassword,
         success: passwordResetCompleted,
         error: passwordResetError,
+        /**
+         * Xử lý nghiệp vụ `onSuccess` (on success). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+         *
+         * @function onSuccess
+         * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+         */
         onSuccess: () => {
             setResetForm(EMPTY_RESET_FORM);
             setResetErrors({});
@@ -145,10 +178,18 @@ const Login = () => {
         },
     });
 
+    /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     useEffect(() => {
         dispatch(fetchRegisterBuildingsRequest());
     }, [dispatch]);
 
+    /**
+     * Thực hiện nghiệp vụ `switchMode` (switch mode). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function switchMode
+     * @param {*} nextMode - Giá trị `nextMode` được hàm sử dụng trong quá trình xử lý.
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const switchMode = (nextMode) => {
         setMode(nextMode);
         setErrors({});
@@ -163,22 +204,38 @@ const Login = () => {
         dispatch(clearPasswordResetState());
     };
 
+    /**
+     * Cập nhật nghiệp vụ `updateRegisterField` (update register field). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function updateRegisterField
+     * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+     * @param {*} value - Giá trị đầu vào cần xử lý.
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const updateRegisterField = (field, value) => {
         const nextValue = field === "phone"
             ? sanitizeVietnamPhoneInput(value)
             : value;
 
+        /* Callback nội bộ của lời gọi `setRegisterForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setRegisterForm((prev) => ({
             ...prev,
             [field]: nextValue,
         }));
 
+        /* Callback nội bộ của lời gọi `setRegisterErrors`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setRegisterErrors((prev) => ({
             ...prev,
             [field]: "",
         }));
     };
 
+    /**
+     * Kiểm tra nghiệp vụ `validateRegisterForm` (validate register form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function validateRegisterForm
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const validateRegisterForm = () => {
         const nextErrors = {};
 
@@ -214,6 +271,13 @@ const Login = () => {
         return Object.keys(nextErrors).length === 0;
     };
 
+    /**
+     * Xử lý nghiệp vụ `handleRegisterSubmit` (handle register submit). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function handleRegisterSubmit
+     * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleRegisterSubmit = (event) => {
         event.preventDefault();
 
@@ -247,17 +311,36 @@ const Login = () => {
     const resendingRegistrationOtp =
         registrationVerificationAction === "resend";
 
+    /**
+     * Cập nhật nghiệp vụ `updateResetField` (update reset field). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function updateResetField
+     * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+     * @param {*} value - Giá trị đầu vào cần xử lý.
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const updateResetField = (field, value) => {
+        /* Callback nội bộ của lời gọi `setResetForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setResetForm((prev) => ({
             ...prev,
             [field]: field === "otp" ? value.replace(/\D/g, "").slice(0, 6) : value,
         }));
+        /* Callback nội bộ của lời gọi `setResetErrors`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setResetErrors((prev) => ({
             ...prev,
             [field]: "",
         }));
     };
 
+    /**
+     * Thực hiện nghiệp vụ `passwordToggle` (password toggle). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function passwordToggle
+     * @param {*} visible - Giá trị `visible` được hàm sử dụng trong quá trình xử lý.
+     * @param {*} onClick - Giá trị `onClick` được hàm sử dụng trong quá trình xử lý.
+     * @param {*} label - Giá trị `label` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const passwordToggle = (visible, onClick, label) => (
         <button
             aria-label={label}
@@ -269,6 +352,7 @@ const Login = () => {
         </button>
     );
 
+    /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     useEffect(() => {
         if (!loginCompleted || !token) return;
 
@@ -294,18 +378,34 @@ const Login = () => {
         user,
     ]);
 
+    /**
+     * Cập nhật nghiệp vụ `updateField` (update field). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function updateField
+     * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+     * @param {*} value - Giá trị đầu vào cần xử lý.
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const updateField = (field, value) => {
+        /* Callback nội bộ của lời gọi `setForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setForm((prev) => ({
             ...prev,
             [field]: value,
         }));
 
+        /* Callback nội bộ của lời gọi `setErrors`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setErrors((prev) => ({
             ...prev,
             [field]: "",
         }));
     };
 
+    /**
+     * Kiểm tra nghiệp vụ `validateForm` (validate form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function validateForm
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const validateForm = () => {
         const nextErrors = {};
 
@@ -325,6 +425,13 @@ const Login = () => {
         return Object.keys(nextErrors).length === 0;
     };
 
+    /**
+     * Xử lý nghiệp vụ `handleSubmit` (handle submit). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function handleSubmit
+     * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleSubmit = (event) => {
         event.preventDefault();
 
@@ -338,10 +445,24 @@ const Login = () => {
         );
     };
 
+    /**
+     * Xử lý nghiệp vụ `handleGoogleCredential` (handle google credential). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function handleGoogleCredential
+     * @param {*} credential - Giá trị `credential` được hàm sử dụng trong quá trình xử lý.
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const handleGoogleCredential = (credential) => {
         dispatch(googleAuthRequest({ credential }));
     };
 
+    /**
+     * Xử lý nghiệp vụ `handleVerifyRegistration` (handle verify registration). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function handleVerifyRegistration
+     * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleVerifyRegistration = (event) => {
         event.preventDefault();
         const otp = registrationOtp.trim();
@@ -365,6 +486,12 @@ const Login = () => {
         );
     };
 
+    /**
+     * Xử lý nghiệp vụ `handleResendRegistrationOtp` (handle resend registration otp). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function handleResendRegistrationOtp
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleResendRegistrationOtp = () => {
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(verificationEmail)) {
             setVerificationEmailError("Email không hợp lệ.");
@@ -376,6 +503,12 @@ const Login = () => {
         dispatch(resendRegistrationOtpRequest({ email: verificationEmail }));
     };
 
+    /**
+     * Thực hiện nghiệp vụ `continueToLogin` (continue to login). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function continueToLogin
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const continueToLogin = () => {
         setForm({
             emailOrPhone: verificationEmail,
@@ -385,6 +518,12 @@ const Login = () => {
         setMode("login");
     };
 
+    /**
+     * Kiểm tra nghiệp vụ `validateResetEmail` (validate reset email). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function validateResetEmail
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const validateResetEmail = () => {
         const nextErrors = {};
 
@@ -398,12 +537,25 @@ const Login = () => {
         return Object.keys(nextErrors).length === 0;
     };
 
+    /**
+     * Xử lý nghiệp vụ `handleRequestReset` (handle request reset). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function handleRequestReset
+     * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleRequestReset = (event) => {
         event.preventDefault();
         if (!validateResetEmail()) return;
         dispatch(requestPasswordResetRequest({ email: resetForm.email.trim() }));
     };
 
+    /**
+     * Kiểm tra nghiệp vụ `validateResetVerification` (validate reset verification). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function validateResetVerification
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const validateResetVerification = () => {
         const nextErrors = {};
 
@@ -419,6 +571,13 @@ const Login = () => {
         return Object.keys(nextErrors).length === 0;
     };
 
+    /**
+     * Xử lý nghiệp vụ `handleVerifyReset` (handle verify reset). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function handleVerifyReset
+     * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleVerifyReset = (event) => {
         event.preventDefault();
         if (!validateResetVerification()) return;
@@ -431,6 +590,13 @@ const Login = () => {
         );
     };
 
+    /**
+     * Xử lý nghiệp vụ `handleResetPassword` (handle reset password). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function handleResetPassword
+     * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleResetPassword = (event) => {
         event.preventDefault();
         const nextErrors = {};
@@ -447,6 +613,7 @@ const Login = () => {
             nextErrors.confirmPassword = "Mật khẩu nhập lại không khớp.";
         }
 
+        /* Callback nội bộ của lời gọi `setResetErrors`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setResetErrors((prev) => ({ ...prev, ...nextErrors }));
         if (Object.keys(nextErrors).length > 0) return;
 

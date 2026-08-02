@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình ReportsPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -33,22 +39,38 @@ import { clearParkingNotice, fetchReportsRequest } from "../backend/parking/park
 import { exportSystemReportPdf } from "./reports/exportSystemReportPdf";
 import "./reports/ReportsPage.css";
 
+/**
+ * Khai báo `vehicleLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/ReportsPage.jsx.
+ */
 const vehicleLabels = {
   CAR: "Ô tô",
   MOTORBIKE: "Xe máy",
 };
 
+/**
+ * Khai báo `pricingLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/ReportsPage.jsx.
+ */
 const pricingLabels = {
   HOURLY: "Vé giờ",
   MONTHLY_PASS: "Gói tháng",
   TURN: "Vé lượt",
 };
 
+/**
+ * Khai báo `customerLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/ReportsPage.jsx.
+ */
 const customerLabels = {
   REGISTERED_USER: "Người dùng hệ thống",
   WALK_IN_GUEST: "Khách vãng lai",
 };
 
+/**
+ * Khai báo `violationLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/ReportsPage.jsx.
+ */
 const violationLabels = {
   "Do sai slot": "Ô tô đậu sai ô",
   "Keo oto do sai khu": "Ô tô đậu sai khu",
@@ -57,11 +79,19 @@ const violationLabels = {
   WRONG_SLOT: "Đỗ sai ô",
   "Xe may vao khu oto": "Xe máy đậu sai khu",
 };
+/**
+ * Khai báo `specialViolationCodes` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/ReportsPage.jsx.
+ */
 const specialViolationCodes = new Set([
   "WRONG_SLOT",
   "MOTORBIKE_WRONG_FLOOR",
   "CAR_WRONG_FLOOR_TOW",
 ]);
+/**
+ * Khai báo `specialViolationNames` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/ReportsPage.jsx.
+ */
 const specialViolationNames = new Set([
   "Ô tô đậu sai ô",
   "Ô tô đậu sai khu",
@@ -71,19 +101,64 @@ const specialViolationNames = new Set([
   "Xe may vao khu oto",
 ]);
 
+/**
+ * Thực hiện nghiệp vụ `asRows` (as rows). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function asRows
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const asRows = (value) => (Array.isArray(value) ? value : []);
+/**
+ * Thực hiện nghiệp vụ `toNumber` (to number). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function toNumber
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const toNumber = (value) => Number(value || 0);
+/**
+ * Thực hiện nghiệp vụ `labelOf` (label of). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function labelOf
+ * @param {*} labels - Giá trị `labels` được hàm sử dụng trong quá trình xử lý.
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const labelOf = (labels, value) => labels[value] || value || "Chưa có";
+/**
+ * Thực hiện nghiệp vụ `percentageLabel` (percentage label). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function percentageLabel
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const percentageLabel = (value) => `${toNumber(value).toLocaleString("vi-VN", { maximumFractionDigits: 2 })}%`;
+/**
+ * Thực hiện nghiệp vụ `splitValues` (split values). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function splitValues
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const splitValues = (value) =>
   String(value || "")
     .split(",")
+    /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     .map((item) => item.trim())
     .filter(Boolean);
 
+/**
+ * Lấy nghiệp vụ `getRelatedVehicles` (get related vehicles). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getRelatedVehicles
+ * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getRelatedVehicles = (row) => {
   if (Array.isArray(row?.relatedVehicles)) return row.relatedVehicles;
 
+  /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   return splitValues(row?.plateNumbers).map((plateNumber) => ({
     buildingName: row?.buildingNames,
     ownerName: row?.userNames,
@@ -94,17 +169,33 @@ const getRelatedVehicles = (row) => {
   }));
 };
 
+/**
+ * Kiểm tra nghiệp vụ `isSpecialViolation` (is special violation). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function isSpecialViolation
+ * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const isSpecialViolation = (row) =>
+  /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   asRows(row?.violationCodes).some((code) => specialViolationCodes.has(code)) ||
   specialViolationNames.has(row?.violationName);
 
+/**
+ * Thực hiện nghiệp vụ `ReportsPage` (reports page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function ReportsPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const ReportsPage = () => {
   const dispatch = useDispatch();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { reports } = useSelector((state) => state.parking);
   const {
     buildings,
     error: buildingsError,
     loading: buildingsLoading,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.buildings);
   const [filters, setFilters] = useState({
     buildingId: "",
@@ -119,6 +210,7 @@ const ReportsPage = () => {
     ? "Ngày bắt đầu phải trước hoặc trùng ngày kết thúc."
     : null;
   const reportParams = useMemo(
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => ({
       from: filters.from,
       to: filters.to,
@@ -127,10 +219,12 @@ const ReportsPage = () => {
     [filters.buildingId, filters.from, filters.to]
   );
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchBuildingsRequest());
   }, [dispatch]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!dateRangeError) {
       dispatch(fetchReportsRequest(reportParams));
@@ -153,15 +247,19 @@ const ReportsPage = () => {
     : allViolationRows.filter(isSpecialViolation);
   const regularViolationRows = Array.isArray(fullReport.violations?.regularRows)
     ? fullReport.violations.regularRows
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     : allViolationRows.filter((row) => !isSpecialViolation(row));
   const capacityRows = asRows(fullReport.capacity);
   const buildingCount = toNumber(fullReport.scope?.buildingCount || capacityRows.length);
   const totalRevenue = toNumber(revenue.totalRevenue || revenue.paidRevenue);
+  /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const maxRevenue = Math.max(...revenueRows.map((row) => toNumber(row.amount)), 1);
   const registeredMix = customerMix.registeredUser || {};
   const walkInMix = customerMix.walkInGuest || {};
+  /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const violationRevenueRow = revenueRows.find((row) => row.key === "VIOLATION_FEE") || {};
   const selectedBuilding = buildings.find(
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (building) => String(building.id) === String(filters.buildingId)
   );
   const scopeName =
@@ -175,8 +273,22 @@ const ReportsPage = () => {
     {
       header: "Tỷ trọng",
       key: "percentage",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => percentageLabel(totalRevenue > 0 ? (toNumber(row.amount) / totalRevenue) * 100 : 0),
     },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Số tiền", key: "amount", render: (row) => formatCurrency(row.amount) },
   ];
 
@@ -189,18 +301,39 @@ const ReportsPage = () => {
       header: "Xe máy vào / ra",
       key: "motorbike",
       minWidth: 130,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => `${toNumber(row.motorbikeEntries)} / ${toNumber(row.motorbikeExits)}`,
     },
     {
       header: "Ô tô vào / ra",
       key: "car",
       minWidth: 120,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => `${toNumber(row.carEntries)} / ${toNumber(row.carExits)}`,
     },
     {
       header: "Vé lượt / giờ",
       key: "tickets",
       minWidth: 120,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => toNumber(row.turnTicketsCompleted) + toNumber(row.hourlyTicketsCompleted),
     },
     { header: "Lượt dùng gói tháng", key: "monthlyPassSessionsCompleted", minWidth: 150 },
@@ -208,18 +341,67 @@ const ReportsPage = () => {
       header: "Người dùng / khách",
       key: "customerMix",
       minWidth: 160,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => `${percentageLabel(row.registeredUserPercentage)} / ${percentageLabel(row.walkInGuestPercentage)}`,
     },
   ];
 
   const ticketColumns = [
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Loại xe", key: "vehicleType", render: (row) => labelOf(vehicleLabels, row.vehicleType) },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Loại vé", key: "pricingType", render: (row) => labelOf(pricingLabels, row.pricingType) },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Nhóm khách", key: "customerType", minWidth: 170, render: (row) => labelOf(customerLabels, row.customerType) },
     { header: "Đã hoàn tất", key: "completedCount" },
     { header: "Đã thanh toán", key: "paidCount" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Tiền gửi xe", key: "parkingFeeTotal", render: (row) => formatCurrency(row.parkingFeeTotal) },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Phí vi phạm", key: "violationFeeTotal", render: (row) => formatCurrency(row.violationFeeTotal) },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Tổng đã thu", key: "totalAmount", render: (row) => formatCurrency(row.totalAmount) },
   ];
 
@@ -227,26 +409,75 @@ const ReportsPage = () => {
     { header: "Người đăng ký", key: "ownerName", minWidth: 150 },
     { header: "Biển số", key: "plateNumber", minWidth: 120 },
     { header: "Tòa nhà", key: "buildingName", minWidth: 180 },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Loại xe", key: "vehicleType", render: (row) => labelOf(vehicleLabels, row.vehicleType) },
     { header: "Tên gói", key: "packageName", minWidth: 190 },
     {
       header: "Trạng thái gói",
       key: "status",
       minWidth: 140,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => <span className={`pill ${getStatusTone(row.status)}`}>{getStatusLabel(row.status)}</span>,
     },
     {
       header: "Thanh toán",
       key: "paymentStatus",
       minWidth: 135,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => <span className={`pill ${getStatusTone(row.paymentStatus)}`}>{getStatusLabel(row.paymentStatus || "PENDING")}</span>,
     },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Bắt đầu", key: "startDate", minWidth: 145, render: (row) => formatDateTime(row.startDate) },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Hết hạn", key: "endDate", minWidth: 145, render: (row) => formatDateTime(row.endDate) },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Số tiền", key: "amount", render: (row) => formatCurrency(row.amount) },
   ];
 
   const violationColumns = [
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Lỗi vi phạm", key: "violationName", minWidth: 190, render: (row) => labelOf(violationLabels, row.violationName) },
     { header: "Tòa nhà", key: "buildingNames", minWidth: 180 },
     { header: "Số lần", key: "violationCount" },
@@ -255,6 +486,13 @@ const ReportsPage = () => {
       header: "Xe liên quan",
       key: "relatedVehicles",
       minWidth: 150,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => {
         const relatedVehicles = getRelatedVehicles(row);
 
@@ -274,6 +512,13 @@ const ReportsPage = () => {
         );
       },
     },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Đã thu", key: "paidPenalty", render: (row) => formatCurrency(row.paidPenalty) },
   ];
 
@@ -288,6 +533,12 @@ const ReportsPage = () => {
     { header: "Tổng ô ô tô", key: "carTotalSlots" },
   ];
 
+  /**
+   * Thực hiện nghiệp vụ `refresh` (refresh). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function refresh
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const refresh = () => {
     if (dateRangeError) return;
     setExportError(null);
@@ -296,6 +547,12 @@ const ReportsPage = () => {
     dispatch(fetchReportsRequest(reportParams));
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleExportPdf` (handle export pdf). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleExportPdf
+   * @returns {Promise<*>} Promise chứa kết quả khi toàn bộ thao tác bất đồng bộ hoàn tất.
+   */
   const handleExportPdf = async () => {
     if (dateRangeError || !fullReport.scope) return;
     setExporting(true);

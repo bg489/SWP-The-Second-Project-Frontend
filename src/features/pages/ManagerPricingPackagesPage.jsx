@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình ManagerPricingPackagesPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { BadgeDollarSign, CalendarDays, CreditCard, Plus, RefreshCcw, Save, XCircle } from "lucide-react";
@@ -20,25 +26,48 @@ import {
 import { fetchBuildingsRequest } from "../backend/buildings/buildingSlice";
 import { formatCurrency, getStatusLabel, getStatusTone, getVehicleTypeLabel } from "../../services/mockParkingData";
 
+/**
+ * Khai báo `pricingTypeLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/ManagerPricingPackagesPage.jsx.
+ */
 const pricingTypeLabels = {
   TURN: "Theo lượt",
   HOURLY: "Theo giờ",
 };
 
+/**
+ * Khai báo `statusOptions` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/ManagerPricingPackagesPage.jsx.
+ */
 const statusOptions = [
   { value: "ACTIVE", label: "Đang áp dụng" },
   { value: "INACTIVE", label: "Ngưng áp dụng" },
 ];
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `formatDate` (format date). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function formatDate
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const formatDate = (value) => (value ? new Date(value).toLocaleString("vi-VN") : "-");
 
+/**
+ * Thực hiện nghiệp vụ `ManagerPricingPackagesPage` (manager pricing packages page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function ManagerPricingPackagesPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const ManagerPricingPackagesPage = () => {
   const dispatch = useDispatch();
   const {
     pricingPolicies,
     packagePlans,
     notice,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.parking);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { buildings } = useSelector((state) => state.buildings);
   const [selectedBuildingId, setSelectedBuildingId] = useState("");
   const effectiveBuildingId = selectedBuildingId || (buildings[0]?.id ? String(buildings[0].id) : "");
@@ -58,10 +87,12 @@ const ManagerPricingPackagesPage = () => {
     status: "ACTIVE",
   });
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchBuildingsRequest());
   }, [dispatch]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!effectiveBuildingId) return;
 
@@ -69,11 +100,15 @@ const ManagerPricingPackagesPage = () => {
     dispatch(fetchPackagePlansRequest({ buildingId: effectiveBuildingId }));
   }, [dispatch, effectiveBuildingId]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const activePackages = useMemo(() => {
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return packagePlans.items.filter((plan) => (plan.status || "ACTIVE") === "ACTIVE").length;
   }, [packagePlans.items]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const sortedPricingPolicies = useMemo(() => {
+    /* Callback nội bộ của lời gọi `sort`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return [...pricingPolicies.items].sort((left, right) => {
       const leftTime = new Date(left.updatedAt || left.createdAt || 0).getTime();
       const rightTime = new Date(right.updatedAt || right.createdAt || 0).getTime();
@@ -82,8 +117,17 @@ const ManagerPricingPackagesPage = () => {
     });
   }, [pricingPolicies.items]);
 
+  /**
+   * Cập nhật nghiệp vụ `updatePriceForm` (update price form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function updatePriceForm
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const updatePriceForm = (field, value) => {
     dispatch(clearParkingNotice());
+    /* Callback nội bộ của lời gọi `setPriceForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setPriceForm((prev) => {
       const next = { ...prev, [field]: value };
 
@@ -96,8 +140,17 @@ const ManagerPricingPackagesPage = () => {
     });
   };
 
+  /**
+   * Cập nhật nghiệp vụ `updatePlanForm` (update plan form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function updatePlanForm
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const updatePlanForm = (field, value) => {
     dispatch(clearParkingNotice());
+    /* Callback nội bộ của lời gọi `setPlanForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setPlanForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -105,6 +158,12 @@ const ManagerPricingPackagesPage = () => {
     submitting: pricingPolicies.saving,
     success: notice,
     error: pricingPolicies.error,
+    /**
+     * Xử lý nghiệp vụ `onSuccess` (on success). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function onSuccess
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     onSuccess: () => setPriceForm({
       vehicleType: "MOTORBIKE",
       pricingType: "TURN",
@@ -117,6 +176,12 @@ const ManagerPricingPackagesPage = () => {
     submitting: packagePlans.saving,
     success: notice,
     error: packagePlans.error,
+    /**
+     * Xử lý nghiệp vụ `onSuccess` (on success). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function onSuccess
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     onSuccess: () => setPlanForm({
       name: "",
       vehicleType: "MOTORBIKE",
@@ -126,6 +191,13 @@ const ManagerPricingPackagesPage = () => {
     }),
   });
 
+  /**
+   * Xử lý nghiệp vụ `handleSavePrice` (handle save price). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleSavePrice
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleSavePrice = (event) => {
     event.preventDefault();
     markPriceSubmitted();
@@ -140,6 +212,13 @@ const ManagerPricingPackagesPage = () => {
     );
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleSavePlan` (handle save plan). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleSavePlan
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleSavePlan = (event) => {
     event.preventDefault();
     markPlanSubmitted();
@@ -155,6 +234,12 @@ const ManagerPricingPackagesPage = () => {
     );
   };
 
+  /**
+   * Thực hiện nghiệp vụ `refresh` (refresh). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function refresh
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const refresh = () => {
     dispatch(clearParkingNotice());
     dispatch(fetchPricingPoliciesRequest({ buildingId: effectiveBuildingId }));
@@ -162,32 +247,116 @@ const ManagerPricingPackagesPage = () => {
   };
 
   const priceColumns = [
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Tòa nhà", key: "buildingName", render: (row) => row.buildingName || "Dùng chung" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Loại xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Cách tính", key: "pricingType", render: (row) => pricingTypeLabels[row.pricingType] || row.pricingType },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Mức thu", key: "amount", render: (row) => formatCurrency(row.amount) },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Cập nhật", key: "updatedAt", render: (row) => formatDate(row.updatedAt || row.createdAt) },
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => <span className={`pill ${getStatusTone(row.status || "ACTIVE")}`}>{getStatusLabel(row.status || "ACTIVE")}</span>,
     },
   ];
 
   const packageColumns = [
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Tòa nhà", key: "buildingName", render: (row) => row.buildingName || "Dùng chung" },
     { header: "Tên gói", key: "name" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Loại xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Thời hạn", key: "durationDays", render: (row) => `${row.durationDays || 30} ngày` },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Giá gói", key: "price", render: (row) => formatCurrency(row.price) },
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => <span className={`pill ${getStatusTone(row.status || "ACTIVE")}`}>{getStatusLabel(row.status || "ACTIVE")}</span>,
     },
     {
       header: "Thao tác",
       key: "actions",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <Button
           size="sm"

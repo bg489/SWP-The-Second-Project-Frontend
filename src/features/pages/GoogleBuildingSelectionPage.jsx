@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình GoogleBuildingSelectionPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -20,6 +26,12 @@ import {
 } from "../backend/auth/authSlice";
 import { roleHomePaths } from "../../services/mockParkingData";
 
+/**
+ * Thực hiện nghiệp vụ `GoogleBuildingSelectionPage` (google building selection page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function GoogleBuildingSelectionPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const GoogleBuildingSelectionPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -40,14 +52,17 @@ const GoogleBuildingSelectionPage = () => {
     requiresBuildingSelection,
     token,
     user,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.auth);
   const [selectedBuildingId, setSelectedBuildingId] = useState("");
   const [selectionError, setSelectionError] = useState("");
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchRegisterBuildingsRequest());
   }, [dispatch]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (
       !isAuthenticated ||
@@ -76,6 +91,13 @@ const GoogleBuildingSelectionPage = () => {
     return <Navigate to="/login" replace />;
   }
 
+  /**
+   * Thực hiện nghiệp vụ `submitSelection` (submit selection). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function submitSelection
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const submitSelection = (event) => {
     event.preventDefault();
 
@@ -92,6 +114,12 @@ const GoogleBuildingSelectionPage = () => {
     );
   };
 
+  /**
+   * Thực hiện nghiệp vụ `signOut` (sign out). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function signOut
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const signOut = () => {
     dispatch(logoutAction());
     logoutContext();

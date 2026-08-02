@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình CarSlotManagementPanel, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -22,6 +28,10 @@ import {
     updateSlotRequest,
 } from "../slots/slotSlice";
 
+/**
+ * Khai báo `emptyForm` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/backend/pages/CarSlotManagementPanel.jsx.
+ */
 const emptyForm = {
     slotCode: "",
     status: "AVAILABLE",
@@ -30,6 +40,10 @@ const emptyForm = {
     note: "",
 };
 
+/**
+ * Khai báo `statusLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/backend/pages/CarSlotManagementPanel.jsx.
+ */
 const statusLabels = {
     AVAILABLE: "Trống",
     RESERVED: "Đã đặt",
@@ -39,6 +53,13 @@ const statusLabels = {
     CONFLICT: "Cần kiểm tra",
 };
 
+/**
+ * Lấy nghiệp vụ `getSizeLabel` (get size label). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getSizeLabel
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getSizeLabel = (value) => {
     const normalized = String(value || "").toUpperCase();
     if (normalized === "STANDARD") return "Tiêu chuẩn";
@@ -46,6 +67,13 @@ const getSizeLabel = (value) => {
     return value || "-";
 };
 
+/**
+ * Thực hiện nghiệp vụ `CarSlotManagementPanel` (car slot management panel). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function CarSlotManagementPanel
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const CarSlotManagementPanel = ({ floor }) => {
     const dispatch = useDispatch();
 
@@ -58,14 +86,23 @@ const CarSlotManagementPanel = ({ floor }) => {
         deletingId,
         mutationError,
         mutationSuccess,
+    /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     } = useSelector((state) => state.slots);
 
     const floorId = floor?.id;
 
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const slots = useMemo(() => {
         return slotsByFloor[floorId] || [];
     }, [slotsByFloor, floorId]);
 
+    /**
+     * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `normalizeText` (normalize text). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function normalizeText
+     * @param {*} value - Giá trị đầu vào cần xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const normalizeText = (value) => {
         return String(value ?? "")
             .toLowerCase()
@@ -73,6 +110,14 @@ const CarSlotManagementPanel = ({ floor }) => {
             .replace(/[\u0300-\u036f]/g, "");
     };
 
+    /**
+     * Lấy nghiệp vụ `getSlotSearchValue` (get slot search value). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function getSlotSearchValue
+     * @param {*} slot - Giá trị `slot` được hàm sử dụng trong quá trình xử lý.
+     * @param {*} column - Giá trị `column` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const getSlotSearchValue = (slot, column) => {
         const values = {
             id: slot.id,
@@ -104,9 +149,11 @@ const CarSlotManagementPanel = ({ floor }) => {
         sizeLabel: "",
     });
 
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const filteredSlots = useMemo(() => {
         const search = normalizeText(slotFilters.searchText);
 
+        /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         return slots.filter((slot) => {
             const matchSearch =
                 !search ||
@@ -125,18 +172,29 @@ const CarSlotManagementPanel = ({ floor }) => {
         });
     }, [slots, slotFilters]);
 
+    /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     useEffect(() => {
         if (floorId) {
             dispatch(fetchSlotsByFloorRequest({ floorId }));
         }
     }, [dispatch, floorId]);
 
+    /**
+     * Cập nhật nghiệp vụ `updateField` (update field). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function updateField
+     * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+     * @param {*} value - Giá trị đầu vào cần xử lý.
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const updateField = (field, value) => {
+        /* Callback nội bộ của lời gọi `setForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setForm((prev) => ({
             ...prev,
             [field]: value,
         }));
 
+        /* Callback nội bộ của lời gọi `setFormErrors`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setFormErrors((prev) => ({
             ...prev,
             [field]: "",
@@ -145,6 +203,12 @@ const CarSlotManagementPanel = ({ floor }) => {
         dispatch(clearSlotNotice());
     };
 
+    /**
+     * Kiểm tra nghiệp vụ `validateForm` (validate form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function validateForm
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const validateForm = () => {
         const nextErrors = {};
 
@@ -157,6 +221,12 @@ const CarSlotManagementPanel = ({ floor }) => {
         return Object.keys(nextErrors).length === 0;
     };
 
+    /**
+     * Xóa hoặc đặt lại nghiệp vụ `resetForm` (reset form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function resetForm
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const resetForm = () => {
         setEditingSlotId(null);
         setForm(emptyForm);
@@ -170,6 +240,13 @@ const CarSlotManagementPanel = ({ floor }) => {
         onSuccess: resetForm,
     });
 
+    /**
+     * Thực hiện nghiệp vụ `startEditSlot` (start edit slot). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function startEditSlot
+     * @param {*} slot - Giá trị `slot` được hàm sử dụng trong quá trình xử lý.
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const startEditSlot = (slot) => {
         setEditingSlotId(slot.id);
 
@@ -182,6 +259,13 @@ const CarSlotManagementPanel = ({ floor }) => {
         });
     };
 
+    /**
+     * Xử lý nghiệp vụ `handleSubmit` (handle submit). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function handleSubmit
+     * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleSubmit = (event) => {
         event.preventDefault();
 
@@ -210,6 +294,13 @@ const CarSlotManagementPanel = ({ floor }) => {
         }
     };
 
+    /**
+     * Xử lý nghiệp vụ `handleDeleteSlot` (handle delete slot). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function handleDeleteSlot
+     * @param {*} slot - Giá trị `slot` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleDeleteSlot = (slot) => {
         const ok = window.confirm(`Bạn chắc muốn xóa ô đỗ "${slot.slotCode}" không?`);
 
@@ -227,6 +318,12 @@ const CarSlotManagementPanel = ({ floor }) => {
         }
     };
 
+    /**
+     * Thực hiện nghiệp vụ `refreshSlots` (refresh slots). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function refreshSlots
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const refreshSlots = () => {
         dispatch(clearSlotNotice());
         dispatch(fetchSlotsByFloorRequest({ floorId }));

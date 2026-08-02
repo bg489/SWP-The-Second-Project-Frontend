@@ -1,9 +1,22 @@
+/**
+ * @fileoverview Cung cấp component giao diện tái sử dụng Table và hành vi hiển thị liên quan.
+ *
+ * Luồng chính: Props đầu vào -> xử lý trạng thái cục bộ khi cần -> trả về phần giao diện tái sử dụng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import Button from "../Button/Button";
 import "./Table.css";
 
+/**
+ * Thực hiện nghiệp vụ `Table` (table). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function Table
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const Table = ({
   columns = [],
   data = [],
@@ -14,6 +27,7 @@ const Table = ({
   className = "",
   tableClassName = "",
 }) => {
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const rows = useMemo(() => (Array.isArray(data) ? data : []), [data]);
   const [localPage, setLocalPage] = useState(1);
   const usesExternalPagination = Boolean(pagination);
@@ -26,6 +40,7 @@ const Table = ({
     ? Number(pagination?.currentPage || pagination?.page || 1)
     : safeLocalPage;
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const visibleRows = useMemo(() => {
     if (!canPaginateLocally) return rows;
 

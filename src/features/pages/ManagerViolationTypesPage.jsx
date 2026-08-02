@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình ManagerViolationTypesPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -31,6 +37,10 @@ import {
 } from "../../services/mockParkingData";
 import "./ManagerViolationTypesPage.css";
 
+/**
+ * Khai báo `specialViolationMeta` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/ManagerViolationTypesPage.jsx.
+ */
 const specialViolationMeta = {
   WRONG_SLOT: {
     label: "Ô tô đậu sai ô",
@@ -49,6 +59,10 @@ const specialViolationMeta = {
   },
 };
 
+/**
+ * Khai báo `emptyForm` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/ManagerViolationTypesPage.jsx.
+ */
 const emptyForm = {
   name: "",
   defaultPenaltyFee: "",
@@ -56,6 +70,13 @@ const emptyForm = {
   status: "ACTIVE",
 };
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `normalizeDisplayName` (normalize display name). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function normalizeDisplayName
+ * @param {*} item - Giá trị `item` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const normalizeDisplayName = (item) => {
   if (item?.code && specialViolationMeta[item.code]) {
     const legacyNames = ["WRONG_SLOT", "Xe may vao khu oto", "Keo oto do sai khu"];
@@ -67,26 +88,39 @@ const normalizeDisplayName = (item) => {
   return item?.name || "Chưa đặt tên";
 };
 
+/**
+ * Thực hiện nghiệp vụ `ManagerViolationTypesPage` (manager violation types page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function ManagerViolationTypesPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const ManagerViolationTypesPage = () => {
   const dispatch = useDispatch();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { violationTypes } = useSelector((state) => state.parking);
   const [editingItem, setEditingItem] = useState(null);
   const [form, setForm] = useState(emptyForm);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchViolationTypesRequest({ includeInactive: true }));
   }, [dispatch]);
 
   const specialTypes = useMemo(
+    /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => Object.keys(specialViolationMeta).map((code) => ({
       code,
       meta: specialViolationMeta[code],
+      /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       item: violationTypes.items.find((type) => type.code === code) || null,
     })),
     [violationTypes.items]
   );
 
   const sortedTypes = useMemo(
+    /* Callback nội bộ của lời gọi `sort`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => [...violationTypes.items].sort((left, right) => {
       const leftSpecial = left.code && specialViolationMeta[left.code] ? 0 : 1;
       const rightSpecial = right.code && specialViolationMeta[right.code] ? 0 : 1;
@@ -96,6 +130,12 @@ const ManagerViolationTypesPage = () => {
     [violationTypes.items]
   );
 
+  /**
+   * Xóa hoặc đặt lại nghiệp vụ `resetForm` (reset form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function resetForm
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const resetForm = () => {
     setEditingItem(null);
     setForm(emptyForm);
@@ -108,6 +148,13 @@ const ManagerViolationTypesPage = () => {
     onSuccess: resetForm,
   });
 
+  /**
+   * Xử lý nghiệp vụ `handleEdit` (handle edit). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleEdit
+   * @param {*} item - Giá trị `item` được hàm sử dụng trong quá trình xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleEdit = (item) => {
     dispatch(clearParkingNotice());
     setEditingItem(item);
@@ -119,11 +166,27 @@ const ManagerViolationTypesPage = () => {
     });
   };
 
+  /**
+   * Cập nhật nghiệp vụ `updateForm` (update form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function updateForm
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const updateForm = (field, value) => {
     dispatch(clearParkingNotice());
+    /* Callback nội bộ của lời gọi `setForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setForm((current) => ({ ...current, [field]: value }));
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleSubmit` (handle submit). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleSubmit
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleSubmit = (event) => {
     event.preventDefault();
 
@@ -140,6 +203,13 @@ const ManagerViolationTypesPage = () => {
     }));
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleDeactivate` (handle deactivate). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleDeactivate
+   * @param {*} item - Giá trị `item` được hàm sử dụng trong quá trình xử lý.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleDeactivate = (item) => {
     const confirmed = window.confirm(
       `Ngừng áp dụng mức phí "${normalizeDisplayName(item)}"?`
@@ -157,6 +227,13 @@ const ManagerViolationTypesPage = () => {
     {
       header: "Nội dung vi phạm",
       key: "name",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div style={{ display: "grid", gap: 4 }}>
           <strong>{normalizeDisplayName(row)}</strong>
@@ -171,6 +248,13 @@ const ManagerViolationTypesPage = () => {
     {
       header: "Số tiền",
       key: "defaultPenaltyFee",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <strong className="text-danger">
           {formatCurrency(row.defaultPenaltyFee ?? row.penaltyFee ?? 0)}
@@ -180,11 +264,25 @@ const ManagerViolationTypesPage = () => {
     {
       header: "Mô tả",
       key: "description",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => row.description || "-",
     },
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <span className={`pill ${getStatusTone(row.status || "ACTIVE")}`}>
           {getStatusLabel(row.status || "ACTIVE")}
@@ -194,6 +292,13 @@ const ManagerViolationTypesPage = () => {
     {
       header: "Thao tác",
       key: "actions",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div className="action-row">
           <Button

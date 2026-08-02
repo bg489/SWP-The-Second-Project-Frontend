@@ -1,8 +1,17 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/features/dashboard/ManagerDashboard.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-page`. */
 .manager-dashboard-page {
   display: grid;
   gap: 20px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-page .page-hero,
+.manager-dashboard-page .section-card,
+.manager-dashboard-page .dashboard-grid,
+.manager-dashboard-page .two-column-grid`. */
 .manager-dashboard-page .page-hero,
 .manager-dashboard-page .section-card,
 .manager-dashboard-page .dashboard-grid,
@@ -10,12 +19,14 @@
   margin: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-revenue`. */
 .manager-dashboard-revenue {
   max-width: 230px;
   font-size: clamp(20px, 2vw, 30px);
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-toolbar`. */
 .manager-dashboard-toolbar {
   display: flex;
   align-items: center;
@@ -28,35 +39,44 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-toolbar > div:first-child`. */
 .manager-dashboard-toolbar > div:first-child {
   display: grid;
   gap: 3px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-toolbar strong`. */
 .manager-dashboard-toolbar strong {
   color: var(--text-primary);
   font-size: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-toolbar > div:first-child > span`. */
 .manager-dashboard-toolbar > div:first-child > span {
   color: var(--text-muted);
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-metrics`. */
 .manager-dashboard-metrics {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-overview`. */
 .manager-dashboard-overview {
   grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-revenue-list,
+.manager-customer-list`. */
 .manager-revenue-list,
 .manager-customer-list {
   display: grid;
   gap: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-revenue-item,
+.manager-customer-item`. */
 .manager-revenue-item,
 .manager-customer-item {
   padding: 13px 14px;
@@ -65,6 +85,8 @@
   background: var(--bg-secondary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-revenue-heading,
+.manager-customer-heading`. */
 .manager-revenue-heading,
 .manager-customer-heading {
   display: flex;
@@ -75,17 +97,23 @@
   font-size: 13px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-revenue-heading span,
+.manager-customer-heading span`. */
 .manager-revenue-heading span,
 .manager-customer-heading span {
   min-width: 0;
   font-weight: 700;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-revenue-heading strong,
+.manager-customer-heading strong`. */
 .manager-revenue-heading strong,
 .manager-customer-heading strong {
   flex: 0 0 auto;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-revenue-track,
+.manager-customer-track`. */
 .manager-revenue-track,
 .manager-customer-track {
   height: 8px;
@@ -95,6 +123,8 @@
   background: var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-revenue-track > div,
+.manager-customer-track > div`. */
 .manager-revenue-track > div,
 .manager-customer-track > div {
   height: 100%;
@@ -102,30 +132,37 @@
   background: linear-gradient(90deg, var(--pink), var(--orange));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-customer-item.registered .manager-customer-track > div`. */
 .manager-customer-item.registered .manager-customer-track > div {
   background: var(--pink);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-customer-item.walk-in .manager-customer-track > div`. */
 .manager-customer-item.walk-in .manager-customer-track > div {
   background: var(--orange);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-revenue-item small,
+.manager-customer-item small`. */
 .manager-revenue-item small,
 .manager-customer-item small {
   color: var(--text-muted);
   font-size: 11px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-live-grid`. */
 .manager-dashboard-live-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-violation-summary`. */
 .manager-violation-summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-violation-summary > div`. */
 .manager-violation-summary > div {
   display: grid;
   gap: 7px;
@@ -137,6 +174,7 @@
   background: linear-gradient(135deg, rgba(255, 184, 245, 0.16), rgba(237, 153, 81, 0.13));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-violation-summary span`. */
 .manager-violation-summary span {
   color: var(--text-secondary);
   font-size: 12px;
@@ -144,12 +182,15 @@
   text-transform: uppercase;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-violation-summary strong`. */
 .manager-violation-summary strong {
   color: var(--text-primary);
   font-size: 24px;
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-note,
+.manager-dashboard-empty`. */
 .manager-dashboard-note,
 .manager-dashboard-empty {
   margin: 14px 0 0;
@@ -158,49 +199,65 @@
   line-height: 1.55;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-building-section`. */
 .manager-building-section {
   min-width: 0;
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 1180px)`. */
 @media (max-width: 1180px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-metrics`. */
   .manager-dashboard-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 900px)`. */
 @media (max-width: 900px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-overview,
+  .manager-dashboard-live-grid`. */
   .manager-dashboard-overview,
   .manager-dashboard-live-grid {
     grid-template-columns: 1fr;
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 640px)`. */
 @media (max-width: 640px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-page`. */
   .manager-dashboard-page {
     gap: 16px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-toolbar`. */
   .manager-dashboard-toolbar {
     align-items: stretch;
     flex-direction: column;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-toolbar .action-row,
+  .manager-dashboard-toolbar .button`. */
   .manager-dashboard-toolbar .action-row,
   .manager-dashboard-toolbar .button {
     width: 100%;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-metrics,
+  .manager-violation-summary`. */
   .manager-dashboard-metrics,
   .manager-violation-summary {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.manager-revenue-heading,
+  .manager-customer-heading`. */
   .manager-revenue-heading,
   .manager-customer-heading {
     align-items: flex-start;
     flex-direction: column;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.manager-dashboard-revenue`. */
   .manager-dashboard-revenue {
     max-width: 100%;
   }

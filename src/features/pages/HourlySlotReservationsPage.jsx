@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình HourlySlotReservationsPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -46,6 +52,10 @@ import {
 } from "../../utils/phone";
 import "./HourlySlotReservationsPage.css";
 
+/**
+ * Khai báo `reservationStatusMeta` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/HourlySlotReservationsPage.jsx.
+ */
 const reservationStatusMeta = {
   PENDING_PAYMENT: { label: "Chờ thanh toán", tone: "warning" },
   BOOKED: { label: "Đã đặt", tone: "success" },
@@ -55,19 +65,43 @@ const reservationStatusMeta = {
   CANCELLED: { label: "Đã hủy", tone: "danger" },
 };
 
+/**
+ * Khai báo `paymentStatusMeta` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/HourlySlotReservationsPage.jsx.
+ */
 const paymentStatusMeta = {
   PENDING: { label: "Chờ thanh toán", tone: "warning" },
   PAID: { label: "Đã thanh toán", tone: "success" },
   FAILED: { label: "Thanh toán thất bại", tone: "danger" },
 };
 
+/**
+ * Thực hiện nghiệp vụ `pad` (pad). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function pad
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const pad = (value) => String(value).padStart(2, "0");
 
+/**
+ * Thực hiện nghiệp vụ `toLocalDateTimeInput` (to local date time input). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function toLocalDateTimeInput
+ * @param {*} date - Giá trị `date` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const toLocalDateTimeInput = (date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
     date.getHours()
   )}:${pad(date.getMinutes())}`;
 
+/**
+ * Tạo nghiệp vụ `createDefaultPeriod` (create default period). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function createDefaultPeriod
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const createDefaultPeriod = () => {
   const start = new Date(Date.now() + 30 * 60 * 1000);
 
@@ -88,6 +122,12 @@ const createDefaultPeriod = () => {
   };
 };
 
+/**
+ * Tạo nghiệp vụ `createReservationBounds` (create reservation bounds). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function createReservationBounds
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const createReservationBounds = () => {
   const minimum = new Date();
   const maximum = new Date();
@@ -104,6 +144,13 @@ const createReservationBounds = () => {
   };
 };
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `formatDateTime` (format date time). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function formatDateTime
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const formatDateTime = (value) =>
   value
     ? new Date(value).toLocaleString("vi-VN", {
@@ -115,14 +162,22 @@ const formatDateTime = (value) =>
       })
     : "-";
 
+/**
+ * Thực hiện nghiệp vụ `HourlySlotReservationsPage` (hourly slot reservations page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function HourlySlotReservationsPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const HourlySlotReservationsPage = () => {
   const dispatch = useDispatch();
   const { role, user: contextUser } = useMockAuth();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const authUser = useSelector((state) => state.auth.user);
   const user = authUser || contextUser;
   const isStaff = role === "PARKING_STAFF";
   const buildingId = user?.buildingId || user?.building_id;
   const { hourlyReservations, vehicles, notice } = useSelector(
+    /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (state) => state.parking
   );
   const [period, setPeriod] = useState(createDefaultPeriod);
@@ -140,6 +195,7 @@ const HourlySlotReservationsPage = () => {
   const [plateScannerOpen, setPlateScannerOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  /* Callback nội bộ của lời gọi `useState`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const [paymentReturn] = useState(() =>
     getPaymentReturnFromUrl({
       successMessage: "Thanh toán thành công. Ô đỗ đã được giữ theo khung giờ đã chọn.",
@@ -147,6 +203,7 @@ const HourlySlotReservationsPage = () => {
     })
   );
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (isStaff) {
       dispatch(
@@ -160,6 +217,7 @@ const HourlySlotReservationsPage = () => {
     }
   }, [buildingId, dispatch, isStaff]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!paymentReturn) return;
 
@@ -176,8 +234,10 @@ const HourlySlotReservationsPage = () => {
   }, [buildingId, dispatch, isStaff, paymentReturn]);
 
   const approvedCars = useMemo(
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () =>
       vehicles.mine.filter(
+        /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         (vehicle) =>
           vehicle.vehicleType === "CAR" &&
           ["APPROVED", "ACTIVE"].includes(vehicle.status) &&
@@ -194,9 +254,11 @@ const HourlySlotReservationsPage = () => {
   const reservations = isStaff
     ? hourlyReservations.staffItems
     : hourlyReservations.mine;
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const filteredReservations = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return reservations.filter((reservation) => {
       const matchesStatus =
         !statusFilter || reservation.status === statusFilter;
@@ -211,6 +273,7 @@ const HourlySlotReservationsPage = () => {
           reservation.slotCode,
         ]
           .filter(Boolean)
+          /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
           .some((value) => String(value).toLowerCase().includes(keyword));
 
       return matchesStatus && matchesSearch;
@@ -218,12 +281,15 @@ const HourlySlotReservationsPage = () => {
   }, [reservations, search, statusFilter]);
 
   const availableSlots = useMemo(
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => hourlyReservations.availability.slots || [],
     [hourlyReservations.availability.slots]
   );
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const slotsByFloor = useMemo(() => {
     const groups = new Map();
 
+    /* Callback nội bộ của lời gọi `forEach`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     availableSlots.forEach((slot) => {
       const key = String(slot.floorId || slot.floorName || "unknown");
       const current = groups.get(key) || {
@@ -240,12 +306,20 @@ const HourlySlotReservationsPage = () => {
   }, [availableSlots]);
   const reservationBounds = createReservationBounds();
   const selectedSlot = availableSlots.find(
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (slot) => String(slot.id) === String(selectedSlotId)
   );
+  /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const activeReservations = reservations.filter((item) =>
     ["PENDING_PAYMENT", "BOOKED", "CHECKED_IN"].includes(item.status)
   ).length;
 
+  /**
+   * Tạo nghiệp vụ `buildPeriodPayload` (build period payload). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function buildPeriodPayload
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const buildPeriodPayload = () => {
     const startAt = new Date(period.startAt);
     const endAt = new Date(period.endAt);
@@ -289,13 +363,28 @@ const HourlySlotReservationsPage = () => {
     };
   };
 
+  /**
+   * Xử lý nghiệp vụ `handlePeriodChange` (handle period change). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handlePeriodChange
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handlePeriodChange = (field, value) => {
     dispatch(clearParkingNotice());
     setFormError("");
     setSelectedSlotId("");
+    /* Callback nội bộ của lời gọi `setPeriod`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setPeriod((current) => ({ ...current, [field]: value }));
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleCheckAvailability` (handle check availability). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleCheckAvailability
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleCheckAvailability = () => {
     const payload = buildPeriodPayload();
 
@@ -306,6 +395,12 @@ const HourlySlotReservationsPage = () => {
     dispatch(fetchHourlyReservationAvailabilityRequest(payload));
   };
 
+  /**
+   * Xóa hoặc đặt lại nghiệp vụ `resetGuestForm` (reset guest form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function resetGuestForm
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const resetGuestForm = () => {
     setGuestForm({
       guestName: "",
@@ -326,6 +421,13 @@ const HourlySlotReservationsPage = () => {
     onSuccess: resetGuestForm,
   });
 
+  /**
+   * Xử lý nghiệp vụ `handleSubmit` (handle submit). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleSubmit
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleSubmit = (event) => {
     event.preventDefault();
     const timePayload = buildPeriodPayload();
@@ -386,6 +488,12 @@ const HourlySlotReservationsPage = () => {
     );
   };
 
+  /**
+   * Thực hiện nghiệp vụ `refresh` (refresh). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function refresh
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const refresh = () => {
     dispatch(clearParkingNotice());
     if (isStaff) {
@@ -403,6 +511,13 @@ const HourlySlotReservationsPage = () => {
     {
       header: "Mã đặt chỗ",
       key: "reservationCode",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div className="reservation-code-cell">
           <strong>{row.reservationCode}</strong>
@@ -413,6 +528,13 @@ const HourlySlotReservationsPage = () => {
     {
       header: isStaff ? "Khách gửi xe" : "Xe đã đăng ký",
       key: "customer",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div className="reservation-person-cell">
           <strong>{row.userName || row.guestName || "Khách vãng lai"}</strong>
@@ -424,6 +546,13 @@ const HourlySlotReservationsPage = () => {
     {
       header: "Ô đỗ",
       key: "slotCode",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div className="reservation-slot-cell">
           <MapPin size={15} />
@@ -437,6 +566,13 @@ const HourlySlotReservationsPage = () => {
       header: "Khung giờ",
       key: "startAt",
       minWidth: 210,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div className="reservation-time-cell">
           <span>{formatDateTime(row.startAt)}</span>
@@ -447,6 +583,13 @@ const HourlySlotReservationsPage = () => {
     {
       header: "Thanh toán",
       key: "paymentStatus",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => {
         const meta =
           paymentStatusMeta[row.paymentStatus] || paymentStatusMeta.PENDING;
@@ -463,6 +606,13 @@ const HourlySlotReservationsPage = () => {
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => {
         const meta =
           reservationStatusMeta[row.status] || reservationStatusMeta.CANCELLED;

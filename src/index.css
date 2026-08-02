@@ -1,3 +1,8 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/index.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Khai báo quy tắc CSS `@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap")`. */
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
 :root {
@@ -64,6 +69,7 @@
   --glass-blur: blur(18px);
 }
 
+/* Điều chỉnh kiểu hiển thị ở chế độ tối cho `.dark-theme`. */
 .dark-theme {
   --bg-primary: #18111a;
   --bg-secondary: #241827;
@@ -89,16 +95,19 @@
   --glass-bg: rgba(31, 20, 34, 0.76);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `*`. */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `html`. */
 html {
   scroll-behavior: smooth;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `body`. */
 body {
   min-height: 100vh;
   font-family: var(--font-sans);
@@ -113,6 +122,8 @@ body {
   transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
+/* Điều chỉnh kiểu hiển thị ở chế độ tối cho `.dark-theme body,
+body.dark-theme`. */
 .dark-theme body,
 body.dark-theme {
   background:
@@ -121,6 +132,10 @@ body.dark-theme {
     linear-gradient(135deg, #18111a, #241827);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `button,
+input,
+select,
+textarea`. */
 button,
 input,
 select,
@@ -128,34 +143,41 @@ textarea {
   font: inherit;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `button`. */
 button {
   color: inherit;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `a`. */
 a {
   color: var(--primary);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `a:hover`. */
 a:hover {
   color: var(--primary-hover);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `::-webkit-scrollbar`. */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `::-webkit-scrollbar-track`. */
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `::-webkit-scrollbar-thumb`. */
 ::-webkit-scrollbar-thumb {
   background: rgba(237, 153, 81, 0.42);
   border-radius: var(--radius-full);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `::-webkit-scrollbar-thumb:hover`. */
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(237, 153, 81, 0.66);
 }

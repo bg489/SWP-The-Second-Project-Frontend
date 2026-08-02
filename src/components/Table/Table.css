@@ -1,3 +1,8 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/components/Table/Table.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.table-container`. */
 .table-container {
   width: 100%;
   overflow: hidden;
@@ -7,16 +12,19 @@
   background: var(--card-bg);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.table-wrapper`. */
 .table-wrapper {
   overflow-x: auto;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.custom-table`. */
 .custom-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.custom-table th`. */
 .custom-table th {
   padding: 13px 16px;
   border-bottom: 1px solid var(--border-color);
@@ -28,6 +36,7 @@
   text-transform: uppercase;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.custom-table td`. */
 .custom-table td {
   padding: 15px 16px;
   border-bottom: 1px solid var(--border-color);
@@ -36,24 +45,29 @@
   vertical-align: middle;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.custom-table tbody tr`. */
 .custom-table tbody tr {
   transition: background-color var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.custom-table tbody tr:hover`. */
 .custom-table tbody tr:hover {
   background: rgba(255, 184, 245, 0.08);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.custom-table tbody tr:last-child td`. */
 .custom-table tbody tr:last-child td {
   border-bottom: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.table-empty-cell`. */
 .table-empty-cell {
   padding: 42px !important;
   color: var(--text-muted);
   text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.table-skeleton-cell`. */
 .table-skeleton-cell {
   width: 80%;
   height: 18px;
@@ -63,6 +77,7 @@
   animation: table-shimmer 1.5s infinite linear;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.table-pagination`. */
 .table-pagination {
   display: flex;
   align-items: center;
@@ -73,20 +88,25 @@
   background: var(--card-bg);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pagination-info`. */
 .pagination-info {
   color: var(--text-secondary);
   font-size: 13px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pagination-controls`. */
 .pagination-controls {
   display: flex;
   gap: 8px;
 }
 
+/* Định nghĩa các bước chuyển động cho hiệu ứng `table-shimmer`. */
 @keyframes table-shimmer {
+  /* Áp dụng bố cục và hình thức hiển thị cho `from`. */
   from {
     background-position: 200% 0;
   }
+  /* Áp dụng bố cục và hình thức hiển thị cho `to`. */
   to {
     background-position: -200% 0;
   }

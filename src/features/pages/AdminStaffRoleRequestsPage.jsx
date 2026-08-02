@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình AdminStaffRoleRequestsPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,6 +36,10 @@ import {
   rejectStaffRoleRequest,
 } from "../backend/staffRoleRequests/staffRoleRequestSlice";
 
+/**
+ * Khai báo `statusOptions` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/AdminStaffRoleRequestsPage.jsx.
+ */
 const statusOptions = [
   { value: "PENDING", label: "Đang chờ duyệt" },
   { value: "APPROVED", label: "Đã tạo tài khoản" },
@@ -37,6 +47,10 @@ const statusOptions = [
   { value: "", label: "Tất cả hồ sơ" },
 ];
 
+/**
+ * Khai báo `statusMeta` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/AdminStaffRoleRequestsPage.jsx.
+ */
 const statusMeta = {
   PENDING: { label: "Đang chờ duyệt", className: "warning" },
   APPROVED: { label: "Đã tạo tài khoản", className: "success" },
@@ -44,15 +58,35 @@ const statusMeta = {
   CANCELLED: { label: "Đã hủy", className: "neutral" },
 };
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `formatDateTime` (format date time). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function formatDateTime
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const formatDateTime = (value) => value
   ? new Date(value).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })
   : "-";
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `normalizeText` (normalize text). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function normalizeText
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const normalizeText = (value) => String(value || "")
   .toLowerCase()
   .normalize("NFD")
   .replace(/[\u0300-\u036f]/g, "");
 
+/**
+ * Thực hiện nghiệp vụ `AdminStaffRoleRequestsPage` (admin staff role requests page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function AdminStaffRoleRequestsPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const AdminStaffRoleRequestsPage = () => {
   const dispatch = useDispatch();
   const {
@@ -62,6 +96,7 @@ const AdminStaffRoleRequestsPage = () => {
     adminRequests,
     error,
     notice,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.staffRoleRequests);
   const [status, setStatus] = useState("PENDING");
   const [keyword, setKeyword] = useState("");
@@ -69,12 +104,15 @@ const AdminStaffRoleRequestsPage = () => {
   const [adminNote, setAdminNote] = useState("");
   const [dialogError, setDialogError] = useState("");
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchAdminStaffRoleRequestsRequest({ status: status || undefined }));
   }, [dispatch, status]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const rows = useMemo(() => {
     const q = normalizeText(keyword.trim());
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return adminRequests.filter((request) => {
       if (status && request.status !== status) return false;
       if (!q) return true;
@@ -85,20 +123,35 @@ const AdminStaffRoleRequestsPage = () => {
         request.managerName,
         request.managerEmail,
         request.buildingName,
+      /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       ].some((value) => normalizeText(value).includes(q));
     });
   }, [adminRequests, keyword, status]);
 
   const reviewRequest = selectedRequestId
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     ? adminRequests.find((request) => Number(request.id) === Number(selectedRequestId)) || null
     : null;
 
+  /**
+   * Hiển thị nghiệp vụ `openReview` (open review). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function openReview
+   * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const openReview = (request) => {
     setSelectedRequestId(request.id);
     setAdminNote("");
     setDialogError("");
   };
 
+  /**
+   * Thực hiện nghiệp vụ `approve` (approve). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function approve
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const approve = () => {
     if (!reviewRequest) return;
     setDialogError("");
@@ -108,6 +161,12 @@ const AdminStaffRoleRequestsPage = () => {
     }));
   };
 
+  /**
+   * Thực hiện nghiệp vụ `reject` (reject). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function reject
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const reject = () => {
     if (!reviewRequest) return;
     if (!adminNote.trim()) {
@@ -127,6 +186,13 @@ const AdminStaffRoleRequestsPage = () => {
       header: "Ảnh chân dung",
       key: "portraitImageUrl",
       minWidth: "125px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (request) => (
         <button
           type="button"
@@ -149,6 +215,13 @@ const AdminStaffRoleRequestsPage = () => {
       header: "Tài khoản được đề nghị",
       key: "userName",
       minWidth: "240px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (request) => (
         <div className="request-person-copy">
           <strong>{request.userName}</strong>
@@ -162,6 +235,13 @@ const AdminStaffRoleRequestsPage = () => {
       header: "Nơi làm việc",
       key: "buildingName",
       minWidth: "210px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (request) => (
         <>
           <strong>{request.buildingName}</strong>
@@ -174,6 +254,13 @@ const AdminStaffRoleRequestsPage = () => {
       header: "Manager đề nghị",
       key: "managerName",
       minWidth: "210px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (request) => (
         <div className="request-person-copy">
           <strong>{request.managerName}</strong>
@@ -185,6 +272,13 @@ const AdminStaffRoleRequestsPage = () => {
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (request) => {
         const meta = statusMeta[request.status] || statusMeta.PENDING;
         return <span className={`pill ${meta.className}`}>{meta.label}</span>;
@@ -193,12 +287,26 @@ const AdminStaffRoleRequestsPage = () => {
     {
       header: "Ngày gửi",
       key: "createdAt",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (request) => formatDateTime(request.createdAt),
     },
     {
       header: "Thao tác",
       key: "actions",
       minWidth: "145px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (request) => (
         <Button size="sm" icon={FileCheck2} onClick={() => openReview(request)}>
           Xem hồ sơ

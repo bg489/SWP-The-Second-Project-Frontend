@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Cung cấp component giao diện tái sử dụng PlateCameraScanner và hành vi hiển thị liên quan.
+ *
+ * Luồng chính: Props đầu vào -> xử lý trạng thái cục bộ khi cần -> trả về phần giao diện tái sử dụng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,6 +25,10 @@ import {
 import { formatPlateNumber } from "../../utils/licensePlate";
 import "./PlateCameraScanner.css";
 
+/**
+ * Khai báo `EMPTY_RECOGNITION` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/components/PlateScanner/PlateCameraScanner.jsx.
+ */
 const EMPTY_RECOGNITION = {
   requestId: null,
   plateNumber: "",
@@ -32,10 +42,29 @@ const EMPTY_RECOGNITION = {
   error: null,
 };
 
+/**
+ * Khai báo `CAMERA_SCAN_DELAY` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/components/PlateScanner/PlateCameraScanner.jsx.
+ */
 const CAMERA_SCAN_DELAY = 1200;
+/**
+ * Khai báo `REQUIRED_MATCHES` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/components/PlateScanner/PlateCameraScanner.jsx.
+ */
 const REQUIRED_MATCHES = 3;
+/**
+ * Khai báo `SAMPLE_WINDOW_SIZE` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/components/PlateScanner/PlateCameraScanner.jsx.
+ */
 const SAMPLE_WINDOW_SIZE = 6;
 
+/**
+ * Thực hiện nghiệp vụ `PlateCameraScanner` (plate camera scanner). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function PlateCameraScanner
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const PlateCameraScanner = ({
   autoApply = true,
   open,
@@ -45,6 +74,7 @@ const PlateCameraScanner = ({
 }) => {
   const dispatch = useDispatch();
   const recognition = useSelector(
+    /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (state) => state.parking.plateRecognition || EMPTY_RECOGNITION
   );
   const videoRef = useRef(null);
@@ -61,9 +91,11 @@ const PlateCameraScanner = ({
   const recognitionMatches =
     currentRequestId !== 0 && recognition.requestId === currentRequestId;
   const recognizedPlate = recognitionMatches ? recognition.plateNumber : "";
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const consensus = useMemo(() => {
     const groups = new Map();
 
+    /* Callback nội bộ của lời gọi `forEach`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     samples.forEach((sample) => {
       const key = sample.plateNumber.replace(/[^A-Z0-9]/g, "");
       const current = groups.get(key) || {
@@ -77,10 +109,12 @@ const PlateCameraScanner = ({
     });
 
     return [...groups.values()]
+      /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       .map((group) => ({
         ...group,
         averageConfidence: group.confidenceTotal / group.count,
       }))
+      /* Callback nội bộ của lời gọi `sort`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       .sort((left, right) =>
         right.count - left.count
         || right.averageConfidence - left.averageConfidence
@@ -98,8 +132,10 @@ const PlateCameraScanner = ({
   const cameraActive = cameraStatus === "active";
   const editing = editedPlate !== null;
 
+  /* Callback nội bộ của lời gọi `useCallback`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
+      /* Callback nội bộ của lời gọi `forEach`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
@@ -109,6 +145,7 @@ const PlateCameraScanner = ({
     }
   }, []);
 
+  /* Callback nội bộ của lời gọi `useCallback`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const startCamera = useCallback(async () => {
     stopCamera();
     setLocalError("");
@@ -136,6 +173,7 @@ const PlateCameraScanner = ({
       });
 
       streamRef.current = stream;
+      /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       stream.getVideoTracks()[0]?.addEventListener("ended", () => {
         setCameraStatus("unavailable");
         setLocalError("Camera đã dừng. Hãy bật lại camera để tiếp tục quét.");
@@ -158,6 +196,7 @@ const PlateCameraScanner = ({
     }
   }, [stopCamera]);
 
+  /* Callback nội bộ của lời gọi `useCallback`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const readPlate = useCallback((file) => {
     const requestId = operationRef.current + 1;
     operationRef.current = requestId;
@@ -167,6 +206,7 @@ const PlateCameraScanner = ({
     dispatch(recognizePlateRequest({ file, requestId }));
   }, [dispatch]);
 
+  /* Callback nội bộ của lời gọi `useCallback`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const captureFrame = useCallback(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -215,6 +255,7 @@ const PlateCameraScanner = ({
       outputWidth,
       outputHeight
     );
+    /* Callback nội bộ của lời gọi `toBlob`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     canvas.toBlob((blob) => {
       if (!blob) {
         setLocalError("Không lấy được hình từ camera. Hãy thử lại.");
@@ -225,6 +266,7 @@ const PlateCameraScanner = ({
     }, "image/jpeg", 0.88);
   }, [cameraActive, readPlate, reading]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!open) return undefined;
 
@@ -234,6 +276,7 @@ const PlateCameraScanner = ({
     dispatch(clearPlateRecognition());
     const startTimer = window.setTimeout(startCamera, 0);
 
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => {
       window.clearTimeout(startTimer);
       operationRef.current += 1;
@@ -241,6 +284,7 @@ const PlateCameraScanner = ({
     };
   }, [dispatch, open, startCamera, stopCamera]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (
       !open ||
@@ -253,6 +297,7 @@ const PlateCameraScanner = ({
     }
 
     const timer = window.setTimeout(captureFrame, CAMERA_SCAN_DELAY);
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => window.clearTimeout(timer);
   }, [
     cameraActive,
@@ -265,6 +310,7 @@ const PlateCameraScanner = ({
     recognition.requestId,
   ]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (
       !recognitionMatches ||
@@ -279,7 +325,9 @@ const PlateCameraScanner = ({
     if (!formattedPlate) return;
 
     processedRequestRef.current = currentRequestId;
+    /* Callback nội bộ của lời gọi `setTimeout`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const sampleTimer = window.setTimeout(() => {
+      /* Callback nội bộ của lời gọi `setSamples`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       setSamples((current) => [
         ...current,
         {
@@ -290,6 +338,7 @@ const PlateCameraScanner = ({
       ].slice(-SAMPLE_WINDOW_SIZE));
     }, 0);
 
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => window.clearTimeout(sampleTimer);
   }, [
     currentRequestId,
@@ -299,6 +348,7 @@ const PlateCameraScanner = ({
     recognizedPlate,
   ]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (
       !consensus ||
@@ -316,10 +366,18 @@ const PlateCameraScanner = ({
     }
   }, [autoApply, consensus, onScan]);
 
+  /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => () => {
     stopCamera();
   }, [stopCamera]);
 
+  /**
+   * Xử lý nghiệp vụ `confirmPlate` (confirm plate). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function confirmPlate
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const confirmPlate = () => {
     const formattedPlate = formatPlateNumber(plateNumber);
     if (!formattedPlate) return;
@@ -328,6 +386,12 @@ const PlateCameraScanner = ({
     closeScanner();
   };
 
+  /**
+   * Xóa hoặc đặt lại nghiệp vụ `closeScanner` (close scanner). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function closeScanner
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const closeScanner = () => {
     operationRef.current += 1;
     stopCamera();
@@ -342,6 +406,12 @@ const PlateCameraScanner = ({
     onClose?.();
   };
 
+  /**
+   * Thực hiện nghiệp vụ `scanAgain` (scan again). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function scanAgain
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const scanAgain = () => {
     operationRef.current += 1;
     setCurrentRequestId(0);

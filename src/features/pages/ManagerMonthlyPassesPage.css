@@ -1,12 +1,19 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/features/pages/ManagerMonthlyPassesPage.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-monthly-page`. */
 .manager-monthly-page {
   min-width: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-backdrop`. */
 .monthly-owner-backdrop {
   z-index: 1350;
   animation: monthly-owner-fade-in 180ms ease-out;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-modal`. */
 .monthly-owner-modal {
   width: min(820px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
@@ -15,6 +22,7 @@
   animation: monthly-owner-rise-in 220ms ease-out;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-header`. */
 .monthly-owner-header {
   position: sticky;
   top: 0;
@@ -29,10 +37,12 @@
   backdrop-filter: blur(16px);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-header > div`. */
 .monthly-owner-header > div {
   min-width: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-header h2`. */
 .monthly-owner-header h2 {
   margin: 10px 0 5px;
   color: var(--text-primary);
@@ -40,11 +50,13 @@
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-header p`. */
 .monthly-owner-header p {
   color: var(--text-secondary);
   font-size: 13px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-close`. */
 .monthly-owner-close {
   display: grid;
   flex: 0 0 auto;
@@ -62,12 +74,14 @@
     transform var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-close:hover`. */
 .monthly-owner-close:hover {
   border-color: var(--primary);
   color: var(--primary);
   transform: translateY(-1px);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-profile`. */
 .monthly-owner-profile {
   display: flex;
   align-items: center;
@@ -79,6 +93,7 @@
   background: linear-gradient(135deg, var(--accent-light), var(--primary-light));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-avatar`. */
 .monthly-owner-avatar {
   display: grid;
   flex: 0 0 auto;
@@ -93,6 +108,7 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-avatar img`. */
 .monthly-owner-avatar img {
   width: 100%;
   height: 100%;
@@ -100,24 +116,28 @@
   transform-origin: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-summary`. */
 .monthly-owner-summary {
   display: grid;
   min-width: 0;
   gap: 5px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-summary > span`. */
 .monthly-owner-summary > span {
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 700;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-summary > strong`. */
 .monthly-owner-summary > strong {
   color: var(--text-primary);
   font-size: 21px;
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-pills`. */
 .monthly-owner-pills {
   display: flex;
   flex-wrap: wrap;
@@ -125,10 +145,12 @@
   margin-top: 4px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-section`. */
 .monthly-owner-section {
   padding: 22px 24px 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-section h3`. */
 .monthly-owner-section h3 {
   display: flex;
   align-items: center;
@@ -138,10 +160,12 @@
   font-size: 17px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-section h3 svg`. */
 .monthly-owner-section h3 svg {
   color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-detail-grid`. */
 .monthly-owner-detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -150,6 +174,7 @@
   border-radius: var(--radius-sm);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-detail-grid > div`. */
 .monthly-owner-detail-grid > div {
   display: grid;
   min-width: 0;
@@ -158,19 +183,23 @@
   border-bottom: 1px solid var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-detail-grid > div:nth-child(odd)`. */
 .monthly-owner-detail-grid > div:nth-child(odd) {
   border-right: 1px solid var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-detail-grid > div:nth-last-child(-n + 2)`. */
 .monthly-owner-detail-grid > div:nth-last-child(-n + 2) {
   border-bottom: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-detail-grid > .monthly-owner-detail-wide`. */
 .monthly-owner-detail-grid > .monthly-owner-detail-wide {
   grid-column: 1 / -1;
   border-right: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-detail-grid span`. */
 .monthly-owner-detail-grid span {
   display: flex;
   align-items: center;
@@ -180,10 +209,12 @@
   font-weight: 700;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-detail-grid span svg`. */
 .monthly-owner-detail-grid span svg {
   color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-detail-grid strong`. */
 .monthly-owner-detail-grid strong {
   min-width: 0;
   color: var(--text-primary);
@@ -191,88 +222,111 @@
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-footer`. */
 .monthly-owner-footer {
   display: flex;
   justify-content: flex-end;
   padding: 22px 24px 24px;
 }
 
+/* Định nghĩa các bước chuyển động cho hiệu ứng `monthly-owner-fade-in`. */
 @keyframes monthly-owner-fade-in {
+  /* Áp dụng bố cục và hình thức hiển thị cho `from`. */
   from {
     opacity: 0;
   }
 }
 
+/* Định nghĩa các bước chuyển động cho hiệu ứng `monthly-owner-rise-in`. */
 @keyframes monthly-owner-rise-in {
+  /* Áp dụng bố cục và hình thức hiển thị cho `from`. */
   from {
     opacity: 0;
     transform: translateY(12px) scale(0.985);
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 680px)`. */
 @media (max-width: 680px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-backdrop`. */
   .monthly-owner-backdrop {
     align-items: end;
     padding: 0;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-modal`. */
   .monthly-owner-modal {
     width: 100%;
     max-height: calc(100dvh - 12px);
     border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-header`. */
   .monthly-owner-header {
     padding: 18px 16px 15px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-profile`. */
   .monthly-owner-profile {
     align-items: flex-start;
     margin: 16px 16px 0;
     padding: 14px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-avatar`. */
   .monthly-owner-avatar {
     width: 68px;
     height: 68px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-summary > strong`. */
   .monthly-owner-summary > strong {
     font-size: 17px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-section`. */
   .monthly-owner-section {
     padding: 18px 16px 0;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-detail-grid`. */
   .monthly-owner-detail-grid {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-detail-grid > div,
+  .monthly-owner-detail-grid > div:nth-child(odd)`. */
   .monthly-owner-detail-grid > div,
   .monthly-owner-detail-grid > div:nth-child(odd) {
     border-right: 0;
     border-bottom: 1px solid var(--border-color);
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-detail-grid > div:nth-last-child(-n + 2)`. */
   .monthly-owner-detail-grid > div:nth-last-child(-n + 2) {
     border-bottom: 1px solid var(--border-color);
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-detail-grid > div:last-child`. */
   .monthly-owner-detail-grid > div:last-child {
     border-bottom: 0;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-footer`. */
   .monthly-owner-footer {
     padding: 18px 16px 20px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-footer .btn`. */
   .monthly-owner-footer .btn {
     width: 100%;
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(prefers-reduced-motion: reduce)`. */
 @media (prefers-reduced-motion: reduce) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.monthly-owner-backdrop,
+  .monthly-owner-modal`. */
   .monthly-owner-backdrop,
   .monthly-owner-modal {
     animation: none;

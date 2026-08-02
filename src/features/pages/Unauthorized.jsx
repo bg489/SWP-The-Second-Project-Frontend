@@ -1,9 +1,21 @@
+/**
+ * @fileoverview Xây dựng màn hình Unauthorized, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button/Button";
 import { useMockAuth } from "../../context/MockAuthContext";
 import { roleHomePaths, roleLabels } from "../../services/mockParkingData";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
 
+/**
+ * Thực hiện nghiệp vụ `Unauthorized` (unauthorized). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function Unauthorized
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const Unauthorized = () => {
   const { role } = useMockAuth();
   const navigate = useNavigate();

@@ -1,7 +1,13 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/features/pages/HourlySlotReservationsPage.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-reservation-page`. */
 .hourly-reservation-page {
   --slot-green: #16a667;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-period-grid`. */
 .reservation-period-grid {
   display: grid;
   grid-template-columns: minmax(190px, 1fr) minmax(190px, 1fr) minmax(170px, 0.72fr) minmax(190px, 0.78fr);
@@ -9,6 +15,7 @@
   align-items: end;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-quote`. */
 .reservation-quote {
   display: grid;
   min-height: 76px;
@@ -20,11 +27,14 @@
   background: var(--surface-soft);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-quote.featured`. */
 .reservation-quote.featured {
   border-color: rgba(237, 153, 81, 0.48);
   background: linear-gradient(135deg, rgba(255, 184, 245, 0.2), rgba(237, 153, 81, 0.18));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-quote span,
+.reservation-quote small`. */
 .reservation-quote span,
 .reservation-quote small {
   color: var(--text-secondary);
@@ -32,11 +42,13 @@
   font-weight: 700;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-quote strong`. */
 .reservation-quote strong {
   color: var(--text-primary);
   font-size: 17px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-slot-heading`. */
 .reservation-slot-heading {
   display: flex;
   align-items: flex-end;
@@ -47,10 +59,13 @@
   border-top: 1px solid var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-slot-heading h3`. */
 .reservation-slot-heading h3 {
   font-size: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-slot-heading p,
+.reservation-slot-heading > span`. */
 .reservation-slot-heading p,
 .reservation-slot-heading > span {
   margin-top: 3px;
@@ -58,6 +73,7 @@
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-slot-heading > span`. */
 .reservation-slot-heading > span {
   padding: 6px 10px;
   border-radius: var(--radius-full);
@@ -67,12 +83,14 @@
   white-space: nowrap;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-floor-groups`. */
 .hourly-floor-groups {
   display: grid;
   gap: 16px;
   margin-top: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-floor-group`. */
 .hourly-floor-group {
   padding: 14px;
   border: 1px solid var(--border-color);
@@ -80,6 +98,7 @@
   background: color-mix(in srgb, var(--surface-soft) 70%, transparent);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-floor-heading`. */
 .hourly-floor-heading {
   display: flex;
   align-items: center;
@@ -89,16 +108,19 @@
   border-bottom: 1px dashed var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-floor-heading > div`. */
 .hourly-floor-heading > div {
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-floor-heading svg`. */
 .hourly-floor-heading svg {
   color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-floor-heading > span`. */
 .hourly-floor-heading > span {
   color: var(--success);
   font-size: 12px;
@@ -106,6 +128,7 @@
   white-space: nowrap;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-slot-grid`. */
 .hourly-slot-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
@@ -113,6 +136,7 @@
   margin-top: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-slot`. */
 .hourly-slot {
   position: relative;
   display: grid;
@@ -130,37 +154,44 @@
   transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-slot.available`. */
 .hourly-slot.available {
   border-color: rgba(22, 166, 103, 0.42);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-slot.available:hover`. */
 .hourly-slot.available:hover {
   transform: translateY(-2px);
   border-color: var(--slot-green);
   box-shadow: 0 10px 24px rgba(22, 166, 103, 0.12);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-slot.selected`. */
 .hourly-slot.selected {
   border: 2px solid var(--orange);
   background: linear-gradient(135deg, rgba(255, 184, 245, 0.34), rgba(237, 153, 81, 0.26));
   box-shadow: 0 0 0 4px rgba(237, 153, 81, 0.14), 0 12px 28px rgba(237, 153, 81, 0.18);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-slot.unavailable`. */
 .hourly-slot.unavailable {
   cursor: not-allowed;
   opacity: 0.55;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-slot strong`. */
 .hourly-slot strong {
   padding-right: 24px;
   font-size: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-slot span`. */
 .hourly-slot span {
   color: var(--text-secondary);
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-slot small`. */
 .hourly-slot small {
   margin-top: 5px;
   color: var(--text-muted);
@@ -169,14 +200,17 @@
   line-height: 1.3;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-slot.available small`. */
 .hourly-slot.available small {
   color: var(--success);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-slot.selected small`. */
 .hourly-slot.selected small {
   color: var(--orange-strong);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hourly-slot svg`. */
 .hourly-slot svg {
   position: absolute;
   top: 12px;
@@ -184,6 +218,7 @@
   color: var(--orange-strong);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-empty-slots`. */
 .reservation-empty-slots {
   display: flex;
   align-items: center;
@@ -198,6 +233,8 @@
   text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-form-grid,
+.reservation-filter-grid`. */
 .reservation-form-grid,
 .reservation-filter-grid {
   display: grid;
@@ -205,26 +242,31 @@
   gap: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-note-field`. */
 .reservation-note-field {
   grid-column: 1 / -1;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-plate-input`. */
 .reservation-plate-input {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 9px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-plate-input .btn`. */
 .reservation-plate-input .btn {
   min-width: 168px;
   white-space: nowrap;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-note`. */
 .reservation-note {
   min-height: 86px;
   resize: vertical;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.selected-slot-summary`. */
 .selected-slot-summary {
   display: inline-flex;
   align-items: center;
@@ -237,6 +279,7 @@
   font-size: 13px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-submit-row`. */
 .reservation-submit-row {
   display: flex;
   align-items: center;
@@ -247,6 +290,7 @@
   border-top: 1px solid var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-payment-note`. */
 .reservation-payment-note {
   display: inline-flex;
   align-items: center;
@@ -255,11 +299,16 @@
   font-size: 13px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-payment-note svg`. */
 .reservation-payment-note svg {
   flex: 0 0 auto;
   color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-code-cell,
+.reservation-person-cell,
+.reservation-time-cell,
+.reservation-payment-cell`. */
 .reservation-code-cell,
 .reservation-person-cell,
 .reservation-time-cell,
@@ -268,6 +317,10 @@
   gap: 3px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-code-cell span,
+.reservation-person-cell span,
+.reservation-time-cell span,
+.reservation-payment-cell span:not(.pill)`. */
 .reservation-code-cell span,
 .reservation-person-cell span,
 .reservation-time-cell span,
@@ -276,66 +329,85 @@
   font-size: 11px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-slot-cell`. */
 .reservation-slot-cell {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-slot-cell svg`. */
 .reservation-slot-cell svg {
   color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.reservation-payment-cell .pill`. */
 .reservation-payment-cell .pill {
   margin-top: 3px;
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 1100px)`. */
 @media (max-width: 1100px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.reservation-period-grid`. */
   .reservation-period-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 720px)`. */
 @media (max-width: 720px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.reservation-period-grid,
+  .reservation-form-grid,
+  .reservation-filter-grid`. */
   .reservation-period-grid,
   .reservation-form-grid,
   .reservation-filter-grid {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.reservation-note-field`. */
   .reservation-note-field {
     grid-column: auto;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.reservation-plate-input`. */
   .reservation-plate-input {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.reservation-plate-input .btn`. */
   .reservation-plate-input .btn {
     width: 100%;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.reservation-slot-heading,
+  .reservation-submit-row`. */
   .reservation-slot-heading,
   .reservation-submit-row {
     align-items: stretch;
     flex-direction: column;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.reservation-submit-row .btn`. */
   .reservation-submit-row .btn {
     width: 100%;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.hourly-slot-grid`. */
   .hourly-slot-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.hourly-floor-heading`. */
   .hourly-floor-heading {
     align-items: flex-start;
     flex-direction: column;
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 420px)`. */
 @media (max-width: 420px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.hourly-slot-grid`. */
   .hourly-slot-grid {
     grid-template-columns: 1fr;
   }

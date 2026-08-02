@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình ManagerStaffProfilesPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -28,6 +34,13 @@ import {
   fetchStaffProfilesRequest,
 } from "../backend/staffRoleRequests/staffRoleRequestSlice";
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `formatDate` (format date). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function formatDate
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const formatDate = (value) => {
   if (!value) return "-";
 
@@ -42,12 +55,20 @@ const formatDate = (value) => {
   }
 };
 
+/**
+ * Thực hiện nghiệp vụ `ManagerStaffProfilesPage` (manager staff profiles page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function ManagerStaffProfilesPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const ManagerStaffProfilesPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { buildings, loading: buildingsLoading, error: buildingsError } = useSelector(
+    /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (state) => state.buildings
   );
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const staffRole = useSelector((state) => state.staffRoleRequests);
   const [selectedBuildingId, setSelectedBuildingId] = useState("");
   const [keyword, setKeyword] = useState("");
@@ -55,27 +76,33 @@ const ManagerStaffProfilesPage = () => {
 
   const activeBuildingId = selectedBuildingId || String(buildings[0]?.id || "");
   const activeBuilding = buildings.find(
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (building) => Number(building.id) === Number(activeBuildingId)
   ) || null;
   const profiles = useMemo(
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => Number(staffRole.profilesBuilding?.id) === Number(activeBuildingId)
       ? staffRole.staffProfiles
       : [],
     [activeBuildingId, staffRole.profilesBuilding?.id, staffRole.staffProfiles]
   );
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchBuildingsRequest());
 
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => {
       dispatch(clearStaffProfiles());
       dispatch(clearStaffProfile());
     };
   }, [dispatch]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!activeBuildingId) return undefined;
 
+    /* Callback nội bộ của lời gọi `setTimeout`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const timer = window.setTimeout(() => {
       dispatch(fetchStaffProfilesRequest({
         buildingId: Number(activeBuildingId),
@@ -83,10 +110,13 @@ const ManagerStaffProfilesPage = () => {
       }));
     }, 320);
 
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => window.clearTimeout(timer);
   }, [activeBuildingId, dispatch, keyword]);
 
   const buildingOptions = useMemo(
+    /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => buildings.map((building) => ({
       value: String(building.id),
       label: `${building.name}${building.address ? ` - ${building.address}` : ""}`,
@@ -94,11 +124,25 @@ const ManagerStaffProfilesPage = () => {
     [buildings]
   );
 
+  /**
+   * Thực hiện nghiệp vụ `selectProfile` (select profile). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function selectProfile
+   * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const selectProfile = (row) => {
     setSelectedUserId(row.userId);
     dispatch(fetchStaffProfileRequest({ userId: row.userId }));
   };
 
+  /**
+   * Thực hiện nghiệp vụ `changeBuilding` (change building). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function changeBuilding
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const changeBuilding = (value) => {
     setSelectedBuildingId(value);
     setKeyword("");
@@ -107,6 +151,12 @@ const ManagerStaffProfilesPage = () => {
     dispatch(clearStaffProfile());
   };
 
+  /**
+   * Thực hiện nghiệp vụ `refresh` (refresh). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function refresh
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const refresh = () => {
     dispatch(fetchBuildingsRequest());
     if (activeBuildingId) {
@@ -125,6 +175,13 @@ const ManagerStaffProfilesPage = () => {
       header: "Nhân viên",
       key: "name",
       minWidth: "220px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div className="request-person">
           <span className="request-person-avatar">
@@ -143,6 +200,13 @@ const ManagerStaffProfilesPage = () => {
       header: "Liên hệ",
       key: "contact",
       minWidth: "230px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div className="request-contact-list">
           <span><Mail size={14} /> {row.email || "Chưa có email"}</span>
@@ -154,16 +218,36 @@ const ManagerStaffProfilesPage = () => {
       header: "Bắt đầu làm việc",
       key: "startedAt",
       minWidth: "150px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => formatDate(row.startedAt),
     },
     {
       header: "Trạng thái",
       key: "profileStatus",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: () => <span className="pill success">Đang làm việc</span>,
     },
     {
       header: "Thao tác",
       key: "action",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <Button
           size="sm"

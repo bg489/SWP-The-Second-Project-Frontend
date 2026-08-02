@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Cung cấp component giao diện tái sử dụng StaffWorkProfileCard và hành vi hiển thị liên quan.
+ *
+ * Luồng chính: Props đầu vào -> xử lý trạng thái cục bộ khi cần -> trả về phần giao diện tái sử dụng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useState } from "react";
 import {
   BadgeCheck,
@@ -12,6 +18,13 @@ import {
   UserRound,
 } from "lucide-react";
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `formatDate` (format date). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function formatDate
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const formatDate = (value) => {
   if (!value) return "Chưa cập nhật";
 
@@ -26,11 +39,26 @@ const formatDate = (value) => {
   }
 };
 
+/**
+ * Lấy nghiệp vụ `getInitials` (get initials). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getInitials
+ * @param {*} name - Giá trị `name` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getInitials = (name) => {
   const parts = String(name || "Nhân viên").trim().split(/\s+/).filter(Boolean);
+  /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   return parts.slice(-2).map((part) => part.charAt(0)).join("").toUpperCase() || "NV";
 };
 
+/**
+ * Thực hiện nghiệp vụ `StaffImage` (staff image). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function StaffImage
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const StaffImage = ({ src, alt, className, fallback }) => {
   const [failedSrc, setFailedSrc] = useState("");
   const failed = Boolean(src && failedSrc === src);
@@ -47,6 +75,13 @@ const StaffImage = ({ src, alt, className, fallback }) => {
   return <img className={className} src={src} alt={alt} onError={() => setFailedSrc(src)} />;
 };
 
+/**
+ * Thực hiện nghiệp vụ `DetailItem` (detail item). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function DetailItem
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const DetailItem = ({ icon: Icon, label, value }) => (
   <div className="staff-work-detail">
     <span className="staff-work-detail-icon"><Icon size={17} /></span>
@@ -57,6 +92,13 @@ const DetailItem = ({ icon: Icon, label, value }) => (
   </div>
 );
 
+/**
+ * Thực hiện nghiệp vụ `StaffWorkProfileCard` (staff work profile card). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function StaffWorkProfileCard
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const StaffWorkProfileCard = ({ profile }) => {
   if (!profile) return null;
 
