@@ -346,12 +346,6 @@ const AdminDashboard = () => {
 
       <div className="dashboard-grid">
         <div className="card metric-card">
-          <div className="metric-icon"><UserCheck size={22} /></div>
-          <div className="metric-label">Tài khoản chờ duyệt</div>
-          <div className="metric-value">{pendingUsers.length}</div>
-          <div className="metric-note">Kiểm tra liên hệ, tòa nhà và quyền sử dụng</div>
-        </div>
-        <div className="card metric-card">
           <div className="metric-icon"><Car size={22} /></div>
           <div className="metric-label">Xe chờ duyệt</div>
           <div className="metric-value">{pendingVehicles.length}</div>
@@ -376,26 +370,6 @@ const AdminDashboard = () => {
           <div className="metric-note">Đã được cấp quyền sử dụng hệ thống</div>
         </div>
       </div>
-
-      <section className="card section-card">
-        <div className="section-header">
-          <div>
-            <h2 className="section-title"><UserCheck size={19} /> Tài khoản chờ duyệt</h2>
-            <p className="section-copy">Chọn đúng quyền sử dụng sau khi kiểm tra thông tin cá nhân.</p>
-          </div>
-          <Button variant="outline" size="sm" icon={ArrowRight} onClick={() => navigate("/admin/users")}>
-            Mở danh sách
-          </Button>
-        </div>
-        <Table
-          columns={userColumns}
-          data={pendingUsers}
-          loading={usersLoading}
-          pageSize={5}
-          className="approval-overview-table"
-          emptyMessage="Không có tài khoản mới đang chờ duyệt."
-        />
-      </section>
 
       <section className="card section-card">
         <div className="section-header">

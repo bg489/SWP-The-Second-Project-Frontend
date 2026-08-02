@@ -149,6 +149,8 @@
   position: relative;
   overflow: hidden;
   padding: 20px;
+  background-color: white;
+  border-radius: 10px;
 }
 
 .metric-card::before {
@@ -835,7 +837,7 @@ body.dark-theme .login-panel-wrap .section-card {
   justify-content: center;
 }
 
-.google-auth-button > div,
+.google-auth-button>div,
 .google-auth-button iframe {
   max-width: 100%;
 }
@@ -1333,6 +1335,7 @@ body.dark-theme .login-panel-wrap .section-card {
       0 12px 28px rgba(22, 166, 103, 0.2),
       0 0 20px rgba(255, 184, 245, 0.28);
   }
+
   to {
     box-shadow:
       0 0 0 6px rgba(22, 166, 103, 0.28),
@@ -1469,7 +1472,7 @@ body.dark-theme .login-panel-wrap .section-card {
   gap: 16px;
 }
 
-.vehicle-photo-stack > .vehicle-photo-field {
+.vehicle-photo-stack>.vehicle-photo-field {
   padding: 12px;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
@@ -1525,7 +1528,7 @@ body.dark-theme .login-panel-wrap .section-card {
   background: var(--success-light);
 }
 
-.vehicle-photo-preview > img {
+.vehicle-photo-preview>img {
   width: 100%;
   height: 120px;
   border-radius: 6px;
@@ -1540,7 +1543,7 @@ body.dark-theme .login-panel-wrap .section-card {
   min-width: 0;
 }
 
-.vehicle-photo-preview-info > span {
+.vehicle-photo-preview-info>span {
   overflow: hidden;
   color: var(--text-secondary);
   font-size: 12px;
@@ -1685,11 +1688,11 @@ body.dark-theme .login-panel-wrap .section-card {
   padding-right: 48px;
 }
 
-.image-review-heading > svg {
+.image-review-heading>svg {
   color: var(--primary);
 }
 
-.image-review-heading > div {
+.image-review-heading>div {
   display: grid;
 }
 
@@ -1806,7 +1809,7 @@ body.dark-theme .login-panel-wrap .section-card {
   gap: 12px;
 }
 
-.staff-request-mode-switch > button {
+.staff-request-mode-switch>button {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1821,30 +1824,30 @@ body.dark-theme .login-panel-wrap .section-card {
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
-.staff-request-mode-switch > button:hover {
+.staff-request-mode-switch>button:hover {
   border-color: var(--accent);
   transform: translateY(-1px);
 }
 
-.staff-request-mode-switch > button.active {
+.staff-request-mode-switch>button.active {
   border-color: #16a36a;
   background: rgba(22, 163, 106, 0.09);
   box-shadow: inset 4px 0 #16a36a, 0 8px 22px rgba(22, 163, 106, 0.1);
   color: #0d8655;
 }
 
-.staff-request-mode-switch > button.active.danger {
+.staff-request-mode-switch>button.active.danger {
   border-color: #e5484d;
   background: rgba(229, 72, 77, 0.09);
   box-shadow: inset 4px 0 #e5484d, 0 8px 22px rgba(229, 72, 77, 0.1);
   color: #c82f37;
 }
 
-.staff-request-mode-switch > button > svg {
+.staff-request-mode-switch>button>svg {
   flex: 0 0 auto;
 }
 
-.staff-request-mode-switch > button > span {
+.staff-request-mode-switch>button>span {
   display: grid;
   gap: 3px;
 }
@@ -1866,7 +1869,7 @@ body.dark-theme .login-panel-wrap .section-card {
   gap: 16px;
 }
 
-.staff-request-workspace > .section-card {
+.staff-request-workspace>.section-card {
   min-width: 0;
   margin: 0;
 }
@@ -1925,7 +1928,7 @@ body.dark-theme .login-panel-wrap .section-card {
   height: 58px;
 }
 
-.staff-request-selected > div {
+.staff-request-selected>div {
   display: grid;
   min-width: 0;
   gap: 3px;
@@ -1969,6 +1972,7 @@ body.dark-theme .login-panel-wrap .section-card {
   border-left: 4px solid #ffb8f5;
   border-radius: var(--radius-sm);
   background: linear-gradient(135deg, rgba(255, 184, 245, 0.14), rgba(237, 153, 81, 0.1));
+  margin: 10px 0;
 }
 
 .role-account-summary--staff,
@@ -1976,11 +1980,11 @@ body.dark-theme .login-panel-wrap .section-card {
   border-left-color: #ed9951;
 }
 
-.role-account-summary > svg {
+.role-account-summary>svg {
   color: var(--accent);
 }
 
-.role-account-summary > div {
+.role-account-summary>div {
   display: grid;
   gap: 3px;
   min-width: 0;
@@ -2029,14 +2033,14 @@ body.dark-theme .login-panel-wrap .section-card {
   display: none;
 }
 
-.staff-portrait-upload > img {
+.staff-portrait-upload>img {
   width: 100%;
   height: 310px;
   object-fit: cover;
   object-position: center top;
 }
 
-.staff-portrait-upload > span {
+.staff-portrait-upload>span {
   display: grid;
   place-items: center;
   align-content: center;
@@ -2046,15 +2050,15 @@ body.dark-theme .login-panel-wrap .section-card {
   text-align: center;
 }
 
-.staff-portrait-upload > span svg {
+.staff-portrait-upload>span svg {
   color: var(--accent);
 }
 
-.staff-portrait-upload > span strong {
+.staff-portrait-upload>span strong {
   color: var(--text-primary);
 }
 
-.staff-portrait-upload > span small {
+.staff-portrait-upload>span small {
   max-width: 270px;
   color: var(--text-muted);
   line-height: 1.45;
@@ -2175,7 +2179,7 @@ body.dark-theme .login-panel-wrap .section-card {
   border-bottom: 1px solid var(--border-color);
 }
 
-.staff-role-review-header > div {
+.staff-role-review-header>div {
   display: grid;
   gap: 6px;
 }
@@ -2229,7 +2233,7 @@ body.dark-theme .login-panel-wrap .section-card {
   color: var(--text-muted);
 }
 
-.staff-role-review-photo-empty > span {
+.staff-role-review-photo-empty>span {
   padding: 0;
   background: transparent;
 }
@@ -2347,7 +2351,7 @@ body.dark-theme .login-panel-wrap .section-card {
   gap: 16px;
 }
 
-.manager-staff-profile-workspace > .section-card {
+.manager-staff-profile-workspace>.section-card {
   min-width: 0;
   margin: 0;
 }
@@ -2464,7 +2468,7 @@ body.dark-theme .login-panel-wrap .section-card {
   font-size: 16px;
 }
 
-.staff-personal-avatar-panel > div:last-child {
+.staff-personal-avatar-panel>div:last-child {
   display: grid;
   min-width: 0;
   gap: 2px;
@@ -2501,7 +2505,7 @@ body.dark-theme .login-panel-wrap .section-card {
   border-bottom: 1px solid var(--border-color);
 }
 
-.staff-work-profile-heading > div {
+.staff-work-profile-heading>div {
   display: grid;
   gap: 7px;
 }
@@ -2559,7 +2563,7 @@ body.dark-theme .login-panel-wrap .section-card {
   color: var(--primary-hover);
 }
 
-.staff-work-detail > span:last-child {
+.staff-work-detail>span:last-child {
   display: grid;
   min-width: 0;
   gap: 3px;
@@ -2589,11 +2593,11 @@ body.dark-theme .login-panel-wrap .section-card {
   color: var(--success);
 }
 
-.staff-work-approval-strip > svg {
+.staff-work-approval-strip>svg {
   flex: 0 0 auto;
 }
 
-.staff-work-approval-strip > div {
+.staff-work-approval-strip>div {
   display: grid;
   gap: 3px;
 }
@@ -2625,7 +2629,9 @@ body.dark-theme .login-panel-wrap .section-card {
 }
 
 @keyframes staff-profile-shimmer {
-  to { background-position: -200% 0; }
+  to {
+    background-position: -200% 0;
+  }
 }
 
 @media (max-width: 1500px) {
@@ -2650,6 +2656,7 @@ body.dark-theme .login-panel-wrap .section-card {
 }
 
 @media (max-width: 640px) {
+
   .manager-staff-scope-grid,
   .staff-request-mode-switch,
   .manager-staff-profile-filters,
@@ -2693,7 +2700,7 @@ body.dark-theme .login-panel-wrap .section-card {
     min-height: 220px;
   }
 
-  .staff-portrait-upload > img {
+  .staff-portrait-upload>img {
     height: 280px;
   }
 
@@ -2730,13 +2737,25 @@ body.dark-theme .login-panel-wrap .section-card {
 }
 
 @keyframes image-review-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes image-review-rise {
-  from { opacity: 0; transform: translateY(14px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (max-width: 640px) {
@@ -2744,7 +2763,7 @@ body.dark-theme .login-panel-wrap .section-card {
     grid-template-columns: 1fr;
   }
 
-  .vehicle-photo-preview > img {
+  .vehicle-photo-preview>img {
     height: 160px;
   }
 
