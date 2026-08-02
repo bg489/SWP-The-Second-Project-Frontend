@@ -1,6 +1,9 @@
 import { call, put, takeEvery, takeLatest } from "redux-saga/effects";
 import api from "../../../services/api";
 import {
+    createAdminUserFailure,
+    createAdminUserRequest,
+    createAdminUserSuccess,
     fetchAdminUsersFailure,
     fetchAdminUsersRequest,
     fetchAdminUsersSuccess,
@@ -37,6 +40,28 @@ function* handleFetchAdminUsers(action) {
     }
 }
 
+function* handleCreateAdminUser(action) {
+    try {
+        const { refreshParams, ...payload } = action.payload || {};
+        const response = yield call(
+            [api, api.post],
+            "/admin/users",
+            payload,
+            { timeout: 30000 }
+        );
+
+        yield put(createAdminUserSuccess(extractData(response)));
+        yield put(fetchAdminUsersRequest(refreshParams || { page: 1, limit: 10 }));
+    } catch (error) {
+        const message =
+            error?.response?.data?.message ||
+            error?.message ||
+            "Tạo tài khoản thất bại.";
+
+        yield put(createAdminUserFailure(message));
+    }
+}
+
 function* handleUpdateAdminUserStatus(action) {
     try {
         const { id, role, status } = action.payload;
@@ -70,6 +95,7 @@ function* handleUpdateAdminUserStatus(action) {
 
 export default function* adminUserSaga() {
     yield takeLatest(fetchAdminUsersRequest.type, handleFetchAdminUsers);
+    yield takeLatest(createAdminUserRequest.type, handleCreateAdminUser);
     yield takeEvery(
         updateAdminUserStatusRequest.type,
         handleUpdateAdminUserStatus

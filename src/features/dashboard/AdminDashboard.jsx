@@ -256,11 +256,7 @@ const AdminDashboard = () => {
     {
       header: "Loại đề nghị",
       key: "requestType",
-      render: (row) => (
-        <span className={`pill ${row.requestType === "DEMOTE" ? "danger" : "success"}`}>
-          {row.requestType === "DEMOTE" ? "Hủy quyền" : "Bổ nhiệm"}
-        </span>
-      ),
+      render: () => <span className="pill success">Tạo Staff</span>,
     },
     {
       header: "Ảnh chân dung",
@@ -369,9 +365,9 @@ const AdminDashboard = () => {
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><Camera size={22} /></div>
-          <div className="metric-label">Thay đổi quyền nhân viên</div>
+          <div className="metric-label">Tài khoản Staff chờ tạo</div>
           <div className="metric-value">{pendingStaffRoles.length}</div>
-          <div className="metric-note">Bổ nhiệm hoặc hủy quyền theo đề nghị của Manager</div>
+          <div className="metric-note">Hồ sơ tạo tài khoản Staff độc lập từ Manager</div>
         </div>
         <div className="card metric-card">
           <div className="metric-icon"><Users size={22} /></div>
@@ -404,8 +400,8 @@ const AdminDashboard = () => {
       <section className="card section-card">
         <div className="section-header">
           <div>
-            <h2 className="section-title"><UserCheck size={19} /> Đề nghị thay đổi quyền nhân viên</h2>
-            <p className="section-copy">Kiểm tra hồ sơ bổ nhiệm và hủy quyền do Manager gửi theo từng tòa nhà.</p>
+            <h2 className="section-title"><UserCheck size={19} /> Đề nghị tạo tài khoản Staff</h2>
+            <p className="section-copy">Kiểm tra hồ sơ nhân viên mới do Manager gửi theo từng tòa nhà.</p>
           </div>
           <Button
             variant="outline"
@@ -422,7 +418,7 @@ const AdminDashboard = () => {
           loading={staffRoleLoading}
           pageSize={5}
           className="approval-overview-table"
-          emptyMessage="Không có đề nghị thay đổi quyền nhân viên đang chờ duyệt."
+          emptyMessage="Không có đề nghị tạo tài khoản Staff đang chờ duyệt."
         />
       </section>
 

@@ -204,7 +204,7 @@ const ManagerStaffProfilesPage = () => {
           </div>
           <div className="action-row">
             <Button variant="outline" icon={UserRoundCog} onClick={() => navigate("/manager/staff")}>
-              Điều chỉnh quyền
+              Đề nghị tạo Staff
             </Button>
             <Button
               variant="outline"

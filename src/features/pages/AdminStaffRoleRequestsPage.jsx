@@ -8,10 +8,12 @@ import {
   CheckCircle2,
   Eye,
   FileCheck2,
+  Mail,
+  Phone,
   RefreshCcw,
   Search,
+  ShieldCheck,
   UserCheck,
-  UserMinus,
   X,
   XCircle,
 } from "lucide-react";
@@ -30,42 +32,26 @@ import {
 
 const statusOptions = [
   { value: "PENDING", label: "Đang chờ duyệt" },
-  { value: "APPROVED", label: "Đã duyệt" },
+  { value: "APPROVED", label: "Đã tạo tài khoản" },
   { value: "REJECTED", label: "Đã từ chối" },
   { value: "", label: "Tất cả hồ sơ" },
 ];
 
-const requestTypeOptions = [
-  { value: "", label: "Tất cả loại đề nghị" },
-  { value: "PROMOTE", label: "Bổ nhiệm nhân viên" },
-  { value: "DEMOTE", label: "Hủy quyền nhân viên" },
-];
-
-const requestTypeMeta = {
-  PROMOTE: { label: "Bổ nhiệm", className: "success" },
-  DEMOTE: { label: "Hủy quyền", className: "danger" },
-};
-
 const statusMeta = {
   PENDING: { label: "Đang chờ duyệt", className: "warning" },
-  APPROVED: { label: "Đã duyệt", className: "success" },
+  APPROVED: { label: "Đã tạo tài khoản", className: "success" },
   REJECTED: { label: "Đã từ chối", className: "danger" },
   CANCELLED: { label: "Đã hủy", className: "neutral" },
 };
 
-const formatDateTime = (value) =>
-  value
-    ? new Date(value).toLocaleString("vi-VN", {
-        dateStyle: "short",
-        timeStyle: "short",
-      })
-    : "-";
+const formatDateTime = (value) => value
+  ? new Date(value).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })
+  : "-";
 
-const normalizeText = (value) =>
-  String(value || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+const normalizeText = (value) => String(value || "")
+  .toLowerCase()
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "");
 
 const AdminStaffRoleRequestsPage = () => {
   const dispatch = useDispatch();
@@ -78,118 +64,104 @@ const AdminStaffRoleRequestsPage = () => {
     notice,
   } = useSelector((state) => state.staffRoleRequests);
   const [status, setStatus] = useState("PENDING");
-  const [requestType, setRequestType] = useState("");
   const [keyword, setKeyword] = useState("");
-  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [selectedRequestId, setSelectedRequestId] = useState(null);
   const [adminNote, setAdminNote] = useState("");
   const [dialogError, setDialogError] = useState("");
 
   useEffect(() => {
-    dispatch(fetchAdminStaffRoleRequestsRequest({
-      status: status || undefined,
-      requestType: requestType || undefined,
-    }));
-  }, [dispatch, requestType, status]);
+    dispatch(fetchAdminStaffRoleRequestsRequest({ status: status || undefined }));
+  }, [dispatch, status]);
 
   const rows = useMemo(() => {
     const q = normalizeText(keyword.trim());
-    if (!q) return adminRequests;
-
-    return adminRequests.filter((request) =>
-      [
+    return adminRequests.filter((request) => {
+      if (status && request.status !== status) return false;
+      if (!q) return true;
+      return [
         request.userName,
         request.userEmail,
         request.userPhone,
         request.managerName,
         request.managerEmail,
         request.buildingName,
-        request.requestType,
-      ].some((value) => normalizeText(value).includes(q))
-    );
-  }, [adminRequests, keyword]);
-  const reviewRequest = selectedRequest
-    ? adminRequests.find((request) => Number(request.id) === Number(selectedRequest.id)) || null
+      ].some((value) => normalizeText(value).includes(q));
+    });
+  }, [adminRequests, keyword, status]);
+
+  const reviewRequest = selectedRequestId
+    ? adminRequests.find((request) => Number(request.id) === Number(selectedRequestId)) || null
     : null;
 
   const openReview = (request) => {
-    setSelectedRequest(request);
+    setSelectedRequestId(request.id);
     setAdminNote("");
     setDialogError("");
   };
 
   const approve = () => {
-    if (!selectedRequest) return;
+    if (!reviewRequest) return;
     setDialogError("");
     dispatch(approveStaffRoleRequest({
-      id: selectedRequest.id,
+      id: reviewRequest.id,
       adminNote: adminNote.trim() || undefined,
     }));
   };
 
   const reject = () => {
-    if (!selectedRequest) return;
+    if (!reviewRequest) return;
     if (!adminNote.trim()) {
-      setDialogError("Vui lòng ghi rõ lý do để quản lý biết cần bổ sung điều gì.");
+      setDialogError("Vui lòng ghi rõ lý do để Manager biết cần bổ sung điều gì.");
       return;
     }
 
     setDialogError("");
     dispatch(rejectStaffRoleRequest({
-      id: selectedRequest.id,
+      id: reviewRequest.id,
       adminNote: adminNote.trim(),
     }));
   };
 
   const columns = [
     {
-      header: "Loại đề nghị",
-      key: "requestType",
-      minWidth: "135px",
-      render: (request) => {
-        const meta = requestTypeMeta[request.requestType] || requestTypeMeta.PROMOTE;
-        return <span className={`pill ${meta.className}`}>{meta.label}</span>;
-      },
-    },
-    {
       header: "Ảnh chân dung",
       key: "portraitImageUrl",
       minWidth: "125px",
-      render: (request) => {
-        const portrait = request.portraitImageUrl
-          || request.staffPortraitImageUrl
-          || request.userAvatarUrl;
-        return (
-          <button
-            type="button"
-            className="staff-role-portrait-button"
-            onClick={() => openReview(request)}
-            aria-label={`Xem hồ sơ chân dung của ${request.userName}`}
-          >
-            {portrait
-              ? <img src={portrait} alt={`Chân dung ${request.userName}`} />
-              : <span className="staff-role-portrait-placeholder">{String(request.userName || "N").charAt(0)}</span>}
-            <span><Eye size={14} /> Xem hồ sơ</span>
-          </button>
-        );
-      },
+      render: (request) => (
+        <button
+          type="button"
+          className="staff-role-portrait-button"
+          onClick={() => openReview(request)}
+          aria-label={`Xem ảnh chân dung của ${request.userName}`}
+        >
+          {request.portraitImageUrl ? (
+            <img src={request.portraitImageUrl} alt={`Chân dung ${request.userName}`} />
+          ) : (
+            <span className="staff-role-portrait-placeholder">
+              {String(request.userName || "N").charAt(0)}
+            </span>
+          )}
+          <span><Eye size={14} /> Xem hồ sơ</span>
+        </button>
+      ),
     },
     {
-      header: "Người được đề nghị",
+      header: "Tài khoản được đề nghị",
       key: "userName",
-      minWidth: "230px",
+      minWidth: "240px",
       render: (request) => (
         <div className="request-person-copy">
-          <strong>{request.userName || "Chưa cập nhật họ tên"}</strong>
-          <small>Mã tài khoản #{request.userId}</small>
+          <strong>{request.userName}</strong>
           <span className="metric-note">{request.userEmail}</span>
           <span className="metric-note">{request.userPhone || "Chưa có số điện thoại"}</span>
+          {request.userId && <small>Tài khoản Staff #{request.userId}</small>}
         </div>
       ),
     },
     {
       header: "Nơi làm việc",
       key: "buildingName",
-      minWidth: "220px",
+      minWidth: "210px",
       render: (request) => (
         <>
           <strong>{request.buildingName}</strong>
@@ -199,7 +171,7 @@ const AdminStaffRoleRequestsPage = () => {
       ),
     },
     {
-      header: "Người đề nghị",
+      header: "Manager đề nghị",
       key: "managerName",
       minWidth: "210px",
       render: (request) => (
@@ -221,7 +193,6 @@ const AdminStaffRoleRequestsPage = () => {
     {
       header: "Ngày gửi",
       key: "createdAt",
-      minWidth: "145px",
       render: (request) => formatDateTime(request.createdAt),
     },
     {
@@ -240,10 +211,10 @@ const AdminStaffRoleRequestsPage = () => {
     <div className="parking-page">
       <section className="page-hero">
         <div className="page-hero-content">
-          <div className="page-eyebrow"><UserCheck size={16} /> Duyệt nhân viên</div>
-          <h1 className="page-title">Kiểm tra thay đổi quyền nhân viên</h1>
+          <div className="page-eyebrow"><UserCheck size={16} /> Duyệt tài khoản Staff</div>
+          <h1 className="page-title">Kiểm tra hồ sơ nhân viên mới</h1>
           <p className="page-subtitle">
-            Xét duyệt cả hồ sơ bổ nhiệm và hủy quyền dựa trên thông tin người dùng, tòa nhà và quản lý gửi đề nghị.
+            Mỗi hồ sơ được duyệt sẽ tạo một tài khoản Staff mới hoàn toàn. Hệ thống không lấy tài khoản User và cũng không đổi quyền của cư dân.
           </p>
         </div>
         <div className="page-hero-aside">
@@ -259,7 +230,7 @@ const AdminStaffRoleRequestsPage = () => {
         <div className="section-header">
           <div>
             <h2 className="section-title"><Search size={19} /> Tìm hồ sơ cần kiểm tra</h2>
-            <p className="section-copy">Có thể tìm theo người dùng, người quản lý hoặc tòa nhà.</p>
+            <p className="section-copy">Tìm theo nhân viên, Manager đề nghị hoặc tòa nhà làm việc.</p>
           </div>
           <Button
             variant="outline"
@@ -267,7 +238,6 @@ const AdminStaffRoleRequestsPage = () => {
             loading={adminLoading}
             onClick={() => dispatch(fetchAdminStaffRoleRequestsRequest({
               status: status || undefined,
-              requestType: requestType || undefined,
             }))}
           >
             Làm mới
@@ -283,19 +253,11 @@ const AdminStaffRoleRequestsPage = () => {
               placeholder={null}
             />
           </FormField>
-          <FormField label="Loại đề nghị">
-            <Select
-              value={requestType}
-              onChange={(event) => setRequestType(event.target.value)}
-              options={requestTypeOptions}
-              placeholder={null}
-            />
-          </FormField>
           <FormField label="Tìm kiếm">
             <Input
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
-              placeholder="Nhập tên, email hoặc tòa nhà"
+              placeholder="Tên, email, Manager hoặc tòa nhà"
               icon={Search}
             />
           </FormField>
@@ -305,7 +267,7 @@ const AdminStaffRoleRequestsPage = () => {
       <section className="card section-card">
         <div className="section-header">
           <div>
-            <h2 className="section-title"><FileCheck2 size={19} /> Danh sách hồ sơ</h2>
+            <h2 className="section-title"><FileCheck2 size={19} /> Danh sách hồ sơ tạo Staff</h2>
             <p className="section-copy">Mỗi hồ sơ chỉ được xử lý một lần.</p>
           </div>
         </div>
@@ -321,19 +283,19 @@ const AdminStaffRoleRequestsPage = () => {
         <div
           className="staff-role-review-backdrop"
           role="presentation"
-          onMouseDown={() => !actionId && setSelectedRequest(null)}
+          onMouseDown={() => !actionId && setSelectedRequestId(null)}
         >
           <section
             className="staff-role-review-dialog"
             role="dialog"
             aria-modal="true"
-            aria-label={`Hồ sơ điều chỉnh quyền của ${selectedRequest.userName}`}
+            aria-label={`Hồ sơ tạo tài khoản Staff cho ${reviewRequest.userName}`}
             onMouseDown={(event) => event.stopPropagation()}
           >
             <button
               type="button"
               className="image-review-close"
-              onClick={() => setSelectedRequest(null)}
+              onClick={() => setSelectedRequestId(null)}
               disabled={Boolean(actionId)}
               aria-label="Đóng hồ sơ"
             >
@@ -342,81 +304,63 @@ const AdminStaffRoleRequestsPage = () => {
 
             <header className="staff-role-review-header">
               <div>
-                <span className="page-eyebrow">
-                  {selectedRequest.requestType === "DEMOTE" ? <UserMinus size={15} /> : <Camera size={15} />}
-                  {selectedRequest.requestType === "DEMOTE" ? "Đề nghị hủy quyền" : "Hồ sơ bổ nhiệm"}
-                </span>
-                <h2>{selectedRequest.userName}</h2>
-                <p>
-                  {selectedRequest.requestType === "DEMOTE"
-                    ? `Đề nghị chuyển nhân viên về cư dân tại ${selectedRequest.buildingName}`
-                    : `Đề nghị làm nhân viên tại ${selectedRequest.buildingName}`}
-                </p>
+                <span className="page-eyebrow"><ShieldCheck size={15} /> Tài khoản Staff độc lập</span>
+                <h2>{reviewRequest.userName}</h2>
+                <p>Đề nghị làm nhân viên tại {reviewRequest.buildingName}</p>
               </div>
-              <span className={`pill ${(statusMeta[selectedRequest.status] || statusMeta.PENDING).className}`}>
-                {(statusMeta[selectedRequest.status] || statusMeta.PENDING).label}
+              <span className={`pill ${(statusMeta[reviewRequest.status] || statusMeta.PENDING).className}`}>
+                {(statusMeta[reviewRequest.status] || statusMeta.PENDING).label}
               </span>
             </header>
 
             <div className="staff-role-review-grid">
               <div className="staff-role-review-photo">
-                {(selectedRequest.portraitImageUrl
-                  || selectedRequest.staffPortraitImageUrl
-                  || selectedRequest.userAvatarUrl) ? (
-                    <img
-                      src={selectedRequest.portraitImageUrl
-                        || selectedRequest.staffPortraitImageUrl
-                        || selectedRequest.userAvatarUrl}
-                      alt={`Ảnh chân dung ${selectedRequest.userName}`}
-                    />
-                  ) : (
-                    <div className="staff-role-review-photo-empty">
-                      <Camera size={38} />
-                      <span>Chưa có ảnh hồ sơ nhân viên</span>
-                    </div>
-                  )}
-                <span>
-                  {selectedRequest.requestType === "DEMOTE"
-                    ? "Ảnh hồ sơ nghề nghiệp hiện tại của nhân viên"
-                    : "Ảnh sẽ được lưu trong hồ sơ nhân viên, tách biệt ảnh đại diện cá nhân"}
-                </span>
+                {reviewRequest.portraitImageUrl ? (
+                  <img src={reviewRequest.portraitImageUrl} alt={`Ảnh chân dung ${reviewRequest.userName}`} />
+                ) : (
+                  <div className="staff-role-review-photo-empty">
+                    <Camera size={38} />
+                    <span>Chưa có ảnh hồ sơ nhân viên</span>
+                  </div>
+                )}
+                <span>Ảnh hồ sơ nghề nghiệp, tách biệt với ảnh đại diện cá nhân.</span>
               </div>
 
               <div className="staff-role-review-details">
                 <section>
-                  <h3><UserCheck size={17} /> Thông tin cá nhân và tài khoản</h3>
+                  <h3><UserCheck size={17} /> Thông tin tài khoản sẽ tạo</h3>
                   <div className="staff-role-detail-list">
-                    <span><strong>Họ tên</strong>{selectedRequest.userName}</span>
-                    <span><strong>Email</strong>{selectedRequest.userEmail}</span>
-                    <span><strong>Số điện thoại</strong>{selectedRequest.userPhone || "Chưa cập nhật"}</span>
-                    <span><strong>Hồ sơ xe</strong>{Number(selectedRequest.vehicleCount || 0)} xe</span>
-                    <span><strong>Ngày tham gia</strong>{formatDateTime(selectedRequest.userCreatedAt)}</span>
+                    <span><strong>Họ tên</strong>{reviewRequest.userName}</span>
+                    <span><strong><Mail size={14} /> Email</strong>{reviewRequest.userEmail}</span>
+                    <span><strong><Phone size={14} /> Số điện thoại</strong>{reviewRequest.userPhone || "Không cung cấp"}</span>
+                    <span><strong>Vai trò</strong>Staff</span>
+                    <span><strong>Mã tài khoản</strong>{reviewRequest.userId ? `#${reviewRequest.userId}` : "Sinh sau khi duyệt"}</span>
                   </div>
                 </section>
 
                 <section>
                   <h3><Building2 size={17} /> Nơi làm việc</h3>
                   <div className="staff-role-detail-list">
-                    <span><strong>Tòa nhà</strong>{selectedRequest.buildingName}</span>
-                    <span><strong>Địa chỉ</strong>{selectedRequest.buildingAddress || "Chưa cập nhật"}</span>
+                    <span><strong>Tòa nhà</strong>{reviewRequest.buildingName}</span>
+                    <span><strong>Địa chỉ</strong>{reviewRequest.buildingAddress || "Chưa cập nhật"}</span>
                   </div>
                 </section>
 
                 <section>
                   <h3><FileCheck2 size={17} /> Người gửi đề nghị</h3>
                   <div className="staff-role-detail-list">
-                    <span><strong>Quản lý</strong>{selectedRequest.managerName}</span>
-                    <span><strong>Liên hệ</strong>{selectedRequest.managerEmail}</span>
-                    <span><strong>Ngày gửi</strong>{formatDateTime(selectedRequest.createdAt)}</span>
+                    <span><strong>Manager</strong>{reviewRequest.managerName}</span>
+                    <span><strong>Liên hệ</strong>{reviewRequest.managerEmail}</span>
+                    <span><strong>Ngày gửi</strong>{formatDateTime(reviewRequest.createdAt)}</span>
                   </div>
                   <p className="staff-role-manager-note">
-                    {selectedRequest.managerNote || "Người quản lý không để lại ghi chú."}
+                    {reviewRequest.managerNote || "Manager không để lại ghi chú."}
                   </p>
                 </section>
               </div>
             </div>
 
-            {selectedRequest.status === "PENDING" ? (
+            {reviewRequest.status === "PENDING" ? (
               <footer className="staff-role-review-actions">
                 <FormField label="Ghi chú hoặc lý do từ chối" error={dialogError || undefined}>
                   <textarea
@@ -428,7 +372,7 @@ const AdminStaffRoleRequestsPage = () => {
                       setAdminNote(event.target.value);
                       setDialogError("");
                     }}
-                    placeholder="Ghi nội dung cần phản hồi cho người quản lý..."
+                    placeholder="Ghi nội dung phản hồi cho Manager..."
                     disabled={Boolean(actionId)}
                   />
                 </FormField>
@@ -437,21 +381,18 @@ const AdminStaffRoleRequestsPage = () => {
                     variant="outline"
                     icon={XCircle}
                     disabled={Boolean(actionId)}
-                    loading={actionId === selectedRequest.id && actionType === "REJECT"}
+                    loading={actionId === reviewRequest.id && actionType === "REJECT"}
                     onClick={reject}
                   >
                     Từ chối hồ sơ
                   </Button>
                   <Button
-                    variant={selectedRequest.requestType === "DEMOTE" ? "danger" : "primary"}
                     icon={CheckCircle2}
-                    loading={actionId === selectedRequest.id && actionType === "APPROVE"}
+                    loading={actionId === reviewRequest.id && actionType === "APPROVE"}
                     disabled={Boolean(actionId)}
                     onClick={approve}
                   >
-                    {selectedRequest.requestType === "DEMOTE"
-                      ? "Duyệt hủy quyền"
-                      : "Duyệt thành nhân viên"}
+                    Duyệt và tạo tài khoản
                   </Button>
                 </div>
               </footer>
@@ -459,8 +400,8 @@ const AdminStaffRoleRequestsPage = () => {
               <footer className="staff-role-review-result">
                 <CalendarDays size={18} />
                 <span>
-                  Xử lý lúc {formatDateTime(selectedRequest.reviewedAt)}
-                  {selectedRequest.adminNote ? ` - ${selectedRequest.adminNote}` : ""}
+                  Xử lý lúc {formatDateTime(reviewRequest.reviewedAt)}
+                  {reviewRequest.adminNote ? ` - ${reviewRequest.adminNote}` : ""}
                 </span>
               </footer>
             )}

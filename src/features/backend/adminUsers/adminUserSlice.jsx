@@ -8,6 +8,7 @@ const initialState = {
     error: null,
 
     updatingId: null,
+    creating: false,
     updateError: null,
     updateSuccess: null,
 };
@@ -31,6 +32,27 @@ const adminUserSlice = createSlice({
         fetchAdminUsersFailure: (state, action) => {
             state.loading = false;
             state.error = action.payload;
+        },
+
+        createAdminUserRequest: (state) => {
+            state.creating = true;
+            state.updateError = null;
+            state.updateSuccess = null;
+        },
+
+        createAdminUserSuccess: (state, action) => {
+            state.creating = false;
+            state.updateError = null;
+            state.updateSuccess = "Đã tạo và kích hoạt tài khoản thành công.";
+
+            if (action.payload?.id) {
+                state.users = [action.payload, ...state.users];
+            }
+        },
+
+        createAdminUserFailure: (state, action) => {
+            state.creating = false;
+            state.updateError = action.payload;
         },
 
         updateAdminUserStatusRequest: (state, action) => {
@@ -64,6 +86,9 @@ const adminUserSlice = createSlice({
 });
 
 export const {
+    createAdminUserFailure,
+    createAdminUserRequest,
+    createAdminUserSuccess,
     fetchAdminUsersRequest,
     fetchAdminUsersSuccess,
     fetchAdminUsersFailure,
