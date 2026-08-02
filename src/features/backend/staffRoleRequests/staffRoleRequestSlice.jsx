@@ -1,10 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  building: null,
-  candidates: [],
-  candidatesLoading: false,
-  candidateRequestType: "PROMOTE",
   managerRequests: [],
   managerLoading: false,
   adminRequests: [],
@@ -25,28 +21,6 @@ const staffRoleRequestSlice = createSlice({
   name: "staffRoleRequests",
   initialState,
   reducers: {
-    fetchStaffRoleCandidatesRequest: (state, action) => {
-      state.candidatesLoading = true;
-      state.error = null;
-      state.candidates = [];
-      state.candidateRequestType = action.payload?.requestType || "PROMOTE";
-    },
-    fetchStaffRoleCandidatesSuccess: (state, action) => {
-      state.candidatesLoading = false;
-      state.building = action.payload?.building || null;
-      state.candidates = action.payload?.users || [];
-      state.candidateRequestType = action.payload?.requestType || "PROMOTE";
-    },
-    fetchStaffRoleCandidatesFailure: (state, action) => {
-      state.candidatesLoading = false;
-      state.error = action.payload;
-    },
-    clearStaffRoleCandidates: (state) => {
-      state.building = null;
-      state.candidates = [];
-      state.candidatesLoading = false;
-    },
-
     fetchManagerStaffRoleRequestsRequest: (state) => {
       state.managerLoading = true;
       state.error = null;
@@ -67,13 +41,8 @@ const staffRoleRequestSlice = createSlice({
     },
     submitStaffRoleRequestSuccess: (state, action) => {
       state.submitting = false;
-      state.notice = action.payload?.requestType === "DEMOTE"
-        ? "Đã gửi đề nghị hủy quyền nhân viên đến quản trị viên."
-        : "Đã gửi hồ sơ bổ nhiệm nhân viên đến quản trị viên.";
+      state.notice = "Đã gửi đề nghị tạo tài khoản Staff độc lập đến quản trị viên.";
       state.managerRequests = [action.payload, ...state.managerRequests];
-      state.candidates = state.candidates.filter(
-        (candidate) => Number(candidate.id) !== Number(action.payload?.userId)
-      );
     },
     submitStaffRoleRequestFailure: (state, action) => {
       state.submitting = false;
@@ -108,18 +77,12 @@ const staffRoleRequestSlice = createSlice({
     staffRoleRequestActionSuccess: (state, action) => {
       state.actionId = null;
       state.actionType = null;
-      if (action.payload?.status === "APPROVED") {
-        state.notice = action.payload?.requestType === "DEMOTE"
-          ? "Đã duyệt hủy quyền và chuyển nhân viên về cư dân."
-          : "Đã duyệt và cấp quyền nhân viên thành công.";
-      } else {
-        state.notice = "Đã từ chối hồ sơ điều chỉnh quyền nhân viên.";
-      }
-      state.adminRequests = state.adminRequests
-        .map((request) =>
-          Number(request.id) === Number(action.payload?.id) ? action.payload : request
-        )
-        .filter((request) => request.status === "PENDING");
+      state.notice = action.payload?.status === "APPROVED"
+        ? "Đã duyệt và tạo tài khoản Staff độc lập thành công."
+        : "Đã từ chối hồ sơ tạo tài khoản Staff.";
+      state.adminRequests = state.adminRequests.map((request) =>
+        Number(request.id) === Number(action.payload?.id) ? action.payload : request
+      );
     },
     staffRoleRequestActionFailure: (state, action) => {
       state.actionId = null;
@@ -180,7 +143,6 @@ export const {
   approveStaffRoleRequest,
   clearStaffProfile,
   clearStaffProfiles,
-  clearStaffRoleCandidates,
   clearStaffRoleRequestNotice,
   fetchAdminStaffRoleRequestsFailure,
   fetchAdminStaffRoleRequestsRequest,
@@ -188,9 +150,6 @@ export const {
   fetchManagerStaffRoleRequestsFailure,
   fetchManagerStaffRoleRequestsRequest,
   fetchManagerStaffRoleRequestsSuccess,
-  fetchStaffRoleCandidatesFailure,
-  fetchStaffRoleCandidatesRequest,
-  fetchStaffRoleCandidatesSuccess,
   fetchStaffProfileFailure,
   fetchStaffProfileRequest,
   fetchStaffProfileSuccess,

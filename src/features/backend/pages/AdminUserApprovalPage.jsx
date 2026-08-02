@@ -1,17 +1,33 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { RefreshCcw, Save, Search, ShieldCheck, UserCheck, UserX } from "lucide-react";
+import {
+    Camera,
+    KeyRound,
+    Mail,
+    Plus,
+    RefreshCcw,
+    Search,
+    ShieldCheck,
+    UserCheck,
+    UserPlus,
+    UserX,
+} from "lucide-react";
 
 import Button from "../../../components/Button/Button";
 import StatusBanner from "../../../components/Feedback/StatusBanner";
 import FormField from "../../../components/Form/FormField";
 import Input from "../../../components/Form/Input";
+import Select from "../../../components/Form/Select";
 import Table from "../../../components/Table/Table";
+import useResetAfterSuccess from "../../../hooks/useResetAfterSuccess";
+import { compressImageFile } from "../../../utils/imageFile";
 import {
+    createAdminUserRequest,
     clearAdminUserNotice,
     fetchAdminUsersRequest,
-    updateAdminUserStatusRequest,
+    setAdminUserLockRequest,
 } from "../adminUsers/adminUserSlice";
+import { fetchBuildingsRequest } from "../buildings/buildingSlice";
 
 const statusOptions = [
     { label: "Tất cả", value: "" },
@@ -28,35 +44,46 @@ const roleOptions = [
     { label: "Quản trị viên", value: "ADMIN" },
 ];
 
-const getDirectRoleOptions = (user) => {
-    const currentRole = user.role || "USER";
-
-    if (currentRole === "STAFF") {
-        return roleOptions.filter((option) => option.value === "STAFF");
-    }
-
-    if (["USER", "MANAGER"].includes(currentRole)) {
-        return roleOptions.filter((option) => ["USER", "MANAGER", "ADMIN"].includes(option.value));
-    }
-
-    return roleOptions.filter((option) => ["MANAGER", "ADMIN"].includes(option.value));
+const roleCreationMeta = {
+    USER: {
+        title: "Tài khoản cư dân",
+        description: "Dùng các chức năng đăng ký xe, mua gói tháng và nhận thông báo tại tòa nhà đang ở.",
+        requirement: "Bắt buộc chọn tòa nhà",
+    },
+    STAFF: {
+        title: "Tài khoản nhân viên bãi xe",
+        description: "Được gắn với một tòa nhà và có hồ sơ nhân viên riêng, tách biệt hoàn toàn với cư dân.",
+        requirement: "Tòa nhà và ảnh hồ sơ bắt buộc",
+    },
+    MANAGER: {
+        title: "Tài khoản quản lý bãi xe",
+        description: "Quản lý vận hành trên toàn hệ thống và không bị gắn cố định với một tòa nhà.",
+        requirement: "Quyền quản lý toàn hệ thống",
+    },
+    ADMIN: {
+        title: "Tài khoản quản trị viên",
+        description: "Quản lý tài khoản và các yêu cầu cấp Staff trên toàn hệ thống.",
+        requirement: "Quyền quản trị toàn hệ thống",
+    },
 };
 
-const getRoleCaption = (role) => {
-    if (role === "STAFF") {
-        return "Quyền Staff chỉ thay đổi qua hồ sơ do Manager gửi";
-    }
+const roleLabels = Object.fromEntries(
+    roleOptions.map((option) => [option.value, option.label])
+);
 
-    if (["USER", "MANAGER"].includes(role)) {
-        return "Admin có thể chuyển trực tiếp giữa User và Manager";
-    }
-
-    return "Tài khoản Admin có thể chuyển sang Manager";
+const emptyCreateForm = {
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    role: "USER",
+    buildingId: "",
+    portraitImageUrl: "",
 };
 
 const statusLabels = {
     PENDING: "Chờ duyệt",
-    ACTIVE: "Đã duyệt",
+    ACTIVE: "Đang hoạt động",
     LOCKED: "Đã khóa",
     INACTIVE: "Không hoạt động",
 };
@@ -75,11 +102,14 @@ const AdminUserApprovalPage = () => {
         pagination,
         loading,
         error,
+        creating,
         updatingId,
         updateError,
         updateSuccess,
     } = useSelector((state) => state.adminUsers);
-
+    const { buildings, loading: buildingsLoading, error: buildingsError } = useSelector(
+        (state) => state.buildings
+    );
     const [filters, setFilters] = useState({
         q: "",
         status: "",
@@ -87,7 +117,9 @@ const AdminUserApprovalPage = () => {
         page: 1,
         limit: 10,
     });
-    const [roleDrafts, setRoleDrafts] = useState({});
+    const [createForm, setCreateForm] = useState(emptyCreateForm);
+    const [createErrors, setCreateErrors] = useState({});
+    const [processingImage, setProcessingImage] = useState(false);
 
     const pendingCount = useMemo(
         () => users.filter((user) => user.status === "PENDING").length,
@@ -97,64 +129,14 @@ const AdminUserApprovalPage = () => {
         () => users.filter((user) => user.status === "ACTIVE").length,
         [users]
     );
-
-    const fetchUsers = (nextFilters = filters) => {
-        dispatch(
-            fetchAdminUsersRequest({
-                q: nextFilters.q || undefined,
-                status: nextFilters.status || undefined,
-                role: nextFilters.role || undefined,
-                page: nextFilters.page,
-                limit: nextFilters.limit,
-            })
-        );
-    };
-
-    useEffect(() => {
-        dispatch(
-            fetchAdminUsersRequest({
-                q: filters.q || undefined,
-                status: filters.status || undefined,
-                role: filters.role || undefined,
-                page: filters.page,
-                limit: filters.limit,
-            })
-        );
-    }, [dispatch, filters.q, filters.status, filters.role, filters.page, filters.limit]);
-
-    const updateFilter = (field, value) => {
-        dispatch(clearAdminUserNotice());
-        setFilters((prev) => ({
-            ...prev,
-            [field]: value,
-            page: 1,
-        }));
-    };
-
-    const handleSearch = (event) => {
-        event.preventDefault();
-        dispatch(clearAdminUserNotice());
-        setFilters((prev) => ({ ...prev, page: 1 }));
-    };
-
-    const handleRefresh = () => {
-        dispatch(clearAdminUserNotice());
-        fetchUsers();
-    };
-
-    const handlePageChange = (page) => {
-        setFilters((prev) => ({
-            ...prev,
-            page: Math.max(1, page),
-        }));
-    };
-
-    const handleRoleDraftChange = (userId, role) => {
-        setRoleDrafts((prev) => ({
-            ...prev,
-            [userId]: role,
-        }));
-    };
+    const buildingOptions = useMemo(
+        () => buildings.map((building) => ({
+            value: String(building.id),
+            label: `${building.name}${building.address ? ` - ${building.address}` : ""}`,
+        })),
+        [buildings]
+    );
+    const accountNeedsBuilding = ["USER", "STAFF"].includes(createForm.role);
 
     const getRefreshParams = () => ({
         q: filters.q || undefined,
@@ -164,48 +146,116 @@ const AdminUserApprovalPage = () => {
         limit: filters.limit,
     });
 
-    const approveUser = (user) => {
-        dispatch(
-            updateAdminUserStatusRequest({
-                id: user.id,
-                role: roleDrafts[user.id] || user.role || "USER",
-                status: "ACTIVE",
-                refreshParams: getRefreshParams(),
-            })
-        );
+    useEffect(() => {
+        dispatch(fetchBuildingsRequest());
+    }, [dispatch]);
+
+    useEffect(() => {
+        dispatch(fetchAdminUsersRequest({
+            q: filters.q || undefined,
+            status: filters.status || undefined,
+            role: filters.role || undefined,
+            page: filters.page,
+            limit: filters.limit,
+        }));
+    }, [dispatch, filters.q, filters.status, filters.role, filters.page, filters.limit]);
+
+    const markCreateSubmitted = useResetAfterSuccess({
+        submitting: creating,
+        success: updateSuccess,
+        error: updateError,
+        onSuccess: () => {
+            setCreateForm(emptyCreateForm);
+            setCreateErrors({});
+        },
+    });
+
+    const updateFilter = (field, value) => {
+        dispatch(clearAdminUserNotice());
+        setFilters((current) => ({ ...current, [field]: value, page: 1 }));
     };
 
-    const rejectUser = (user) => {
-        dispatch(
-            updateAdminUserStatusRequest({
-                id: user.id,
-                role: roleDrafts[user.id] || user.role || "USER",
-                status: "INACTIVE",
-                refreshParams: getRefreshParams(),
-            })
-        );
+    const updateCreateForm = (field, value) => {
+        dispatch(clearAdminUserNotice());
+        setCreateForm((current) => {
+            const next = { ...current, [field]: value };
+            if (field === "role" && value !== "STAFF") next.portraitImageUrl = "";
+            if (field === "role" && !["USER", "STAFF"].includes(value)) next.buildingId = "";
+            return next;
+        });
+        setCreateErrors((current) => ({ ...current, [field]: "" }));
     };
 
-    const lockUser = (user) => {
-        dispatch(
-            updateAdminUserStatusRequest({
-                id: user.id,
-                role: roleDrafts[user.id] || user.role || "USER",
-                status: "LOCKED",
-                refreshParams: getRefreshParams(),
-            })
-        );
+    const handlePortrait = async (event) => {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+        if (!file) return;
+
+        setProcessingImage(true);
+        try {
+            const portraitImageUrl = await compressImageFile(file, {
+                maxWidth: 900,
+                maxHeight: 1200,
+                maxLength: 850_000,
+            });
+            updateCreateForm("portraitImageUrl", portraitImageUrl);
+        } catch (imageError) {
+            setCreateForm((current) => ({ ...current, portraitImageUrl: "" }));
+            setCreateErrors((current) => ({
+                ...current,
+                portraitImageUrl: imageError.message || "Không chuẩn bị được ảnh chân dung.",
+            }));
+        } finally {
+            setProcessingImage(false);
+        }
     };
 
-    const saveRole = (user) => {
-        dispatch(
-            updateAdminUserStatusRequest({
-                id: user.id,
-                role: roleDrafts[user.id] || user.role || "USER",
-                status: user.status,
-                refreshParams: getRefreshParams(),
-            })
-        );
+    const validateCreateForm = () => {
+        const nextErrors = {};
+        if (createForm.name.trim().length < 2) nextErrors.name = "Vui lòng nhập họ tên đầy đủ.";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(createForm.email.trim())) {
+            nextErrors.email = "Email không hợp lệ.";
+        }
+        if (createForm.phone.trim() && !/^0\d{9}$/.test(createForm.phone.trim())) {
+            nextErrors.phone = "Số điện thoại phải có 10 chữ số và bắt đầu bằng 0.";
+        }
+        if (createForm.password.length < 6) nextErrors.password = "Mật khẩu phải có ít nhất 6 ký tự.";
+        if (accountNeedsBuilding && !createForm.buildingId) {
+            nextErrors.buildingId = "Vui lòng chọn tòa nhà cho tài khoản này.";
+        }
+        if (createForm.role === "STAFF" && !createForm.portraitImageUrl) {
+            nextErrors.portraitImageUrl = "Tài khoản Staff cần có ảnh chân dung hồ sơ.";
+        }
+        setCreateErrors(nextErrors);
+        return Object.keys(nextErrors).length === 0;
+    };
+
+    const handleCreateAccount = (event) => {
+        event.preventDefault();
+        dispatch(clearAdminUserNotice());
+        if (!validateCreateForm()) return;
+
+        markCreateSubmitted();
+        dispatch(createAdminUserRequest({
+            name: createForm.name.trim(),
+            email: createForm.email.trim(),
+            phone: createForm.phone.trim() || undefined,
+            password: createForm.password,
+            role: createForm.role,
+            buildingId: accountNeedsBuilding ? Number(createForm.buildingId) : undefined,
+            portraitImageUrl: createForm.role === "STAFF"
+                ? createForm.portraitImageUrl
+                : undefined,
+            refreshParams: { ...getRefreshParams(), page: 1 },
+        }));
+    };
+
+    const setAccountLock = (user, locked) => {
+        dispatch(setAdminUserLockRequest({
+            id: user.id,
+            locked,
+            refreshParams: getRefreshParams(),
+        }));
     };
 
     const columns = [
@@ -213,62 +263,47 @@ const AdminUserApprovalPage = () => {
         {
             header: "Người dùng",
             key: "name",
+            minWidth: "180px",
             render: (user) => (
                 <>
                     <strong>{user.name}</strong>
                     <br />
-                    <span className="metric-note">{user.buildingName || "Chưa gán tòa nhà"}</span>
+                    <span className="metric-note">{user.buildingName || "Không gắn tòa nhà"}</span>
                 </>
             ),
         },
         {
             header: "Liên hệ",
             key: "email",
+            minWidth: "210px",
             render: (user) => (
                 <>
                     <span>{user.email}</span>
                     <br />
-                    <span className="metric-note">{user.phone || "Chưa có SĐT"}</span>
+                    <span className="metric-note">{user.phone || "Chưa có số điện thoại"}</span>
                 </>
             ),
         },
         {
-            header: "Thông tin duyệt",
+            header: "Thông tin hồ sơ",
             key: "approvalInfo",
+            minWidth: "190px",
             render: (user) => (
                 <>
-                    <strong>{user.buildingName || "Chưa gán tòa nhà"}</strong>
+                    <strong>{user.role === "STAFF" ? "Tài khoản Staff riêng" : user.role}</strong>
                     <br />
-                    <span className="metric-note">
-                        {Number(user.vehicleCount || 0)} xe đã đăng ký
-                    </span>
-                    <br />
-                    <span className="metric-note">
-                        {user.vehicleSummary || "Chưa có hồ sơ xe"}
-                    </span>
+                    <span className="metric-note">{Number(user.vehicleCount || 0)} xe đã đăng ký</span>
                 </>
             ),
         },
         {
-            header: "Quyền sử dụng",
+            header: "Vai trò",
             key: "role",
-            minWidth: "210px",
+            minWidth: "220px",
             render: (user) => (
-                <div className="admin-role-control">
-                    <select
-                        className="form-input admin-role-select"
-                        value={roleDrafts[user.id] || user.role || "USER"}
-                        onChange={(event) => handleRoleDraftChange(user.id, event.target.value)}
-                        disabled={updatingId === user.id}
-                        aria-label={`Quyền sử dụng của ${user.name}`}
-                    >
-                        {getDirectRoleOptions(user).map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </select>
-                    <span className="admin-role-caption">{getRoleCaption(user.role)}</span>
+                <div className="admin-role-static">
+                    <strong>{roleLabels[user.role] || user.role}</strong>
+                    <span>Vai trò cố định từ khi tạo</span>
                 </div>
             ),
         },
@@ -284,73 +319,45 @@ const AdminUserApprovalPage = () => {
         {
             header: "Ngày tạo",
             key: "createdAt",
-            render: (user) => (user.createdAt ? new Date(user.createdAt).toLocaleDateString("vi-VN") : "-"),
+            render: (user) => user.createdAt
+                ? new Date(user.createdAt).toLocaleDateString("vi-VN")
+                : "-",
         },
         {
             header: "Thao tác",
             key: "actions",
-            minWidth: "240px",
+            minWidth: "150px",
             render: (user) => {
-                const isPending = user.status === "PENDING";
-                const isInactive = user.status === "INACTIVE";
                 const isLocked = user.status === "LOCKED";
                 const isActive = user.status === "ACTIVE";
 
                 return (
                     <div className="action-row admin-account-actions">
-                        {(isPending || isInactive || isLocked) && (
+                        {isLocked && (
                             <Button
-                                type="button"
                                 size="sm"
                                 icon={UserCheck}
                                 loading={updatingId === user.id}
                                 disabled={updatingId === user.id}
-                                onClick={() => approveUser(user)}
+                                onClick={() => setAccountLock(user, false)}
                             >
-                                {isPending ? "Duyệt" : isInactive ? "Duyệt lại" : "Mở khóa"}
+                                Mở khóa
                             </Button>
                         )}
-
                         {isActive && (
                             <Button
-                                type="button"
-                                size="sm"
-                                icon={Save}
-                                loading={updatingId === user.id}
-                                disabled={
-                                    updatingId === user.id ||
-                                    (roleDrafts[user.id] || user.role || "USER") === user.role
-                                }
-                                onClick={() => saveRole(user)}
-                            >
-                                Lưu quyền
-                            </Button>
-                        )}
-
-                        {isPending && (
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                icon={UserX}
-                                disabled={updatingId === user.id}
-                                onClick={() => rejectUser(user)}
-                            >
-                                Từ chối
-                            </Button>
-                        )}
-
-                        {isActive && (
-                            <Button
-                                type="button"
                                 size="sm"
                                 variant="danger"
                                 icon={UserX}
+                                loading={updatingId === user.id}
                                 disabled={updatingId === user.id}
-                                onClick={() => lockUser(user)}
+                                onClick={() => setAccountLock(user, true)}
                             >
                                 Khóa
                             </Button>
+                        )}
+                        {!isActive && !isLocked && (
+                            <span className="metric-note">Không có thao tác</span>
                         )}
                     </div>
                 );
@@ -361,67 +368,168 @@ const AdminUserApprovalPage = () => {
     return (
         <div className="parking-page">
             <section className="page-hero">
-                <div>
-                    <div className="page-eyebrow">
-                        <ShieldCheck size={16} /> Duyệt tài khoản
-                    </div>
-                    <h1 className="page-title">Duyệt và quản lý tài khoản</h1>
+                <div className="page-hero-content">
+                    <div className="page-eyebrow"><ShieldCheck size={16} /> Quản lý tài khoản</div>
+                    <h1 className="page-title">Tạo và quản lý toàn bộ tài khoản</h1>
                     <p className="page-subtitle">
-                        Duyệt tài khoản, mở khóa và chuyển trực tiếp giữa cư dân với quản lý. Mọi thay đổi có liên quan tới nhân viên bãi xe phải đi qua hồ sơ của Manager.
+                        Admin tạo trực tiếp tài khoản Cư dân, Staff, Manager hoặc Admin và có thể khóa tài khoản khi cần. Vai trò được giữ cố định sau khi tạo.
                     </p>
                 </div>
-
-                <div className="action-row">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        icon={RefreshCcw}
-                        loading={loading}
-                        disabled={loading}
-                        onClick={handleRefresh}
-                    >
-                        Tải lại
-                    </Button>
+                <div className="page-hero-aside">
+                    <span className="page-hero-label">Tổng tài khoản</span>
+                    <span className="page-hero-number">{Number(pagination?.total || users.length)}</span>
+                    <span className="page-hero-label">tài khoản</span>
                 </div>
             </section>
 
+            <StatusBanner success={updateSuccess} errors={[error, updateError, buildingsError]} />
+
             <section className="dashboard-grid">
                 <div className="metric-card">
-                    <div className="metric-label">Đang hiển thị</div>
-                    <div className="metric-value">{Number(pagination?.total || users.length)}</div>
-                    <div className="metric-note">Kết quả theo bộ lọc hiện tại</div>
-                </div>
-                <div className="metric-card">
-                    <div className="metric-label">Chờ duyệt</div>
-                    <div className="metric-value">{pendingCount}</div>
-                    <div className="metric-note">Trên trang hiện tại</div>
-                </div>
-                <div className="metric-card">
-                    <div className="metric-label">Đã duyệt</div>
+                    <div className="metric-label">Đang hoạt động</div>
                     <div className="metric-value">{activeCount}</div>
                     <div className="metric-note">Trên trang hiện tại</div>
+                </div>
+                <div className="metric-card">
+                    <div className="metric-label">Chờ duyệt cũ</div>
+                    <div className="metric-value">{pendingCount}</div>
+                    <div className="metric-note">Dữ liệu đăng ký trước đây</div>
                 </div>
             </section>
 
             <section className="section-card card">
                 <div className="section-header">
                     <div>
-                        <h2 className="section-title">Bộ lọc tài khoản</h2>
+                        <h2 className="section-title"><UserPlus size={19} /> Tạo tài khoản mới</h2>
                         <p className="section-copy">
-                            Lọc nhanh tài khoản chờ duyệt, đã duyệt, đã khóa hoặc theo quyền sử dụng.
+                            Mỗi vai trò có hồ sơ và phạm vi sử dụng riêng. Tài khoản được xác minh và kích hoạt ngay sau khi tạo.
                         </p>
                     </div>
                 </div>
 
-                <form
-                    onSubmit={handleSearch}
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "1.4fr 0.8fr 0.8fr auto",
-                        gap: 12,
-                        alignItems: "end",
-                    }}
-                >
+                <form onSubmit={handleCreateAccount} className="form-stack">
+                    <div className="filter-grid">
+                        <FormField label="Họ tên" required error={createErrors.name}>
+                            <Input
+                                value={createForm.name}
+                                onChange={(event) => updateCreateForm("name", event.target.value)}
+                                placeholder="Nguyễn Văn A"
+                                disabled={creating}
+                            />
+                        </FormField>
+                        <FormField label="Email đăng nhập" required error={createErrors.email}>
+                            <Input
+                                type="email"
+                                icon={Mail}
+                                value={createForm.email}
+                                onChange={(event) => updateCreateForm("email", event.target.value)}
+                                placeholder="account@sunrise.vn"
+                                disabled={creating}
+                            />
+                        </FormField>
+                        <FormField label="Số điện thoại" error={createErrors.phone}>
+                            <Input
+                                inputMode="numeric"
+                                maxLength={10}
+                                value={createForm.phone}
+                                onChange={(event) => updateCreateForm("phone", event.target.value.replace(/\D/g, ""))}
+                                placeholder="0901234567"
+                                disabled={creating}
+                            />
+                        </FormField>
+                        <FormField label="Mật khẩu" required error={createErrors.password}>
+                            <Input
+                                type="password"
+                                icon={KeyRound}
+                                value={createForm.password}
+                                onChange={(event) => updateCreateForm("password", event.target.value)}
+                                placeholder="Tối thiểu 6 ký tự"
+                                disabled={creating}
+                            />
+                        </FormField>
+                        <FormField label="Vai trò" required>
+                            <Select
+                                value={createForm.role}
+                                onChange={(event) => updateCreateForm("role", event.target.value)}
+                                options={roleOptions}
+                                placeholder={null}
+                                disabled={creating}
+                            />
+                        </FormField>
+                        {accountNeedsBuilding && (
+                            <FormField label="Tòa nhà" required error={createErrors.buildingId}>
+                                <Select
+                                    value={createForm.buildingId}
+                                    onChange={(event) => updateCreateForm("buildingId", event.target.value)}
+                                    options={buildingOptions}
+                                    placeholder="Chọn tòa nhà"
+                                    disabled={creating || buildingsLoading}
+                                />
+                            </FormField>
+                        )}
+                    </div>
+
+                    <div className={`role-account-summary role-account-summary--${createForm.role.toLowerCase()}`}>
+                        <ShieldCheck size={22} />
+                        <div>
+                            <strong>{roleCreationMeta[createForm.role].title}</strong>
+                            <span>{roleCreationMeta[createForm.role].description}</span>
+                        </div>
+                        <span className="role-account-requirement">
+                            {roleCreationMeta[createForm.role].requirement}
+                        </span>
+                    </div>
+
+                    {createForm.role === "STAFF" && (
+                        <FormField label="Ảnh chân dung hồ sơ Staff" required error={createErrors.portraitImageUrl}>
+                            <label className="staff-portrait-upload">
+                                <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    onChange={handlePortrait}
+                                    disabled={creating || processingImage}
+                                />
+                                {createForm.portraitImageUrl ? (
+                                    <img src={createForm.portraitImageUrl} alt="Ảnh chân dung Staff" />
+                                ) : (
+                                    <span>
+                                        <Camera size={28} />
+                                        <strong>{processingImage ? "Đang chuẩn bị ảnh..." : "Chọn ảnh chân dung"}</strong>
+                                        <small>Ảnh này thuộc hồ sơ Staff, tách biệt ảnh đại diện cá nhân</small>
+                                    </span>
+                                )}
+                            </label>
+                        </FormField>
+                    )}
+
+                    <Button
+                        type="submit"
+                        icon={Plus}
+                        loading={creating}
+                        disabled={creating || processingImage}
+                    >
+                        Tạo và kích hoạt tài khoản
+                    </Button>
+                </form>
+            </section>
+
+            <section className="section-card card">
+                <div className="section-header">
+                    <div>
+                        <h2 className="section-title"><Search size={19} /> Bộ lọc tài khoản</h2>
+                        <p className="section-copy">Tìm theo tên, email, số điện thoại, trạng thái hoặc vai trò.</p>
+                    </div>
+                    <Button
+                        variant="outline"
+                        icon={RefreshCcw}
+                        loading={loading}
+                        onClick={() => dispatch(fetchAdminUsersRequest(getRefreshParams()))}
+                    >
+                        Làm mới
+                    </Button>
+                </div>
+
+                <div className="filter-grid">
                     <FormField label="Tìm kiếm">
                         <Input
                             icon={Search}
@@ -430,70 +538,49 @@ const AdminUserApprovalPage = () => {
                             onChange={(event) => updateFilter("q", event.target.value)}
                         />
                     </FormField>
-
                     <FormField label="Trạng thái">
-                        <select
-                            className="form-input"
+                        <Select
                             value={filters.status}
                             onChange={(event) => updateFilter("status", event.target.value)}
-                        >
-                            {statusOptions.map((option) => (
-                                <option key={option.label} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
+                            options={statusOptions}
+                            placeholder={null}
+                        />
                     </FormField>
-
-                    <FormField label="Quyền sử dụng">
-                        <select
-                            className="form-input"
+                    <FormField label="Vai trò">
+                        <Select
                             value={filters.role}
                             onChange={(event) => updateFilter("role", event.target.value)}
-                        >
-                            <option value="">Tất cả quyền</option>
-                            {roleOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
+                            options={[{ value: "", label: "Tất cả vai trò" }, ...roleOptions]}
+                            placeholder={null}
+                        />
                     </FormField>
-
-                    <Button type="submit" loading={loading} disabled={loading}>
-                        Tìm
-                    </Button>
-                </form>
+                </div>
             </section>
-
-            <StatusBanner success={updateSuccess} errors={[error, updateError]} />
 
             <section className="section-card card">
                 <div className="section-header">
                     <div>
                         <h2 className="section-title">Danh sách tài khoản</h2>
                         <p className="section-copy">
-                            Nút xử lý luôn nằm bên phải: duyệt tài khoản mới, duyệt lại tài khoản đã từ chối hoặc mở khóa tài khoản.
+                            Vai trò chỉ để xem và không thể chỉnh sửa. Admin chỉ có thể khóa hoặc mở khóa tài khoản đang hoạt động.
                         </p>
                     </div>
                 </div>
-
                 <Table
                     columns={columns}
                     data={users}
                     loading={loading}
                     className="admin-user-table"
                     emptyMessage="Không có tài khoản phù hợp."
-                    pagination={
-                        pagination
-                            ? {
-                                currentPage: Number(pagination.page || filters.page || 1),
-                                totalPages: Number(pagination.totalPages || 1),
-                                totalItems: Number(pagination.total || users.length),
-                                onPageChange: handlePageChange,
-                            }
-                            : null
-                    }
+                    pagination={pagination ? {
+                        currentPage: Number(pagination.page || filters.page || 1),
+                        totalPages: Number(pagination.totalPages || 1),
+                        totalItems: Number(pagination.total || users.length),
+                        onPageChange: (page) => setFilters((current) => ({
+                            ...current,
+                            page: Math.max(1, page),
+                        })),
+                    } : null}
                 />
             </section>
         </div>

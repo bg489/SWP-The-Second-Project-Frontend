@@ -9,9 +9,6 @@ import {
   fetchManagerStaffRoleRequestsFailure,
   fetchManagerStaffRoleRequestsRequest,
   fetchManagerStaffRoleRequestsSuccess,
-  fetchStaffRoleCandidatesFailure,
-  fetchStaffRoleCandidatesRequest,
-  fetchStaffRoleCandidatesSuccess,
   fetchStaffProfileFailure,
   fetchStaffProfileRequest,
   fetchStaffProfileSuccess,
@@ -38,25 +35,6 @@ const extractList = (response) => {
 const getErrorMessage = (error, fallback) =>
   error?.response?.data?.message || error?.message || fallback;
 
-function* handleFetchCandidates(action) {
-  try {
-    const response = yield call([api, api.get], "/staff-role-requests/candidates", {
-      params: {
-        buildingId: action.payload?.buildingId,
-        requestType: action.payload?.requestType || "PROMOTE",
-        q: action.payload?.q || undefined,
-      },
-    });
-    yield put(fetchStaffRoleCandidatesSuccess(extractData(response)));
-  } catch (error) {
-    yield put(
-      fetchStaffRoleCandidatesFailure(
-        getErrorMessage(error, "Không lấy được danh sách tài khoản trong tòa.")
-      )
-    );
-  }
-}
-
 function* handleFetchManagerRequests(action) {
   try {
     const response = yield call([api, api.get], "/staff-role-requests/my", {
@@ -66,7 +44,7 @@ function* handleFetchManagerRequests(action) {
   } catch (error) {
     yield put(
       fetchManagerStaffRoleRequestsFailure(
-        getErrorMessage(error, "Không lấy được lịch sử đề nghị nhân viên.")
+        getErrorMessage(error, "Không lấy được lịch sử đề nghị tạo tài khoản Staff.")
       )
     );
   }
@@ -85,13 +63,10 @@ function* handleSubmitRequest(action) {
     yield put(fetchManagerStaffRoleRequestsRequest(
       refreshParams?.buildingId ? { buildingId: refreshParams.buildingId } : undefined
     ));
-    if (refreshParams?.buildingId) {
-      yield put(fetchStaffRoleCandidatesRequest(refreshParams));
-    }
   } catch (error) {
     yield put(
       submitStaffRoleRequestFailure(
-        getErrorMessage(error, "Gửi hồ sơ đề nghị nhân viên thất bại.")
+        getErrorMessage(error, "Gửi hồ sơ đề nghị tạo tài khoản Staff thất bại.")
       )
     );
   }
@@ -106,7 +81,7 @@ function* handleFetchAdminRequests(action) {
   } catch (error) {
     yield put(
       fetchAdminStaffRoleRequestsFailure(
-        getErrorMessage(error, "Không lấy được hồ sơ đề nghị nhân viên.")
+        getErrorMessage(error, "Không lấy được hồ sơ tạo tài khoản Staff.")
       )
     );
   }
@@ -156,7 +131,7 @@ function* handleApproveRequest(action) {
   } catch (error) {
     yield put(
       staffRoleRequestActionFailure(
-        getErrorMessage(error, "Duyệt hồ sơ đề nghị nhân viên thất bại.")
+        getErrorMessage(error, "Duyệt hồ sơ tạo tài khoản Staff thất bại.")
       )
     );
   }
@@ -175,14 +150,13 @@ function* handleRejectRequest(action) {
   } catch (error) {
     yield put(
       staffRoleRequestActionFailure(
-        getErrorMessage(error, "Từ chối hồ sơ đề nghị nhân viên thất bại.")
+        getErrorMessage(error, "Từ chối hồ sơ tạo tài khoản Staff thất bại.")
       )
     );
   }
 }
 
 export default function* staffRoleRequestSaga() {
-  yield takeLatest(fetchStaffRoleCandidatesRequest.type, handleFetchCandidates);
   yield takeLatest(fetchManagerStaffRoleRequestsRequest.type, handleFetchManagerRequests);
   yield takeLatest(submitStaffRoleRequest.type, handleSubmitRequest);
   yield takeLatest(fetchAdminStaffRoleRequestsRequest.type, handleFetchAdminRequests);
