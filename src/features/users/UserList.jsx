@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Khai báo chức năng frontend của module UserList.
+ *
+ * Luồng chính: Dữ liệu đầu vào -> xử lý theo trách nhiệm của module -> xuất kết quả cho lớp gọi.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,8 +14,15 @@ import FormField from "../../components/Form/FormField";
 import Input from "../../components/Form/Input";
 import { UserPlus, Pencil, Trash2, Search, X, Check } from "lucide-react";
 
+/**
+ * Thực hiện nghiệp vụ `UserList` (user list). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function UserList
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 function UserList() {
   const dispatch = useDispatch();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { users, loading, error } = useSelector((state) => state.users);
 
   // Search state
@@ -23,6 +36,7 @@ function UserList() {
   const [formError, setFormError] = useState({});
   const [showForm, setShowForm] = useState(false);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     // Only dispatch request if store is empty to prevent resetting modified local store
     if (users.length === 0) {
@@ -30,6 +44,13 @@ function UserList() {
     }
   }, [dispatch, users.length]);
 
+  /**
+   * Xử lý nghiệp vụ `handleSubmit` (handle submit). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+   *
+   * @function handleSubmit
+   * @param {*} e - Giá trị `e` được hàm sử dụng trong quá trình xử lý.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleSubmit = (e) => {
     e.preventDefault();
     const errors = {};
@@ -53,6 +74,7 @@ function UserList() {
     } else {
       // Create User Action
       const newUser = {
+        /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         id: users.length > 0 ? Math.max(...users.map((u) => u.id)) + 1 : 1,
         name: userName,
         email: userEmail,
@@ -68,6 +90,13 @@ function UserList() {
     setShowForm(false);
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleEditClick` (handle edit click). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+   *
+   * @function handleEditClick
+   * @param {*} user - Giá trị `user` được hàm sử dụng trong quá trình xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleEditClick = (user) => {
     setIsEditing(true);
     setCurrentUserId(user.id);
@@ -77,12 +106,25 @@ function UserList() {
     setShowForm(true);
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleDeleteClick` (handle delete click). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+   *
+   * @function handleDeleteClick
+   * @param {*} userId - Giá trị `userId` được hàm sử dụng trong quá trình xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleDeleteClick = (userId) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa người dùng này?")) {
       dispatch(deleteUser(userId));
     }
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleCancel` (handle cancel). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+   *
+   * @function handleCancel
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleCancel = () => {
     setIsEditing(false);
     setCurrentUserId(null);
@@ -94,6 +136,7 @@ function UserList() {
 
   // Filter users based on search
   const filteredUsers = users.filter(
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (user) =>
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -108,6 +151,13 @@ function UserList() {
       header: "Hành động",
       key: "actions",
       width: "160px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div style={{ display: "flex", gap: "6px" }}>
           <Button

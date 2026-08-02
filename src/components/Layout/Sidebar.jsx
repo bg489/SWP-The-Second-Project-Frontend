@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Cung cấp component giao diện tái sử dụng Sidebar và hành vi hiển thị liên quan.
+ *
+ * Luồng chính: Props đầu vào -> xử lý trạng thái cục bộ khi cần -> trả về phần giao diện tái sử dụng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import {
@@ -27,6 +33,10 @@ import { useMockAuth } from "../../context/MockAuthContext";
 import { logout as logoutAction } from "../../features/backend/auth/authSlice";
 import "./Layout.css";
 
+/**
+ * Khai báo `roleLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/components/Layout/Sidebar.jsx.
+ */
 const roleLabels = {
   ADMIN: "Quản trị viên",
   PARKING_MANAGER: "Quản lý bãi xe",
@@ -34,6 +44,10 @@ const roleLabels = {
   USER: "Cư dân",
 };
 
+/**
+ * Khai báo `menus` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/components/Layout/Sidebar.jsx.
+ */
 const menus = {
   USER: [
     { path: "/user/dashboard", label: "Tổng quan", icon: LayoutDashboard },
@@ -82,12 +96,25 @@ const menus = {
   ],
 };
 
+/**
+ * Thực hiện nghiệp vụ `Sidebar` (sidebar). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function Sidebar
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const Sidebar = ({ isOpen, isHidden, toggleSidebar }) => {
   const { role, user, logout: mockLogout } = useMockAuth();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const menuItems = menus[role] || [];
 
+  /**
+   * Xử lý nghiệp vụ `handleLogout` (handle logout). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleLogout
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleLogout = () => {
     dispatch(logoutAction());
     mockLogout();

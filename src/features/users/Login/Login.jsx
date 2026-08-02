@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Khai báo chức năng frontend của module Login.
+ *
+ * Luồng chính: Dữ liệu đầu vào -> xử lý theo trách nhiệm của module -> xuất kết quả cho lớp gọi.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useState } from 'react';
 import './Login.css';
 import VehicleList from '../vehicle/VehicleList.jsx';
@@ -14,6 +20,12 @@ const Login = () => {
     const [successMsg, setSuccessMsg] = useState('');
     const [dashboardView, setDashboardView] = useState(null);
 
+    /**
+     * Kiểm tra nghiệp vụ `validateForm` (validate form). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+     *
+     * @function validateForm
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const validateForm = () => {
         let tempErrors = {};
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,14 +45,23 @@ const Login = () => {
         return Object.keys(tempErrors).length === 0;
     };
 
+    /**
+     * Xử lý nghiệp vụ `handleSubmit` (handle submit). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+     *
+     * @function handleSubmit
+     * @param {*} e - Giá trị `e` được hàm sử dụng trong quá trình xử lý.
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const handleSubmit = (e) => {
         e.preventDefault();
         if (validateForm()) {
             if (isLoginView) {
                 setSuccessMsg(`Đăng nhập thành công với quyền: ${role.toUpperCase()}!`);
+                /* Callback nội bộ của lời gọi `setTimeout`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
                 setTimeout(() => { setDashboardView(role); }, 1200);
             } else {
                 setSuccessMsg('Đăng ký tài khoản thành công! Bạn có thể đăng nhập ngay.');
+                /* Callback nội bộ của lời gọi `setTimeout`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
                 setTimeout(() => {
                     setIsLoginView(true);
                     setSuccessMsg('');
@@ -50,6 +71,12 @@ const Login = () => {
         }
     };
 
+    /**
+     * Thực hiện nghiệp vụ `switchView` (switch view). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+     *
+     * @function switchView
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const switchView = () => {
         setIsLoginView(!isLoginView);
         setErrors({});

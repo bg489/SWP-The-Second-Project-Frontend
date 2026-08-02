@@ -1,3 +1,8 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/App.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.card`. */
 .card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
@@ -6,12 +11,14 @@
   backdrop-filter: blur(14px);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.parking-page`. */
 .parking-page {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.page-hero`. */
 .page-hero {
   position: relative;
   display: flex;
@@ -28,6 +35,7 @@
   box-shadow: var(--shadow-premium);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.page-hero::after`. */
 .page-hero::after {
   content: "";
   position: absolute;
@@ -38,12 +46,15 @@
   background: rgba(255, 255, 255, 0.32);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.page-hero-content,
+.page-hero-aside`. */
 .page-hero-content,
 .page-hero-aside {
   position: relative;
   z-index: 1;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.page-eyebrow`. */
 .page-eyebrow {
   display: inline-flex;
   align-items: center;
@@ -60,6 +71,7 @@
   text-transform: uppercase;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.page-title`. */
 .page-title {
   max-width: 780px;
   color: inherit;
@@ -68,6 +80,7 @@
   line-height: 1.15;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.page-subtitle`. */
 .page-subtitle {
   max-width: 760px;
   margin-top: 10px;
@@ -76,6 +89,7 @@
   font-weight: 600;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.page-hero-aside`. */
 .page-hero-aside {
   min-width: 220px;
   align-self: stretch;
@@ -88,12 +102,14 @@
   background: rgba(255, 255, 255, 0.24);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.page-hero-number`. */
 .page-hero-number {
   font-size: 30px;
   line-height: 1;
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.page-hero-label`. */
 .page-hero-label {
   color: rgba(42, 21, 38, 0.72);
   font-size: 12px;
@@ -101,10 +117,12 @@
   text-transform: uppercase;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.section-card`. */
 .section-card {
   padding: 24px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.section-header`. */
 .section-header {
   display: flex;
   align-items: flex-start;
@@ -113,6 +131,7 @@
   margin-bottom: 18px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.section-title`. */
 .section-title {
   display: flex;
   align-items: center;
@@ -122,22 +141,26 @@
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.section-title svg`. */
 .section-title svg {
   color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.section-copy`. */
 .section-copy {
   margin-top: 4px;
   color: var(--text-secondary);
   font-size: 13px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.dashboard-grid`. */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.two-column-grid`. */
 .two-column-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
@@ -145,6 +168,7 @@
   align-items: start;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.metric-card`. */
 .metric-card {
   position: relative;
   overflow: hidden;
@@ -153,6 +177,7 @@
   border-radius: 10px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.metric-card::before`. */
 .metric-card::before {
   content: "";
   position: absolute;
@@ -161,6 +186,7 @@
   background: linear-gradient(90deg, var(--pink), var(--orange));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.metric-icon`. */
 .metric-icon {
   display: grid;
   width: 42px;
@@ -172,6 +198,7 @@
   color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.metric-label`. */
 .metric-label {
   color: var(--text-secondary);
   font-size: 12px;
@@ -180,6 +207,7 @@
   text-transform: uppercase;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.metric-value`. */
 .metric-value {
   margin-top: 4px;
   color: var(--text-primary);
@@ -187,12 +215,14 @@
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.metric-note`. */
 .metric-note {
   margin-top: 4px;
   color: var(--text-muted);
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pill`. */
 .pill {
   display: inline-flex;
   align-items: center;
@@ -205,53 +235,64 @@
   white-space: nowrap;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pill.success`. */
 .pill.success {
   background: var(--success-light);
   color: var(--success);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pill.warning`. */
 .pill.warning {
   background: var(--warning-light);
   color: var(--warning);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pill.danger`. */
 .pill.danger {
   background: var(--danger-light);
   color: var(--danger);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pill.info`. */
 .pill.info {
   background: var(--info-light);
   color: var(--info);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pill.neutral`. */
 .pill.neutral {
   background: var(--bg-secondary);
   color: var(--text-secondary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.action-row`. */
 .action-row {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.plate-input-row`. */
 .plate-input-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 640px)`. */
 @media (max-width: 640px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.plate-input-row`. */
   .plate-input-row {
     grid-template-columns: 1fr;
   }
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.mg-pagination`. */
 .mg-pagination {
   margin-top: 10px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.soft-panel`. */
 .soft-panel {
   padding: 16px;
   border: 1px solid var(--border-color);
@@ -260,6 +301,7 @@
   margin-bottom: 10px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.slot-preview-panel`. */
 .slot-preview-panel {
   display: grid;
   gap: 10px;
@@ -269,12 +311,15 @@
   background: linear-gradient(135deg, rgba(255, 184, 245, 0.18), rgba(237, 153, 81, 0.13));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.slot-preview-list`. */
 .slot-preview-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.slot-preview-pill,
+.slot-preview-more`. */
 .slot-preview-pill,
 .slot-preview-more {
   display: inline-flex;
@@ -289,16 +334,19 @@
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.slot-preview-more`. */
 .slot-preview-more {
   color: var(--text-secondary);
   font-weight: 700;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.data-list`. */
 .data-list {
   display: grid;
   gap: 10px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.data-row`. */
 .data-row {
   display: flex;
   justify-content: space-between;
@@ -309,6 +357,7 @@
   font-size: 13px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.data-row-button`. */
 .data-row-button {
   width: 100%;
   border: 0;
@@ -318,20 +367,24 @@
   text-align: left;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.data-row-button:hover`. */
 .data-row-button:hover {
   color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.data-row:last-child`. */
 .data-row:last-child {
   padding-bottom: 0;
   border-bottom: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.data-row strong`. */
 .data-row strong {
   color: var(--text-primary);
   text-align: right;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.profile-avatar-panel`. */
 .profile-avatar-panel {
   display: flex;
   align-items: center;
@@ -342,6 +395,7 @@
   background: linear-gradient(135deg, var(--accent-light), var(--primary-light));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.profile-avatar-large`. */
 .profile-avatar-large {
   display: grid;
   width: 82px;
@@ -357,11 +411,13 @@
   object-fit: cover;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.profile-avatar-crop-frame`. */
 .profile-avatar-crop-frame {
   overflow: hidden;
   padding: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.profile-avatar-crop-frame img`. */
 .profile-avatar-crop-frame img {
   width: 100%;
   height: 100%;
@@ -369,6 +425,7 @@
   transform-origin: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.avatar-crop-controls`. */
 .avatar-crop-controls {
   display: grid;
   gap: 12px;
@@ -378,15 +435,18 @@
   background: var(--surface-soft);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.profile-avatar-upload`. */
 .profile-avatar-upload {
   margin-top: 10px;
   cursor: pointer;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.profile-avatar-upload input`. */
 .profile-avatar-upload input {
   display: none;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.file-upload-panel`. */
 .file-upload-panel {
   display: flex;
   align-items: center;
@@ -401,10 +461,12 @@
   cursor: pointer;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.file-upload-panel input`. */
 .file-upload-panel input {
   display: none;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.evidence-preview`. */
 .evidence-preview {
   width: 100%;
   max-height: 260px;
@@ -414,6 +476,7 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.evidence-thumb`. */
 .evidence-thumb {
   width: 74px;
   height: 48px;
@@ -422,6 +485,7 @@
   border: 1px solid var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.check-row`. */
 .check-row {
   display: inline-flex;
   align-items: center;
@@ -430,12 +494,14 @@
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.check-row input`. */
 .check-row input {
   width: 16px;
   height: 16px;
   accent-color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.progress-track`. */
 .progress-track {
   overflow: hidden;
   height: 10px;
@@ -443,6 +509,7 @@
   background: rgba(237, 153, 81, 0.13);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.progress-fill`. */
 .progress-fill {
   height: 100%;
   border-radius: inherit;
@@ -450,6 +517,7 @@
   transition: width var(--transition-normal);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-box`. */
 .qr-box {
   display: grid;
   width: 118px;
@@ -463,6 +531,7 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.mock-qr`. */
 .mock-qr {
   width: 100%;
   height: 100%;
@@ -476,12 +545,14 @@
   border: 8px solid #fff;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-image`. */
 .qr-image {
   display: block;
   max-width: 100%;
   border-radius: 6px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-image-error`. */
 .qr-image-error {
   display: grid;
   place-items: center;
@@ -495,6 +566,7 @@
   text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-live-preview`. */
 .qr-live-preview {
   display: grid;
   grid-template-columns: 168px 1fr;
@@ -506,12 +578,16 @@
   background: rgba(255, 255, 255, 0.62);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-live-preview .qr-image,
+.qr-large-frame .qr-image,
+.qr-thumb-button .qr-image`. */
 .qr-live-preview .qr-image,
 .qr-large-frame .qr-image,
 .qr-thumb-button .qr-image {
   box-shadow: var(--shadow-sm);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-thumb-button`. */
 .qr-thumb-button {
   display: inline-grid;
   place-items: center;
@@ -526,12 +602,14 @@
     box-shadow var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-thumb-button:hover`. */
 .qr-thumb-button:hover {
   transform: translateY(-2px);
   border-color: rgba(237, 153, 81, 0.5);
   box-shadow: var(--shadow-sm);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.modal-backdrop`. */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -543,6 +621,7 @@
   backdrop-filter: blur(8px);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-modal-overlay`. */
 .qr-modal-overlay {
   position: fixed;
   inset: 0;
@@ -551,6 +630,7 @@
   backdrop-filter: blur(8px);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-modal-card`. */
 .qr-modal-card {
   position: fixed;
   top: 50dvh;
@@ -562,6 +642,7 @@
   transform: translate(-50%, -50%);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-follow-card`. */
 .qr-follow-card {
   position: sticky;
   top: calc(50dvh - 250px);
@@ -573,6 +654,7 @@
   text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-large-frame`. */
 .qr-large-frame {
   display: grid;
   place-items: center;
@@ -582,6 +664,7 @@
   background: #fff;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-scanner-card`. */
 .qr-scanner-card {
   display: grid;
   gap: 12px;
@@ -592,6 +675,7 @@
   background: linear-gradient(135deg, rgba(255, 184, 245, 0.16), rgba(237, 153, 81, 0.12));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-scanner-header`. */
 .qr-scanner-header {
   display: flex;
   align-items: center;
@@ -599,6 +683,7 @@
   gap: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-scanner-header strong`. */
 .qr-scanner-header strong {
   display: inline-flex;
   align-items: center;
@@ -606,6 +691,7 @@
   color: var(--text-primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-scanner-video-wrap`. */
 .qr-scanner-video-wrap {
   position: relative;
   overflow: hidden;
@@ -615,12 +701,14 @@
   background: #1f1720;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-scanner-video`. */
 .qr-scanner-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-scanner-frame`. */
 .qr-scanner-frame {
   position: absolute;
   inset: 15%;
@@ -632,11 +720,13 @@
   pointer-events: none;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.timeline`. */
 .timeline {
   display: grid;
   gap: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.timeline-item`. */
 .timeline-item {
   display: grid;
   grid-template-columns: 34px 1fr;
@@ -644,6 +734,7 @@
   align-items: start;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.timeline-dot`. */
 .timeline-dot {
   display: grid;
   width: 34px;
@@ -655,12 +746,14 @@
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.slot-map-grid`. */
 .slot-map-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
   gap: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.slot-tile`. */
 .slot-tile {
   min-height: 70px;
   border: 1px solid var(--border-color);
@@ -672,34 +765,41 @@
   transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.slot-tile:hover`. */
 .slot-tile:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.slot-tile.selected`. */
 .slot-tile.selected {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(237, 153, 81, 0.22);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.slot-tile.available`. */
 .slot-tile.available {
   background: rgba(255, 255, 255, 0.72);
   border-color: rgba(22, 166, 103, 0.3);
   color: var(--success);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.slot-tile.occupied`. */
 .slot-tile.occupied {
   background: var(--primary-light);
   border-color: rgba(237, 153, 81, 0.45);
   color: var(--orange-strong);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.slot-tile.reserved`. */
 .slot-tile.reserved {
   background: var(--accent-light);
   border-color: rgba(255, 184, 245, 0.65);
   color: var(--pink-strong);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.slot-tile.maintenance,
+.slot-tile.locked`. */
 .slot-tile.maintenance,
 .slot-tile.locked {
   background: var(--warning-light);
@@ -707,12 +807,14 @@
   color: var(--warning);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.slot-tile.conflict`. */
 .slot-tile.conflict {
   background: var(--danger-light);
   border-color: rgba(220, 74, 74, 0.42);
   color: var(--danger);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.login-shell`. */
 .login-shell {
   min-height: 100vh;
   display: grid;
@@ -724,6 +826,7 @@
     linear-gradient(135deg, var(--rose), var(--cream));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.login-story`. */
 .login-story {
   display: flex;
   min-width: 0;
@@ -734,6 +837,7 @@
   color: #2a1526;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.login-panel-wrap`. */
 .login-panel-wrap {
   display: grid;
   min-width: 0;
@@ -741,6 +845,7 @@
   padding: 42px;
 }
 
+/* Điều chỉnh kiểu hiển thị ở chế độ tối cho `body.dark-theme .login-shell`. */
 body.dark-theme .login-shell {
   color-scheme: dark;
   background:
@@ -749,6 +854,7 @@ body.dark-theme .login-shell {
     linear-gradient(135deg, #100b13 0%, #18101b 48%, #241425 100%);
 }
 
+/* Điều chỉnh kiểu hiển thị ở chế độ tối cho `body.dark-theme .login-story`. */
 body.dark-theme .login-story {
   border-right: 1px solid rgba(255, 184, 245, 0.12);
   background:
@@ -759,16 +865,19 @@ body.dark-theme .login-story {
   box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03);
 }
 
+/* Điều chỉnh kiểu hiển thị ở chế độ tối cho `body.dark-theme .login-story .page-eyebrow`. */
 body.dark-theme .login-story .page-eyebrow {
   border: 1px solid rgba(255, 184, 245, 0.22);
   background: rgba(255, 184, 245, 0.16);
   color: #ffe6fb;
 }
 
+/* Điều chỉnh kiểu hiển thị ở chế độ tối cho `body.dark-theme .login-story .page-subtitle`. */
 body.dark-theme .login-story .page-subtitle {
   color: rgba(255, 248, 251, 0.78);
 }
 
+/* Điều chỉnh kiểu hiển thị ở chế độ tối cho `body.dark-theme .login-story .soft-panel`. */
 body.dark-theme .login-story .soft-panel {
   border-color: rgba(255, 184, 245, 0.16);
   background:
@@ -777,31 +886,38 @@ body.dark-theme .login-story .soft-panel {
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
 }
 
+/* Điều chỉnh kiểu hiển thị ở chế độ tối cho `body.dark-theme .login-story .data-row`. */
 body.dark-theme .login-story .data-row {
   border-bottom-color: rgba(255, 184, 245, 0.14);
   color: rgba(255, 248, 251, 0.72);
 }
 
+/* Điều chỉnh kiểu hiển thị ở chế độ tối cho `body.dark-theme .login-story .data-row strong,
+body.dark-theme .login-story .metric-value`. */
 body.dark-theme .login-story .data-row strong,
 body.dark-theme .login-story .metric-value {
   color: #fff8fb;
 }
 
+/* Điều chỉnh kiểu hiển thị ở chế độ tối cho `body.dark-theme .login-story .metric-note`. */
 body.dark-theme .login-story .metric-note {
   color: rgba(255, 248, 251, 0.68);
 }
 
+/* Điều chỉnh kiểu hiển thị ở chế độ tối cho `body.dark-theme .login-panel-wrap`. */
 body.dark-theme .login-panel-wrap {
   background:
     radial-gradient(circle at 34% 18%, rgba(255, 184, 245, 0.08), transparent 24rem),
     radial-gradient(circle at 96% 72%, rgba(237, 153, 81, 0.12), transparent 28rem);
 }
 
+/* Điều chỉnh kiểu hiển thị ở chế độ tối cho `body.dark-theme .login-panel-wrap .section-card`. */
 body.dark-theme .login-panel-wrap .section-card {
   border-color: rgba(255, 184, 245, 0.18);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.auth-mode-tabs`. */
 .auth-mode-tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -809,26 +925,31 @@ body.dark-theme .login-panel-wrap .section-card {
   margin-bottom: 18px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.auth-mode-tabs .btn`. */
 .auth-mode-tabs .btn {
   min-width: 0;
   padding-inline: 8px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.auth-mode-tabs .btn-text`. */
 .auth-mode-tabs .btn-text {
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.google-auth-section`. */
 .google-auth-section {
   display: grid;
   gap: 14px;
   margin-bottom: 18px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.google-auth-control`. */
 .google-auth-control {
   position: relative;
   min-height: 44px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.google-auth-button`. */
 .google-auth-button {
   display: flex;
   width: 100%;
@@ -837,15 +958,19 @@ body.dark-theme .login-panel-wrap .section-card {
   justify-content: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.google-auth-button>div,
+.google-auth-button iframe`. */
 .google-auth-button>div,
 .google-auth-button iframe {
   max-width: 100%;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.google-auth-control.is-disabled`. */
 .google-auth-control.is-disabled {
   opacity: 0.62;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.google-auth-blocker`. */
 .google-auth-blocker {
   position: absolute;
   inset: 0;
@@ -853,6 +978,7 @@ body.dark-theme .login-panel-wrap .section-card {
   cursor: wait;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.google-auth-error`. */
 .google-auth-error {
   margin-top: 8px;
   color: var(--danger);
@@ -860,6 +986,7 @@ body.dark-theme .login-panel-wrap .section-card {
   text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.auth-divider`. */
 .auth-divider {
   display: flex;
   align-items: center;
@@ -870,6 +997,8 @@ body.dark-theme .login-panel-wrap .section-card {
   text-transform: uppercase;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.auth-divider::before,
+.auth-divider::after`. */
 .auth-divider::before,
 .auth-divider::after {
   height: 1px;
@@ -878,6 +1007,7 @@ body.dark-theme .login-panel-wrap .section-card {
   content: "";
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.registration-verification-card`. */
 .registration-verification-card {
   display: grid;
   gap: 18px;
@@ -887,23 +1017,27 @@ body.dark-theme .login-panel-wrap .section-card {
   background: var(--success-light);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.registration-verification-heading`. */
 .registration-verification-heading {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.registration-verification-heading .metric-icon`. */
 .registration-verification-heading .metric-icon {
   flex: 0 0 auto;
   margin: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.registration-verification-actions`. */
 .registration-verification-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.onboarding-shell`. */
 .onboarding-shell {
   min-height: 100vh;
   background:
@@ -912,6 +1046,7 @@ body.dark-theme .login-panel-wrap .section-card {
     var(--bg-primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.onboarding-header`. */
 .onboarding-header {
   display: flex;
   min-height: 76px;
@@ -923,6 +1058,7 @@ body.dark-theme .login-panel-wrap .section-card {
   backdrop-filter: var(--glass-blur);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.onboarding-header .brand-mark`. */
 .onboarding-header .brand-mark {
   display: grid;
   width: 42px;
@@ -934,17 +1070,20 @@ body.dark-theme .login-panel-wrap .section-card {
   color: #fff;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.onboarding-header p`. */
 .onboarding-header p {
   color: var(--text-muted);
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.onboarding-header-actions`. */
 .onboarding-header-actions {
   display: flex;
   gap: 8px;
   margin-left: auto;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.onboarding-content`. */
 .onboarding-content {
   display: grid;
   width: min(1120px, calc(100% - 36px));
@@ -953,10 +1092,12 @@ body.dark-theme .login-panel-wrap .section-card {
   padding: 34px 0 52px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.onboarding-hero`. */
 .onboarding-hero {
   margin: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.onboarding-user-name`. */
 .onboarding-user-name {
   overflow-wrap: anywhere;
   color: var(--text-primary);
@@ -964,6 +1105,7 @@ body.dark-theme .login-panel-wrap .section-card {
   font-weight: 900;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.building-choice-grid`. */
 .building-choice-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -971,6 +1113,7 @@ body.dark-theme .login-panel-wrap .section-card {
   margin-bottom: 20px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.building-choice`. */
 .building-choice {
   position: relative;
   display: flex;
@@ -990,12 +1133,14 @@ body.dark-theme .login-panel-wrap .section-card {
     transform var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.building-choice:hover`. */
 .building-choice:hover {
   transform: translateY(-2px);
   border-color: rgba(237, 153, 81, 0.58);
   box-shadow: var(--shadow-sm);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.building-choice.selected`. */
 .building-choice.selected {
   border: 2px solid var(--success);
   background:
@@ -1004,6 +1149,7 @@ body.dark-theme .login-panel-wrap .section-card {
   box-shadow: 0 0 0 4px rgba(22, 166, 103, 0.12);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.building-choice-icon`. */
 .building-choice-icon {
   display: grid;
   width: 42px;
@@ -1015,6 +1161,7 @@ body.dark-theme .login-panel-wrap .section-card {
   color: var(--orange-strong);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.building-choice-copy`. */
 .building-choice-copy {
   display: grid;
   min-width: 0;
@@ -1022,11 +1169,14 @@ body.dark-theme .login-panel-wrap .section-card {
   padding-right: 24px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.building-choice-copy strong,
+.building-choice-copy small`. */
 .building-choice-copy strong,
 .building-choice-copy small {
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.building-choice-copy small`. */
 .building-choice-copy small {
   display: flex;
   align-items: flex-start;
@@ -1034,11 +1184,13 @@ body.dark-theme .login-panel-wrap .section-card {
   color: var(--text-secondary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.building-choice-copy small svg`. */
 .building-choice-copy small svg {
   flex: 0 0 auto;
   margin-top: 2px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.building-choice-check`. */
 .building-choice-check {
   position: absolute;
   top: 12px;
@@ -1046,12 +1198,14 @@ body.dark-theme .login-panel-wrap .section-card {
   color: var(--success);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.onboarding-loading`. */
 .onboarding-loading {
   padding: 34px;
   color: var(--text-secondary);
   text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.role-card`. */
 .role-card {
   display: flex;
   gap: 14px;
@@ -1065,86 +1219,108 @@ body.dark-theme .login-panel-wrap .section-card {
   transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.role-card:hover`. */
 .role-card:hover {
   transform: translateY(-2px);
   border-color: rgba(237, 153, 81, 0.52);
   box-shadow: var(--shadow-md);
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 1024px)`. */
 @media (max-width: 1024px) {
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.two-column-grid,
+  .login-shell`. */
   .two-column-grid,
   .login-shell {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.page-hero`. */
   .page-hero {
     flex-direction: column;
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 640px)`. */
 @media (max-width: 640px) {
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.page-hero,
+  .section-card`. */
   .page-hero,
   .section-card {
     padding: 20px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.page-title`. */
   .page-title {
     font-size: 24px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.section-header`. */
   .section-header {
     flex-direction: column;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-live-preview`. */
   .qr-live-preview {
     grid-template-columns: 1fr;
     justify-items: center;
     text-align: center;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.login-story,
+  .login-panel-wrap`. */
   .login-story,
   .login-panel-wrap {
     padding: 26px 18px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.auth-mode-tabs`. */
   .auth-mode-tabs {
     gap: 8px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.auth-mode-tabs .btn`. */
   .auth-mode-tabs .btn {
     font-size: 12px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.registration-verification-actions`. */
   .registration-verification-actions {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.onboarding-header`. */
   .onboarding-header {
     align-items: flex-start;
     flex-wrap: wrap;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.onboarding-header-actions`. */
   .onboarding-header-actions {
     width: 100%;
     margin-left: 0;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.onboarding-header-actions .btn`. */
   .onboarding-header-actions .btn {
     flex: 1;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.onboarding-content`. */
   .onboarding-content {
     width: min(100% - 24px, 1120px);
     padding-top: 18px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.building-choice-grid`. */
   .building-choice-grid {
     grid-template-columns: 1fr;
   }
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-manager-grid`. */
 .car-slot-manager-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
@@ -1152,6 +1328,8 @@ body.dark-theme .login-panel-wrap .section-card {
   align-items: start;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-map-card,
+.car-slot-form-card`. */
 .car-slot-map-card,
 .car-slot-form-card {
   border: 1px solid var(--border-color);
@@ -1160,6 +1338,7 @@ body.dark-theme .login-panel-wrap .section-card {
   padding: 18px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-map-header`. */
 .car-slot-map-header {
   display: flex;
   align-items: center;
@@ -1169,12 +1348,14 @@ body.dark-theme .login-panel-wrap .section-card {
   color: var(--text-primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-grid`. */
 .car-slot-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
   gap: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card`. */
 .car-slot-card {
   position: relative;
   overflow: hidden;
@@ -1192,21 +1373,25 @@ body.dark-theme .login-panel-wrap .section-card {
     box-shadow var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card:hover`. */
 .car-slot-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-sm);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card:disabled`. */
 .car-slot-card:disabled {
   cursor: not-allowed;
   opacity: 0.78;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card.selected`. */
 .car-slot-card.selected {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(237, 153, 81, 0.22);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card.selected:not(:disabled)`. */
 .car-slot-card.selected:not(:disabled) {
   z-index: 1;
   border: 2px solid #0fa66b;
@@ -1222,10 +1407,12 @@ body.dark-theme .login-panel-wrap .section-card {
   animation: selected-slot-glow 1.35s ease-in-out infinite alternate;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card.selected:not(:disabled)::before`. */
 .car-slot-card.selected:not(:disabled)::before {
   content: none;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card.selected:not(:disabled)::after`. */
 .car-slot-card.selected:not(:disabled)::after {
   content: "Đang chọn  ✓";
   position: absolute;
@@ -1242,6 +1429,7 @@ body.dark-theme .login-panel-wrap .section-card {
   text-transform: uppercase;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card.selected:not(:disabled) .car-slot-code`. */
 .car-slot-card.selected:not(:disabled) .car-slot-code {
   color: #063f2d;
   font-size: 1.05rem;
@@ -1252,27 +1440,34 @@ body.dark-theme .login-panel-wrap .section-card {
   white-space: nowrap;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card.selected:not(:disabled) .car-slot-status`. */
 .car-slot-card.selected:not(:disabled) .car-slot-status {
   margin-bottom: 22px;
   color: #0b7a50;
   font-weight: 900;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card.available`. */
 .car-slot-card.available {
   background: rgba(22, 163, 74, 0.1);
   border-color: rgba(22, 163, 74, 0.35);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card.reserved`. */
 .car-slot-card.reserved {
   background: rgba(234, 179, 8, 0.12);
   border-color: rgba(234, 179, 8, 0.38);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card.occupied`. */
 .car-slot-card.occupied {
   background: rgba(239, 68, 68, 0.12);
   border-color: rgba(239, 68, 68, 0.4);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card.maintenance,
+.car-slot-card.locked,
+.car-slot-card.conflict`. */
 .car-slot-card.maintenance,
 .car-slot-card.locked,
 .car-slot-card.conflict {
@@ -1280,28 +1475,34 @@ body.dark-theme .login-panel-wrap .section-card {
   border-color: rgba(100, 116, 139, 0.38);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card.assigned-to-session`. */
 .car-slot-card.assigned-to-session {
   border: 2px dashed var(--primary);
   background: rgba(237, 153, 81, 0.16);
   opacity: 1;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-card.assigned-to-session .car-slot-status`. */
 .car-slot-card.assigned-to-session .car-slot-status {
   color: var(--orange-strong);
   font-weight: 900;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-code`. */
 .car-slot-code {
   font-weight: 800;
   font-size: 0.95rem;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-status,
+.car-slot-size`. */
 .car-slot-status,
 .car-slot-size {
   font-size: 0.72rem;
   color: var(--text-secondary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-legend`. */
 .car-slot-legend {
   display: flex;
   flex-wrap: wrap;
@@ -1312,6 +1513,7 @@ body.dark-theme .login-panel-wrap .section-card {
   font-size: 0.85rem;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.legend-dot`. */
 .legend-dot {
   width: 11px;
   height: 11px;
@@ -1320,15 +1522,19 @@ body.dark-theme .login-panel-wrap .section-card {
   margin-right: -6px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.legend-dot.available`. */
 .legend-dot.available {
   background: #16a34a;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.legend-dot.reserved`. */
 .legend-dot.reserved {
   background: #eab308;
 }
 
+/* Định nghĩa các bước chuyển động cho hiệu ứng `selected-slot-glow`. */
 @keyframes selected-slot-glow {
+  /* Áp dụng bố cục và hình thức hiển thị cho `from`. */
   from {
     box-shadow:
       0 0 0 4px rgba(22, 166, 103, 0.2),
@@ -1336,6 +1542,7 @@ body.dark-theme .login-panel-wrap .section-card {
       0 0 20px rgba(255, 184, 245, 0.28);
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `to`. */
   to {
     box-shadow:
       0 0 0 6px rgba(22, 166, 103, 0.28),
@@ -1344,20 +1551,25 @@ body.dark-theme .login-panel-wrap .section-card {
   }
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.legend-dot.occupied`. */
 .legend-dot.occupied {
   background: #ef4444;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.legend-dot.maintenance`. */
 .legend-dot.maintenance {
   background: #64748b;
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 980px)`. */
 @media (max-width: 980px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.car-slot-manager-grid`. */
   .car-slot-manager-grid {
     grid-template-columns: 1fr;
   }
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.filter-grid`. */
 .filter-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -1365,14 +1577,18 @@ body.dark-theme .login-panel-wrap .section-card {
   align-items: end;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.filter-grid .form-field`. */
 .filter-grid .form-field {
   margin: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-user-table .custom-table`. */
 .admin-user-table .custom-table {
   min-width: 1280px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-user-table .custom-table th:last-child,
+.admin-user-table .custom-table td:last-child`. */
 .admin-user-table .custom-table th:last-child,
 .admin-user-table .custom-table td:last-child {
   position: sticky;
@@ -1381,6 +1597,7 @@ body.dark-theme .login-panel-wrap .section-card {
   box-shadow: -10px 0 18px rgba(42, 21, 38, 0.08);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-user-table .custom-table th:last-child`. */
 .admin-user-table .custom-table th:last-child {
   z-index: 3;
   background:
@@ -1388,18 +1605,23 @@ body.dark-theme .login-panel-wrap .section-card {
     var(--surface);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-user-table .custom-table td:last-child`. */
 .admin-user-table .custom-table td:last-child {
   background: var(--surface);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-account-actions`. */
 .admin-account-actions {
   flex-wrap: nowrap;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.approval-overview-table .custom-table`. */
 .approval-overview-table .custom-table {
   min-width: 920px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.approval-overview-table .custom-table th:last-child,
+.approval-overview-table .custom-table td:last-child`. */
 .approval-overview-table .custom-table th:last-child,
 .approval-overview-table .custom-table td:last-child {
   position: sticky;
@@ -1408,6 +1630,7 @@ body.dark-theme .login-panel-wrap .section-card {
   box-shadow: -10px 0 18px rgba(42, 21, 38, 0.08);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.approval-overview-table .custom-table th:last-child`. */
 .approval-overview-table .custom-table th:last-child {
   z-index: 3;
   background:
@@ -1415,10 +1638,12 @@ body.dark-theme .login-panel-wrap .section-card {
     var(--surface);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.approval-overview-table .custom-table td:last-child`. */
 .approval-overview-table .custom-table td:last-child {
   background: var(--surface);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.approval-building-route`. */
 .approval-building-route {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -1427,31 +1652,37 @@ body.dark-theme .login-panel-wrap .section-card {
   color: var(--text-secondary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.approval-building-route svg`. */
 .approval-building-route svg {
   color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.approval-building-route strong`. */
 .approval-building-route strong {
   color: var(--text-primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-role-static`. */
 .admin-role-static {
   display: grid;
   gap: 4px;
   min-width: 190px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-role-static strong`. */
 .admin-role-static strong {
   color: var(--text-primary);
   font-weight: 700;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-role-static span`. */
 .admin-role-static span {
   color: var(--text-muted);
   font-size: 11px;
   line-height: 1.35;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.visually-hidden-input`. */
 .visually-hidden-input {
   position: absolute;
   width: 1px;
@@ -1462,16 +1693,19 @@ body.dark-theme .login-panel-wrap .section-card {
   white-space: nowrap;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-photo-field`. */
 .vehicle-photo-field {
   display: grid;
   gap: 8px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-photo-stack`. */
 .vehicle-photo-stack {
   display: grid;
   gap: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-photo-stack>.vehicle-photo-field`. */
 .vehicle-photo-stack>.vehicle-photo-field {
   padding: 12px;
   border: 1px solid var(--border-color);
@@ -1479,6 +1713,7 @@ body.dark-theme .login-panel-wrap .section-card {
   background: var(--surface-soft);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-camera-button`. */
 .vehicle-camera-button {
   display: grid;
   min-height: 150px;
@@ -1495,21 +1730,25 @@ body.dark-theme .login-panel-wrap .section-card {
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-camera-button:hover:not(:disabled)`. */
 .vehicle-camera-button:hover:not(:disabled) {
   border-color: var(--primary);
   box-shadow: 0 0 0 4px var(--primary-glow);
   transform: translateY(-2px);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-camera-button svg`. */
 .vehicle-camera-button svg {
   color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-camera-button span`. */
 .vehicle-camera-button span {
   font-size: 15px;
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-camera-button small`. */
 .vehicle-camera-button small {
   max-width: 360px;
   color: var(--text-secondary);
@@ -1518,6 +1757,7 @@ body.dark-theme .login-panel-wrap .section-card {
   text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-photo-preview`. */
 .vehicle-photo-preview {
   display: grid;
   grid-template-columns: minmax(150px, 0.7fr) minmax(180px, 1fr);
@@ -1528,6 +1768,7 @@ body.dark-theme .login-panel-wrap .section-card {
   background: var(--success-light);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-photo-preview>img`. */
 .vehicle-photo-preview>img {
   width: 100%;
   height: 120px;
@@ -1536,6 +1777,7 @@ body.dark-theme .login-panel-wrap .section-card {
   object-fit: contain;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-photo-preview-info`. */
 .vehicle-photo-preview-info {
   display: grid;
   align-content: center;
@@ -1543,6 +1785,7 @@ body.dark-theme .login-panel-wrap .section-card {
   min-width: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-photo-preview-info>span`. */
 .vehicle-photo-preview-info>span {
   overflow: hidden;
   color: var(--text-secondary);
@@ -1551,6 +1794,7 @@ body.dark-theme .login-panel-wrap .section-card {
   white-space: nowrap;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-plate-thumb`. */
 .vehicle-plate-thumb {
   display: block;
   width: 104px;
@@ -1561,6 +1805,7 @@ body.dark-theme .login-panel-wrap .section-card {
   object-fit: contain;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-plate-review-button`. */
 .vehicle-plate-review-button {
   display: grid;
   width: 124px;
@@ -1574,12 +1819,14 @@ body.dark-theme .login-panel-wrap .section-card {
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-plate-review-button:hover`. */
 .vehicle-plate-review-button:hover {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-glow);
   transform: translateY(-2px);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-plate-review-button img`. */
 .vehicle-plate-review-button img {
   width: 110px;
   height: 66px;
@@ -1588,6 +1835,7 @@ body.dark-theme .login-panel-wrap .section-card {
   object-fit: contain;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-plate-review-button span`. */
 .vehicle-plate-review-button span {
   display: inline-flex;
   align-items: center;
@@ -1598,6 +1846,7 @@ body.dark-theme .login-panel-wrap .section-card {
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-review-gallery`. */
 .vehicle-review-gallery {
   display: grid;
   grid-template-columns: repeat(3, minmax(96px, 1fr));
@@ -1605,16 +1854,19 @@ body.dark-theme .login-panel-wrap .section-card {
   width: 100%;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-review-gallery .vehicle-plate-review-button`. */
 .vehicle-review-gallery .vehicle-plate-review-button {
   width: 100%;
   min-width: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-review-gallery .vehicle-plate-review-button img`. */
 .vehicle-review-gallery .vehicle-plate-review-button img {
   width: 100%;
   height: 68px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-review-missing`. */
 .vehicle-review-missing {
   display: grid;
   min-height: 108px;
@@ -1629,15 +1881,18 @@ body.dark-theme .login-panel-wrap .section-card {
   text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-review-missing strong`. */
 .vehicle-review-missing strong {
   color: var(--text-secondary);
   font-size: 11px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-review-missing small`. */
 .vehicle-review-missing small {
   font-size: 10px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.image-review-backdrop`. */
 .image-review-backdrop {
   position: fixed;
   z-index: 1400;
@@ -1650,6 +1905,7 @@ body.dark-theme .login-panel-wrap .section-card {
   animation: image-review-fade 0.2s ease-out both;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.image-review-dialog`. */
 .image-review-dialog {
   position: relative;
   display: grid;
@@ -1665,6 +1921,7 @@ body.dark-theme .login-panel-wrap .section-card {
   animation: image-review-rise 0.24s ease-out both;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.image-review-close`. */
 .image-review-close {
   position: absolute;
   z-index: 2;
@@ -1681,6 +1938,7 @@ body.dark-theme .login-panel-wrap .section-card {
   cursor: pointer;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.image-review-heading`. */
 .image-review-heading {
   display: flex;
   align-items: center;
@@ -1688,23 +1946,28 @@ body.dark-theme .login-panel-wrap .section-card {
   padding-right: 48px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.image-review-heading>svg`. */
 .image-review-heading>svg {
   color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.image-review-heading>div`. */
 .image-review-heading>div {
   display: grid;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.image-review-heading strong`. */
 .image-review-heading strong {
   font-size: 18px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.image-review-heading span`. */
 .image-review-heading span {
   color: var(--text-secondary);
   font-size: 13px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.image-review-large`. */
 .image-review-large {
   width: 100%;
   max-height: calc(100vh - 150px);
@@ -1713,12 +1976,14 @@ body.dark-theme .login-panel-wrap .section-card {
   object-fit: contain;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.request-person`. */
 .request-person {
   display: flex;
   align-items: center;
   gap: 11px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.request-person-avatar`. */
 .request-person-avatar {
   display: grid;
   flex: 0 0 auto;
@@ -1733,6 +1998,7 @@ body.dark-theme .login-panel-wrap .section-card {
   font-weight: 900;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.request-person-avatar img`. */
 .request-person-avatar img {
   width: 100%;
   height: 100%;
@@ -1740,22 +2006,26 @@ body.dark-theme .login-panel-wrap .section-card {
   transform-origin: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.request-person-copy`. */
 .request-person-copy {
   display: grid;
   justify-items: start;
   gap: 4px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.request-person-copy small`. */
 .request-person-copy small {
   color: var(--text-muted);
   font-size: 11px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.request-contact-list`. */
 .request-contact-list {
   display: grid;
   gap: 7px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.request-contact-list span`. */
 .request-contact-list span {
   display: flex;
   align-items: flex-start;
@@ -1764,16 +2034,19 @@ body.dark-theme .login-panel-wrap .section-card {
   line-height: 1.4;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.request-contact-list svg`. */
 .request-contact-list svg {
   flex: 0 0 auto;
   margin-top: 2px;
   color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-building-strip`. */
 .manager-building-strip {
   border-left: 4px solid var(--accent);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-staff-scope-grid`. */
 .manager-staff-scope-grid {
   display: grid;
   grid-template-columns: minmax(280px, 1fr) minmax(280px, 1.1fr);
@@ -1781,6 +2054,7 @@ body.dark-theme .login-panel-wrap .section-card {
   gap: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-selected-building`. */
 .manager-selected-building {
   display: grid;
   min-height: 58px;
@@ -1792,23 +2066,27 @@ body.dark-theme .login-panel-wrap .section-card {
   background: linear-gradient(135deg, var(--accent-light), var(--primary-light));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-selected-building strong`. */
 .manager-selected-building strong {
   color: var(--text-primary);
   font-size: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-selected-building span`. */
 .manager-selected-building span {
   color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.4;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-mode-switch`. */
 .staff-request-mode-switch {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-mode-switch>button`. */
 .staff-request-mode-switch>button {
   display: flex;
   align-items: center;
@@ -1824,11 +2102,13 @@ body.dark-theme .login-panel-wrap .section-card {
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-mode-switch>button:hover`. */
 .staff-request-mode-switch>button:hover {
   border-color: var(--accent);
   transform: translateY(-1px);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-mode-switch>button.active`. */
 .staff-request-mode-switch>button.active {
   border-color: #16a36a;
   background: rgba(22, 163, 106, 0.09);
@@ -1836,6 +2116,7 @@ body.dark-theme .login-panel-wrap .section-card {
   color: #0d8655;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-mode-switch>button.active.danger`. */
 .staff-request-mode-switch>button.active.danger {
   border-color: #e5484d;
   background: rgba(229, 72, 77, 0.09);
@@ -1843,25 +2124,30 @@ body.dark-theme .login-panel-wrap .section-card {
   color: #c82f37;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-mode-switch>button>svg`. */
 .staff-request-mode-switch>button>svg {
   flex: 0 0 auto;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-mode-switch>button>span`. */
 .staff-request-mode-switch>button>span {
   display: grid;
   gap: 3px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-mode-switch strong`. */
 .staff-request-mode-switch strong {
   color: var(--text-primary);
   font-size: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-mode-switch small`. */
 .staff-request-mode-switch small {
   color: var(--text-muted);
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-workspace`. */
 .staff-request-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(330px, 0.8fr);
@@ -1869,21 +2155,25 @@ body.dark-theme .login-panel-wrap .section-card {
   gap: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-workspace>.section-card`. */
 .staff-request-workspace>.section-card {
   min-width: 0;
   margin: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-form-card`. */
 .staff-request-form-card {
   position: sticky;
   top: 18px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-form-card .form-stack`. */
 .staff-request-form-card .form-stack {
   display: grid;
   gap: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-empty`. */
 .staff-request-empty {
   display: grid;
   min-height: 290px;
@@ -1898,21 +2188,25 @@ body.dark-theme .login-panel-wrap .section-card {
   text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-empty svg`. */
 .staff-request-empty svg {
   color: var(--accent);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-empty strong`. */
 .staff-request-empty strong {
   color: var(--text-primary);
   font-size: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-empty span`. */
 .staff-request-empty span {
   max-width: 300px;
   font-size: 13px;
   line-height: 1.5;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-selected`. */
 .staff-request-selected {
   display: flex;
   align-items: center;
@@ -1923,17 +2217,21 @@ body.dark-theme .login-panel-wrap .section-card {
   background: linear-gradient(135deg, var(--accent-light), var(--primary-light));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-selected .request-person-avatar`. */
 .staff-request-selected .request-person-avatar {
   width: 58px;
   height: 58px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-selected>div`. */
 .staff-request-selected>div {
   display: grid;
   min-width: 0;
   gap: 3px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-selected strong,
+.staff-request-selected span`. */
 .staff-request-selected strong,
 .staff-request-selected span {
   overflow: hidden;
@@ -1941,16 +2239,19 @@ body.dark-theme .login-panel-wrap .section-card {
   white-space: nowrap;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-selected strong`. */
 .staff-request-selected strong {
   color: var(--text-primary);
   font-size: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-selected span`. */
 .staff-request-selected span {
   color: var(--text-secondary);
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-portrait-upload`. */
 .staff-portrait-upload {
   display: grid;
   min-height: 250px;
@@ -1962,6 +2263,7 @@ body.dark-theme .login-panel-wrap .section-card {
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.role-account-summary`. */
 .role-account-summary {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -1975,31 +2277,38 @@ body.dark-theme .login-panel-wrap .section-card {
   margin: 10px 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.role-account-summary--staff,
+.role-account-summary--admin`. */
 .role-account-summary--staff,
 .role-account-summary--admin {
   border-left-color: #ed9951;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.role-account-summary>svg`. */
 .role-account-summary>svg {
   color: var(--accent);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.role-account-summary>div`. */
 .role-account-summary>div {
   display: grid;
   gap: 3px;
   min-width: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.role-account-summary strong`. */
 .role-account-summary strong {
   color: var(--text-primary);
   font-size: 15px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.role-account-summary span`. */
 .role-account-summary span {
   color: var(--text-secondary);
   line-height: 1.45;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.role-account-requirement`. */
 .role-account-requirement {
   padding: 7px 10px;
   border: 1px solid rgba(237, 153, 81, 0.28);
@@ -2011,11 +2320,14 @@ body.dark-theme .login-panel-wrap .section-card {
   white-space: nowrap;
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 720px)`. */
 @media (max-width: 720px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.role-account-summary`. */
   .role-account-summary {
     grid-template-columns: auto minmax(0, 1fr);
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.role-account-requirement`. */
   .role-account-requirement {
     grid-column: 1 / -1;
     justify-self: start;
@@ -2023,16 +2335,19 @@ body.dark-theme .login-panel-wrap .section-card {
   }
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-portrait-upload:hover`. */
 .staff-portrait-upload:hover {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px rgba(237, 153, 81, 0.11);
   transform: translateY(-1px);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-portrait-upload input`. */
 .staff-portrait-upload input {
   display: none;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-portrait-upload>img`. */
 .staff-portrait-upload>img {
   width: 100%;
   height: 310px;
@@ -2040,6 +2355,7 @@ body.dark-theme .login-panel-wrap .section-card {
   object-position: center top;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-portrait-upload>span`. */
 .staff-portrait-upload>span {
   display: grid;
   place-items: center;
@@ -2050,20 +2366,24 @@ body.dark-theme .login-panel-wrap .section-card {
   text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-portrait-upload>span svg`. */
 .staff-portrait-upload>span svg {
   color: var(--accent);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-portrait-upload>span strong`. */
 .staff-portrait-upload>span strong {
   color: var(--text-primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-portrait-upload>span small`. */
 .staff-portrait-upload>span small {
   max-width: 270px;
   color: var(--text-muted);
   line-height: 1.45;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-demotion-warning`. */
 .staff-demotion-warning {
   display: flex;
   align-items: flex-start;
@@ -2075,26 +2395,31 @@ body.dark-theme .login-panel-wrap .section-card {
   color: #c82f37;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-demotion-warning svg`. */
 .staff-demotion-warning svg {
   flex: 0 0 auto;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-demotion-warning div`. */
 .staff-demotion-warning div {
   display: grid;
   gap: 4px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-demotion-warning strong`. */
 .staff-demotion-warning strong {
   color: var(--text-primary);
   font-size: 13px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-demotion-warning span`. */
 .staff-demotion-warning span {
   color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.45;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-portrait-button`. */
 .staff-role-portrait-button {
   display: grid;
   width: 104px;
@@ -2108,12 +2433,14 @@ body.dark-theme .login-panel-wrap .section-card {
   transition: border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-portrait-button:hover`. */
 .staff-role-portrait-button:hover {
   border-color: var(--accent);
   box-shadow: 0 8px 20px rgba(237, 153, 81, 0.16);
   transform: translateY(-1px);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-portrait-button img`. */
 .staff-role-portrait-button img {
   width: 100%;
   height: 86px;
@@ -2121,6 +2448,7 @@ body.dark-theme .login-panel-wrap .section-card {
   object-position: center top;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-portrait-button .staff-role-portrait-placeholder`. */
 .staff-role-portrait-button .staff-role-portrait-placeholder {
   display: grid;
   width: 100%;
@@ -2132,6 +2460,7 @@ body.dark-theme .login-panel-wrap .section-card {
   font-size: 28px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-portrait-button span`. */
 .staff-role-portrait-button span {
   display: inline-flex;
   align-items: center;
@@ -2143,6 +2472,7 @@ body.dark-theme .login-panel-wrap .section-card {
   font-weight: 900;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-backdrop`. */
 .staff-role-review-backdrop {
   position: fixed;
   z-index: 1450;
@@ -2155,6 +2485,7 @@ body.dark-theme .login-panel-wrap .section-card {
   animation: image-review-fade 0.2s ease-out both;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-dialog`. */
 .staff-role-review-dialog {
   position: relative;
   display: grid;
@@ -2170,6 +2501,7 @@ body.dark-theme .login-panel-wrap .section-card {
   animation: image-review-rise 0.24s ease-out both;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-header`. */
 .staff-role-review-header {
   display: flex;
   align-items: flex-start;
@@ -2179,26 +2511,32 @@ body.dark-theme .login-panel-wrap .section-card {
   border-bottom: 1px solid var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-header>div`. */
 .staff-role-review-header>div {
   display: grid;
   gap: 6px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-header h2,
+.staff-role-review-header p`. */
 .staff-role-review-header h2,
 .staff-role-review-header p {
   margin: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-header h2`. */
 .staff-role-review-header h2 {
   color: var(--text-primary);
   font-size: 25px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-header p`. */
 .staff-role-review-header p {
   color: var(--text-secondary);
   font-size: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-grid`. */
 .staff-role-review-grid {
   display: grid;
   grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
@@ -2206,11 +2544,13 @@ body.dark-theme .login-panel-wrap .section-card {
   gap: 18px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-photo`. */
 .staff-role-review-photo {
   display: grid;
   gap: 9px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-photo img`. */
 .staff-role-review-photo img {
   width: 100%;
   max-height: 560px;
@@ -2221,6 +2561,7 @@ body.dark-theme .login-panel-wrap .section-card {
   object-fit: contain;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-photo-empty`. */
 .staff-role-review-photo-empty {
   display: grid;
   min-height: 340px;
@@ -2233,11 +2574,13 @@ body.dark-theme .login-panel-wrap .section-card {
   color: var(--text-muted);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-photo-empty>span`. */
 .staff-role-review-photo-empty>span {
   padding: 0;
   background: transparent;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-photo span`. */
 .staff-role-review-photo span {
   padding: 10px;
   border-radius: var(--radius-sm);
@@ -2248,11 +2591,13 @@ body.dark-theme .login-panel-wrap .section-card {
   text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-details`. */
 .staff-role-review-details {
   display: grid;
   gap: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-details section`. */
 .staff-role-review-details section {
   display: grid;
   gap: 10px;
@@ -2262,6 +2607,7 @@ body.dark-theme .login-panel-wrap .section-card {
   background: var(--surface-soft);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-details h3`. */
 .staff-role-review-details h3 {
   display: flex;
   align-items: center;
@@ -2271,15 +2617,18 @@ body.dark-theme .login-panel-wrap .section-card {
   font-size: 15px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-details h3 svg`. */
 .staff-role-review-details h3 svg {
   color: var(--accent);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-detail-list`. */
 .staff-role-detail-list {
   display: grid;
   gap: 8px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-detail-list span`. */
 .staff-role-detail-list span {
   display: grid;
   grid-template-columns: minmax(110px, 0.65fr) minmax(0, 1.35fr);
@@ -2291,16 +2640,19 @@ body.dark-theme .login-panel-wrap .section-card {
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-detail-list span:last-child`. */
 .staff-role-detail-list span:last-child {
   padding-bottom: 0;
   border-bottom: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-detail-list strong`. */
 .staff-role-detail-list strong {
   color: var(--text-muted);
   font-weight: 750;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-manager-note`. */
 .staff-role-manager-note {
   margin: 2px 0 0;
   padding: 10px;
@@ -2311,6 +2663,7 @@ body.dark-theme .login-panel-wrap .section-card {
   line-height: 1.5;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-actions`. */
 .staff-role-review-actions {
   display: grid;
   gap: 12px;
@@ -2318,10 +2671,12 @@ body.dark-theme .login-panel-wrap .section-card {
   border-top: 1px solid var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-actions .action-row`. */
 .staff-role-review-actions .action-row {
   justify-content: flex-end;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-result`. */
 .staff-role-review-result {
   display: flex;
   align-items: center;
@@ -2333,17 +2688,20 @@ body.dark-theme .login-panel-wrap .section-card {
   color: var(--text-secondary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-result svg`. */
 .staff-role-review-result svg {
   flex: 0 0 auto;
   color: var(--accent);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-staff-profile-filters`. */
 .manager-staff-profile-filters {
   display: grid;
   grid-template-columns: minmax(260px, 0.9fr) minmax(300px, 1.1fr);
   gap: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-staff-profile-workspace`. */
 .manager-staff-profile-workspace {
   display: grid;
   grid-template-columns: minmax(0, 0.88fr) minmax(430px, 1.12fr);
@@ -2351,16 +2709,19 @@ body.dark-theme .login-panel-wrap .section-card {
   gap: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-staff-profile-workspace>.section-card`. */
 .manager-staff-profile-workspace>.section-card {
   min-width: 0;
   margin: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manager-staff-profile-detail`. */
 .manager-staff-profile-detail {
   position: sticky;
   top: 18px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-profile-card`. */
 .staff-work-profile-card {
   display: grid;
   grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
@@ -2370,6 +2731,7 @@ body.dark-theme .login-panel-wrap .section-card {
   background: var(--surface-soft);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-profile-visual`. */
 .staff-work-profile-visual {
   display: grid;
   align-content: start;
@@ -2379,6 +2741,7 @@ body.dark-theme .login-panel-wrap .section-card {
   background: linear-gradient(155deg, rgba(255, 184, 245, 0.22), rgba(237, 153, 81, 0.13));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-formal-photo-frame`. */
 .staff-formal-photo-frame {
   position: relative;
   min-height: 320px;
@@ -2389,6 +2752,7 @@ body.dark-theme .login-panel-wrap .section-card {
   box-shadow: var(--shadow-sm);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-formal-photo`. */
 .staff-formal-photo {
   width: 100%;
   height: 100%;
@@ -2398,6 +2762,7 @@ body.dark-theme .login-panel-wrap .section-card {
   object-position: center top;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-profile-image-fallback`. */
 .staff-profile-image-fallback {
   display: grid;
   place-items: center;
@@ -2409,11 +2774,13 @@ body.dark-theme .login-panel-wrap .section-card {
   text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-profile-image-fallback span`. */
 .staff-profile-image-fallback span {
   font-size: 12px;
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-formal-photo-label`. */
 .staff-formal-photo-label {
   position: absolute;
   inset: auto 10px 10px 10px;
@@ -2431,6 +2798,7 @@ body.dark-theme .login-panel-wrap .section-card {
   backdrop-filter: blur(10px);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-personal-avatar-panel`. */
 .staff-personal-avatar-panel {
   display: flex;
   align-items: center;
@@ -2442,6 +2810,7 @@ body.dark-theme .login-panel-wrap .section-card {
   background: var(--card-bg);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-personal-avatar`. */
 .staff-personal-avatar {
   display: grid;
   width: 58px;
@@ -2454,32 +2823,39 @@ body.dark-theme .login-panel-wrap .section-card {
   object-fit: cover;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-personal-avatar.staff-profile-image-fallback`. */
 .staff-personal-avatar.staff-profile-image-fallback {
   gap: 0;
   padding: 0;
   color: var(--text-primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-personal-avatar.staff-profile-image-fallback svg`. */
 .staff-personal-avatar.staff-profile-image-fallback svg {
   display: none;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-personal-avatar.staff-profile-image-fallback span`. */
 .staff-personal-avatar.staff-profile-image-fallback span {
   font-size: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-personal-avatar-panel>div:last-child`. */
 .staff-personal-avatar-panel>div:last-child {
   display: grid;
   min-width: 0;
   gap: 2px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-personal-avatar-panel small,
+.staff-personal-avatar-panel span`. */
 .staff-personal-avatar-panel small,
 .staff-personal-avatar-panel span {
   color: var(--text-muted);
   font-size: 10px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-personal-avatar-panel strong`. */
 .staff-personal-avatar-panel strong {
   overflow: hidden;
   color: var(--text-primary);
@@ -2488,6 +2864,7 @@ body.dark-theme .login-panel-wrap .section-card {
   white-space: nowrap;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-profile-content`. */
 .staff-work-profile-content {
   display: grid;
   align-content: start;
@@ -2496,6 +2873,7 @@ body.dark-theme .login-panel-wrap .section-card {
   padding: 22px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-profile-heading`. */
 .staff-work-profile-heading {
   display: flex;
   align-items: flex-start;
@@ -2505,22 +2883,26 @@ body.dark-theme .login-panel-wrap .section-card {
   border-bottom: 1px solid var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-profile-heading>div`. */
 .staff-work-profile-heading>div {
   display: grid;
   gap: 7px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-profile-heading h2`. */
 .staff-work-profile-heading h2 {
   color: var(--text-primary);
   font-size: 23px;
   line-height: 1.2;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-profile-heading p`. */
 .staff-work-profile-heading p {
   color: var(--text-secondary);
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-employee-code`. */
 .staff-employee-code {
   display: inline-flex;
   align-items: center;
@@ -2535,12 +2917,14 @@ body.dark-theme .login-panel-wrap .section-card {
   font-weight: 900;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-detail-grid`. */
 .staff-work-detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-detail`. */
 .staff-work-detail {
   display: flex;
   align-items: flex-start;
@@ -2552,6 +2936,7 @@ body.dark-theme .login-panel-wrap .section-card {
   background: var(--card-bg);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-detail-icon`. */
 .staff-work-detail-icon {
   display: grid;
   width: 32px;
@@ -2563,12 +2948,14 @@ body.dark-theme .login-panel-wrap .section-card {
   color: var(--primary-hover);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-detail>span:last-child`. */
 .staff-work-detail>span:last-child {
   display: grid;
   min-width: 0;
   gap: 3px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-detail small`. */
 .staff-work-detail small {
   color: var(--text-muted);
   font-size: 10px;
@@ -2576,12 +2963,14 @@ body.dark-theme .login-panel-wrap .section-card {
   text-transform: uppercase;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-detail strong`. */
 .staff-work-detail strong {
   overflow-wrap: anywhere;
   color: var(--text-primary);
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-approval-strip`. */
 .staff-work-approval-strip {
   display: flex;
   align-items: flex-start;
@@ -2593,26 +2982,31 @@ body.dark-theme .login-panel-wrap .section-card {
   color: var(--success);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-approval-strip>svg`. */
 .staff-work-approval-strip>svg {
   flex: 0 0 auto;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-approval-strip>div`. */
 .staff-work-approval-strip>div {
   display: grid;
   gap: 3px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-approval-strip strong`. */
 .staff-work-approval-strip strong {
   color: var(--text-primary);
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-approval-strip span`. */
 .staff-work-approval-strip span {
   color: var(--text-secondary);
   font-size: 11px;
   line-height: 1.45;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-profile-loading`. */
 .staff-profile-loading {
   display: grid;
   gap: 12px;
@@ -2620,6 +3014,7 @@ body.dark-theme .login-panel-wrap .section-card {
   align-content: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-profile-loading span`. */
 .staff-profile-loading span {
   height: 62px;
   border-radius: var(--radius-sm);
@@ -2628,35 +3023,49 @@ body.dark-theme .login-panel-wrap .section-card {
   animation: staff-profile-shimmer 1.2s linear infinite;
 }
 
+/* Định nghĩa các bước chuyển động cho hiệu ứng `staff-profile-shimmer`. */
 @keyframes staff-profile-shimmer {
+  /* Áp dụng bố cục và hình thức hiển thị cho `to`. */
   to {
     background-position: -200% 0;
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 1500px)`. */
 @media (max-width: 1500px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.manager-staff-profile-workspace`. */
   .manager-staff-profile-workspace {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.manager-staff-profile-detail`. */
   .manager-staff-profile-detail {
     position: static;
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 1180px)`. */
 @media (max-width: 1180px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-workspace`. */
   .staff-request-workspace {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-form-card`. */
   .staff-request-form-card {
     position: static;
   }
 
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 640px)`. */
 @media (max-width: 640px) {
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.manager-staff-scope-grid,
+  .staff-request-mode-switch,
+  .manager-staff-profile-filters,
+  .staff-work-profile-card,
+  .staff-work-detail-grid`. */
   .manager-staff-scope-grid,
   .staff-request-mode-switch,
   .manager-staff-profile-filters,
@@ -2665,112 +3074,141 @@ body.dark-theme .login-panel-wrap .section-card {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-profile-visual`. */
   .staff-work-profile-visual {
     border-right: 0;
     border-bottom: 1px solid var(--border-color);
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-formal-photo-frame,
+  .staff-formal-photo`. */
   .staff-formal-photo-frame,
   .staff-formal-photo {
     min-height: 300px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-profile-content`. */
   .staff-work-profile-content {
     padding: 16px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-work-profile-heading`. */
   .staff-work-profile-heading {
     display: grid;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-employee-code`. */
   .staff-employee-code {
     justify-self: start;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-workspace`. */
   .staff-request-workspace {
     gap: 12px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-request-selected`. */
   .staff-request-selected {
     align-items: flex-start;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-portrait-upload,
+  .staff-request-empty`. */
   .staff-portrait-upload,
   .staff-request-empty {
     min-height: 220px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-portrait-upload>img`. */
   .staff-portrait-upload>img {
     height: 280px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-backdrop`. */
   .staff-role-review-backdrop {
     padding: 10px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-dialog`. */
   .staff-role-review-dialog {
     max-height: calc(100vh - 20px);
     padding: 15px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-header`. */
   .staff-role-review-header {
     display: grid;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-grid`. */
   .staff-role-review-grid {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-photo img`. */
   .staff-role-review-photo img {
     max-height: 420px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-detail-list span`. */
   .staff-role-detail-list span {
     grid-template-columns: 1fr;
     gap: 3px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.staff-role-review-actions .action-row`. */
   .staff-role-review-actions .action-row {
     display: grid;
     grid-template-columns: 1fr;
   }
 }
 
+/* Định nghĩa các bước chuyển động cho hiệu ứng `image-review-fade`. */
 @keyframes image-review-fade {
+  /* Áp dụng bố cục và hình thức hiển thị cho `from`. */
   from {
     opacity: 0;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `to`. */
   to {
     opacity: 1;
   }
 }
 
+/* Định nghĩa các bước chuyển động cho hiệu ứng `image-review-rise`. */
 @keyframes image-review-rise {
+  /* Áp dụng bố cục và hình thức hiển thị cho `from`. */
   from {
     opacity: 0;
     transform: translateY(14px) scale(0.98);
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `to`. */
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 640px)`. */
 @media (max-width: 640px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-photo-preview`. */
   .vehicle-photo-preview {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.vehicle-photo-preview>img`. */
   .vehicle-photo-preview>img {
     height: 160px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.image-review-backdrop`. */
   .image-review-backdrop {
     padding: 12px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.image-review-dialog`. */
   .image-review-dialog {
     max-height: calc(100vh - 24px);
     padding: 14px;

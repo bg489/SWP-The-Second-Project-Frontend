@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Khởi tạo ứng dụng React, gắn Redux và các lớp bao ngoài vào phần tử gốc của trang.
+ *
+ * Luồng chính: Dữ liệu đầu vào -> xử lý theo trách nhiệm của module -> xuất kết quả cho lớp gọi.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";

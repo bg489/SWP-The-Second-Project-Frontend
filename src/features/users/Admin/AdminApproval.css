@@ -1,3 +1,8 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/features/users/Admin/AdminApproval.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-container`. */
 .admin-container {
     display: flex;
     justify-content: center;
@@ -7,6 +12,7 @@
     width: 100%;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-content`. */
 .admin-content {
     background: #14171c;
     border: 1px solid #232931;
@@ -17,6 +23,7 @@
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-header`. */
 .admin-header {
     display: flex;
     justify-content: space-between;
@@ -26,6 +33,7 @@
     margin-bottom: 30px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-header h2`. */
 .admin-header h2 {
     margin: 0;
     font-size: 24px;
@@ -36,12 +44,14 @@
     -webkit-text-fill-color: transparent;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-sub`. */
 .admin-sub {
     margin: 6px 0 0 0;
     color: #7a889b;
     font-size: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-badge`. */
 .admin-badge {
     background: rgba(52, 152, 219, 0.1);
     color: #3498db;
@@ -53,6 +63,7 @@
     letter-spacing: 0.5px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-section`. */
 .admin-section {
     background: #1a1e24;
     border: 1px solid #28303d;
@@ -62,6 +73,7 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-section-title h3`. */
 .admin-section-title h3 {
     margin: 0 0 18px 0;
     font-size: 15px;
@@ -69,17 +81,20 @@
     color: #f1f5f9;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-table-wrapper`. */
 .admin-table-wrapper {
     overflow-x: auto;
     border-radius: 8px;
     border: 1px solid #28303d;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-table`. */
 .admin-table {
     width: 100%;
     border-collapse: collapse;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-table th`. */
 .admin-table th {
     background: #111419;
     color: #94a3b8;
@@ -91,6 +106,7 @@
     text-align: left;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-table td`. */
 .admin-table td {
     padding: 14px 16px;
     border-bottom: 1px solid #232931;
@@ -98,10 +114,12 @@
     color: #e2e8f0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-table tbody tr:hover`. */
 .admin-table tbody tr:hover {
     background: rgba(255, 255, 255, 0.01);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-plate`. */
 .admin-plate {
     font-family: monospace;
     font-weight: 700;
@@ -111,17 +129,20 @@
     border: 1px solid #334155;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-pkg-text`. */
 .admin-pkg-text {
     color: #3498db;
     font-weight: 600;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-actions`. */
 .admin-actions {
     display: flex;
     gap: 8px;
     justify-content: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-approve`. */
 .btn-approve {
     background: linear-gradient(135deg, #2ecc71, #27ae60);
     color: white;
@@ -133,6 +154,7 @@
     cursor: pointer;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-reject`. */
 .btn-reject {
     background: linear-gradient(135deg, #ff4d4d, #cf0000);
     color: white;
@@ -144,12 +166,15 @@
     cursor: pointer;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-approve:hover,
+.btn-reject:hover`. */
 .btn-approve:hover,
 .btn-reject:hover {
     transform: translateY(-1px);
     opacity: 0.9;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-empty-msg`. */
 .admin-empty-msg {
     color: #2ecc71;
     font-size: 14px;
@@ -157,6 +182,7 @@
     text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-status`. */
 .admin-status {
     font-size: 11px;
     font-weight: 800;
@@ -164,11 +190,13 @@
     border-radius: 4px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-approved`. */
 .status-approved {
     background: rgba(46, 204, 113, 0.15);
     color: #2ecc71;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-rejected`. */
 .status-rejected {
     background: rgba(255, 77, 77, 0.15);
     color: #ff4d4d;
@@ -183,6 +211,7 @@
     padding-bottom: 10px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-tab-btn`. */
 .admin-tab-btn {
     background: transparent;
     border: 1px solid #28303d;
@@ -195,11 +224,13 @@
     transition: all 0.2s ease;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-tab-btn:hover`. */
 .admin-tab-btn:hover {
     color: #fff;
     background: #1a1e24;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.admin-tab-btn.active`. */
 .admin-tab-btn.active {
     background: #3498db;
     color: #fff;
@@ -222,18 +253,22 @@
     gap: 15px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pkg-form-group`. */
 .pkg-form-group {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pkg-form-group label`. */
 .pkg-form-group label {
     font-size: 13px;
     color: #94a3b8;
     font-weight: 500;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pkg-form-group input,
+.pkg-form-group select`. */
 .pkg-form-group input,
 .pkg-form-group select {
     background: #111419;
@@ -246,6 +281,8 @@
     font-family: inherit;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pkg-form-group input:focus,
+.pkg-form-group select:focus`. */
 .pkg-form-group input:focus,
 .pkg-form-group select:focus {
     border-color: #3498db;
@@ -257,6 +294,7 @@
     gap: 10px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-radio-label`. */
 .status-radio-label {
     flex: 1;
     display: flex;
@@ -271,16 +309,19 @@
     color: #64748b;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-radio-label input`. */
 .status-radio-label input {
     display: none;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-radio-label.active-green`. */
 .status-radio-label.active-green {
     border-color: #2ecc71;
     color: #2ecc71;
     background: rgba(46, 204, 113, 0.05);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-radio-label.active-red`. */
 .status-radio-label.active-red {
     border-color: #e74c3c;
     color: #e74c3c;
@@ -294,6 +335,7 @@
     margin-top: 10px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pkg-btn-save`. */
 .pkg-btn-save {
     flex: 2;
     background: linear-gradient(135deg, #3498db, #2980b9);
@@ -305,6 +347,7 @@
     cursor: pointer;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pkg-btn-cancel`. */
 .pkg-btn-cancel {
     flex: 1;
     background: #334155;
@@ -322,11 +365,13 @@
     border-radius: 6px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pill-active`. */
 .pill-active {
     background: rgba(46, 204, 113, 0.15);
     color: #2ecc71;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pill-paused`. */
 .pill-paused {
     background: rgba(231, 76, 60, 0.15);
     color: #e74c3c;
@@ -343,6 +388,7 @@
     cursor: pointer;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-delete-inline`. */
 .btn-delete-inline {
     background: rgba(231, 76, 60, 0.1);
     border: 1px solid rgba(231, 76, 60, 0.2);
@@ -353,10 +399,12 @@
     cursor: pointer;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-edit-inline:hover`. */
 .btn-edit-inline:hover {
     background: #334155;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.btn-delete-inline:hover`. */
 .btn-delete-inline:hover {
     background: #e74c3c;
     color: #fff;
@@ -411,11 +459,13 @@
     transition: all 0.2s;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.card-action-btn:hover`. */
 .card-action-btn:hover {
     background: #232931;
     transform: scale(1.1);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.card-filter-select:focus`. */
 .card-filter-select:focus {
     border-color: #9b59b6 !important;
 }

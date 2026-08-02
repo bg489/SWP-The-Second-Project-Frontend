@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình UserProfilePage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Camera, Car, KeyRound, MailCheck, Plus, Save, Trash2, User } from "lucide-react";
@@ -26,6 +32,12 @@ import {
   VIETNAM_PHONE_ERROR,
 } from "../../utils/phone";
 
+/**
+ * Tạo nghiệp vụ `createVehicleForm` (create vehicle form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function createVehicleForm
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const createVehicleForm = () => ({
   plateNumber: "",
   vehicleType: "MOTORBIKE",
@@ -36,12 +48,25 @@ const createVehicleForm = () => ({
   vehicleLandscapeImageUrl: "",
 });
 
+/**
+ * Tạo nghiệp vụ `createVehicleImageState` (create vehicle image state). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function createVehicleImageState
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const createVehicleImageState = () => ({
   plateImageUrl: { error: "", fileName: "", processing: false },
   vehiclePortraitImageUrl: { error: "", fileName: "", processing: false },
   vehicleLandscapeImageUrl: { error: "", fileName: "", processing: false },
 });
 
+/**
+ * Thực hiện nghiệp vụ `VehiclePhotoCapture` (vehicle photo capture). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function VehiclePhotoCapture
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const VehiclePhotoCapture = ({
   buttonLabel,
   completeLabel,
@@ -119,6 +144,12 @@ const VehiclePhotoCapture = ({
   );
 };
 
+/**
+ * Thực hiện nghiệp vụ `UserProfilePage` (user profile page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function UserProfilePage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const UserProfilePage = () => {
   const dispatch = useDispatch();
   const { user: mockUser } = useMockAuth();
@@ -129,8 +160,10 @@ const UserProfilePage = () => {
     profileUpdateNotice,
     profileUpdateRequestId,
     user: authUser,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.auth);
   const user = authUser || mockUser;
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { vehicles, notice } = useSelector((state) => state.parking);
   const isResident = (frontendRole || user?.role || "USER") === "USER";
   const [profileForm, setProfileForm] = useState({
@@ -148,13 +181,16 @@ const UserProfilePage = () => {
   const [vehicleImages, setVehicleImages] = useState(createVehicleImageState);
   const [form, setForm] = useState(createVehicleForm);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (isResident) {
       dispatch(fetchMyVehiclesRequest());
     }
   }, [dispatch, isResident]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
+    /* Callback nội bộ của lời gọi `setTimeout`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const timer = window.setTimeout(() => {
       setProfileForm({
         avatarCropX: Number(user?.avatarCropX ?? 50),
@@ -166,25 +202,30 @@ const UserProfilePage = () => {
       });
     }, 0);
 
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => window.clearTimeout(timer);
   }, [user?.avatar, user?.avatarCropX, user?.avatarCropY, user?.avatarCropZoom, user?.avatarUrl, user?.name, user?.phone]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!profileUpdateRequestId && profileUpdateNotice === "Cập nhật hồ sơ thành công.") {
       setProfileOtp("");
     }
   }, [profileUpdateNotice, profileUpdateRequestId]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!vehicleSubmissionRef.current || vehicles.saving) return undefined;
 
     if (notice === "Đã gửi hồ sơ xe để chờ duyệt.") {
       vehicleSubmissionRef.current = false;
+      /* Callback nội bộ của lời gọi `setTimeout`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       const timer = window.setTimeout(() => {
         setForm(createVehicleForm());
         setVehicleImages(createVehicleImageState());
       }, 0);
 
+      /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       return () => window.clearTimeout(timer);
     }
 
@@ -195,11 +236,27 @@ const UserProfilePage = () => {
     return undefined;
   }, [notice, vehicles.error, vehicles.saving]);
 
+  /**
+   * Cập nhật nghiệp vụ `updateForm` (update form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function updateForm
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const updateForm = (field, value) => {
     dispatch(clearParkingNotice());
+    /* Callback nội bộ của lời gọi `setForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleSubmit` (handle submit). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleSubmit
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleSubmit = (event) => {
     event.preventDefault();
     const missingImages = {
@@ -207,10 +264,13 @@ const UserProfilePage = () => {
       vehiclePortraitImageUrl: "Vui lòng chụp xe theo chiều dọc thân xe.",
       vehicleLandscapeImageUrl: "Vui lòng chụp ngang thân xe từ bên hông.",
     };
+    /* Callback nội bộ của lời gọi `every`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const hasAllImages = Object.keys(missingImages).every((field) => form[field]);
 
     if (!form.plateNumber.trim() || !form.brand.trim() || !hasAllImages) {
+      /* Callback nội bộ của lời gọi `setVehicleImages`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       setVehicleImages((prev) => Object.fromEntries(
+        /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         Object.entries(prev).map(([field, state]) => [
           field,
           {
@@ -237,10 +297,19 @@ const UserProfilePage = () => {
     );
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleVehicleImageChange` (handle vehicle image change). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleVehicleImageChange
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} file - Giá trị `file` được hàm sử dụng trong quá trình xử lý.
+   * @returns {Promise<*>} Promise chứa kết quả khi toàn bộ thao tác bất đồng bộ hoàn tất.
+   */
   const handleVehicleImageChange = async (field, file) => {
     if (!file) return;
 
     dispatch(clearParkingNotice());
+    /* Callback nội bộ của lời gọi `setVehicleImages`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setVehicleImages((prev) => ({
       ...prev,
       [field]: { ...prev[field], error: "", processing: true },
@@ -248,7 +317,9 @@ const UserProfilePage = () => {
 
     try {
       const imageUrl = await compressImageFile(file);
+      /* Callback nội bộ của lời gọi `setForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       setForm((prev) => ({ ...prev, [field]: imageUrl }));
+      /* Callback nội bộ của lời gọi `setVehicleImages`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       setVehicleImages((prev) => ({
         ...prev,
         [field]: {
@@ -258,6 +329,7 @@ const UserProfilePage = () => {
         },
       }));
     } catch (error) {
+      /* Callback nội bộ của lời gọi `setVehicleImages`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       setVehicleImages((prev) => ({
         ...prev,
         [field]: {
@@ -267,6 +339,7 @@ const UserProfilePage = () => {
         },
       }));
     } finally {
+      /* Callback nội bộ của lời gọi `setVehicleImages`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       setVehicleImages((prev) => ({
         ...prev,
         [field]: { ...prev[field], processing: false },
@@ -274,14 +347,31 @@ const UserProfilePage = () => {
     }
   };
 
+  /**
+   * Xóa hoặc đặt lại nghiệp vụ `removeVehicleImage` (remove vehicle image). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function removeVehicleImage
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const removeVehicleImage = (field) => {
+    /* Callback nội bộ của lời gọi `setForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setForm((prev) => ({ ...prev, [field]: "" }));
+    /* Callback nội bộ của lời gọi `setVehicleImages`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setVehicleImages((prev) => ({
       ...prev,
       [field]: { error: "", fileName: "", processing: false },
     }));
   };
 
+  /**
+   * Cập nhật nghiệp vụ `updateProfileForm` (update profile form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function updateProfileForm
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const updateProfileForm = (field, value) => {
     const nextValue =
       field === "phone" ? sanitizeVietnamPhoneInput(value) : value;
@@ -290,9 +380,17 @@ const UserProfilePage = () => {
       setProfilePhoneError("");
     }
 
+    /* Callback nội bộ của lời gọi `setProfileForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setProfileForm((prev) => ({ ...prev, [field]: nextValue }));
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleProfileSubmit` (handle profile submit). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleProfileSubmit
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleProfileSubmit = (event) => {
     event.preventDefault();
 
@@ -315,6 +413,12 @@ const UserProfilePage = () => {
     setProfileOtp("");
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleConfirmProfileUpdate` (handle confirm profile update). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleConfirmProfileUpdate
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleConfirmProfileUpdate = () => {
     dispatch(
       confirmProfileUpdateRequest({
@@ -324,6 +428,7 @@ const UserProfilePage = () => {
     );
   };
 
+  /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const isProcessingVehicleImage = Object.values(vehicleImages).some((image) => image.processing);
   const hasAllVehicleImages = [
     form.plateImageUrl,
@@ -332,13 +437,41 @@ const UserProfilePage = () => {
   ].every(Boolean);
 
   const columns = [
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Biển số", key: "plateNumber", render: (row) => <strong>{row.plateNumber}</strong> },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Loại xe", key: "vehicleType", render: (row) => getVehicleTypeLabel(row.vehicleType) },
     { header: "Hãng xe", key: "brand" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Màu xe", key: "color", render: (row) => row.color || "-" },
     {
       header: "Hồ sơ ảnh",
       key: "vehicleImages",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => {
         const imageCount = [
           row.plateImageUrl,
@@ -356,6 +489,13 @@ const UserProfilePage = () => {
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => <span className={`pill ${getStatusTone(row.status)}`}>{getStatusLabel(row.status)}</span>,
     },
   ];

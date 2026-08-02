@@ -1,3 +1,13 @@
+/**
+ * @fileoverview Cung cấp lớp truy cập dữ liệu hoặc dữ liệu hỗ trợ cho frontend trong mockParkingData.
+ *
+ * Luồng chính: Dữ liệu đầu vào -> xử lý theo trách nhiệm của module -> xuất kết quả cho lớp gọi.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
+/**
+ * Khai báo `ROLE_KEYS` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const ROLE_KEYS = {
   USER: "USER",
   PARKING_STAFF: "PARKING_STAFF",
@@ -5,6 +15,10 @@ export const ROLE_KEYS = {
   ADMIN: "ADMIN",
 };
 
+/**
+ * Khai báo `roleLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const roleLabels = {
   USER: "Cư dân",
   PARKING_STAFF: "Nhân viên bãi xe",
@@ -14,6 +28,10 @@ export const roleLabels = {
   MANAGER: "Quản lý bãi xe",
 };
 
+/**
+ * Khai báo `roleHomePaths` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const roleHomePaths = {
   USER: "/user/dashboard",
   PARKING_STAFF: "/staff/dashboard",
@@ -21,6 +39,10 @@ export const roleHomePaths = {
   ADMIN: "/admin/dashboard",
 };
 
+/**
+ * Khai báo `buildingInfo` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const buildingInfo = {
   id: 1,
   name: "Sunrise Residence Parking",
@@ -33,6 +55,10 @@ export const buildingInfo = {
     "Hệ thống quản lý tòa nhà gửi xe bằng QR. Xe máy quản lý theo sức chứa, ô tô quản lý theo từng ô đỗ cụ thể.",
 };
 
+/**
+ * Khai báo `floors` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const floors = [
   {
     id: 1,
@@ -72,6 +98,11 @@ export const floors = [
   },
 ];
 
+/**
+ * Khai báo `carSlots` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
+/* Callback nội bộ của lời gọi `from`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
 export const carSlots = Array.from({ length: 36 }, (_, index) => {
   const slotNo = String(index + 1).padStart(2, "0");
   const statusMap = {
@@ -105,6 +136,10 @@ export const carSlots = Array.from({ length: 36 }, (_, index) => {
   };
 });
 
+/**
+ * Khai báo `users` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const users = [
   {
     id: 1,
@@ -158,6 +193,10 @@ export const users = [
   },
 ];
 
+/**
+ * Khai báo `vehicles` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const vehicles = [
   {
     id: 101,
@@ -216,6 +255,10 @@ export const vehicles = [
   },
 ];
 
+/**
+ * Khai báo `monthlyPasses` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const monthlyPasses = [
   {
     id: 501,
@@ -258,12 +301,20 @@ export const monthlyPasses = [
   },
 ];
 
+/**
+ * Khai báo `monthlyPackages` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const monthlyPackages = [
   { id: "PKG-MB", name: "Gói tháng xe máy", vehicleType: "MOTORBIKE", price: 120000, duration: "30 ngày" },
   { id: "PKG-CAR", name: "Gói tháng ô tô B3", vehicleType: "CAR", price: 1800000, duration: "30 ngày" },
   { id: "PKG-CAR-VIP", name: "Gói ô tô ô ưu tiên", vehicleType: "CAR", price: 2400000, duration: "30 ngày" },
 ];
 
+/**
+ * Khai báo `slotRegistrations` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const slotRegistrations = [
   {
     id: 701,
@@ -297,6 +348,10 @@ export const slotRegistrations = [
   },
 ];
 
+/**
+ * Khai báo `tempQrCards` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const tempQrCards = [
   { id: "TMP-001", label: "QR tạm 001", status: "READY", currentSessionId: null, note: "Sẵn sàng phát cho khách vãng lai." },
   { id: "TMP-002", label: "QR tạm 002", status: "IN_USE", currentSessionId: "SESS-1002", note: "Đang gắn với khách ô tô." },
@@ -304,6 +359,10 @@ export const tempQrCards = [
   { id: "TMP-004", label: "QR tạm 004", status: "LOCKED", currentSessionId: null, note: "Mất/hỏng, tạm khóa." },
 ];
 
+/**
+ * Khai báo `parkingSessions` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const parkingSessions = [
   {
     id: "SESS-1001",
@@ -387,6 +446,10 @@ export const parkingSessions = [
   },
 ];
 
+/**
+ * Khai báo `violations` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const violations = [
   {
     id: "VIO-01",
@@ -426,6 +489,10 @@ export const violations = [
   },
 ];
 
+/**
+ * Khai báo `payments` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const payments = [
   {
     id: 9001,
@@ -459,6 +526,10 @@ export const payments = [
   },
 ];
 
+/**
+ * Khai báo `reportSummary` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const reportSummary = {
   date: "2026-06-11",
   trafficIn: 842,
@@ -473,6 +544,10 @@ export const reportSummary = {
   expiredQrPasses: 11,
 };
 
+/**
+ * Khai báo `revenueSeries` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const revenueSeries = [
   { label: "T2", value: 128 },
   { label: "T3", value: 146 },
@@ -481,6 +556,10 @@ export const revenueSeries = [
   { label: "T6", value: 225 },
 ];
 
+/**
+ * Khai báo `pricingPolicy` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const pricingPolicy = {
   motorbikeTurn: 4000,
   carHourly: 20000,
@@ -488,6 +567,13 @@ export const pricingPolicy = {
   wrongSlotFine: 300000,
 };
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `formatCurrency` (format currency). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function formatCurrency
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 export const formatCurrency = (value) =>
   new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -495,14 +581,42 @@ export const formatCurrency = (value) =>
     maximumFractionDigits: 0,
   }).format(value);
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `formatDate` (format date). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function formatDate
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 export const formatDate = (value) =>
   value ? new Date(value).toLocaleDateString("vi-VN") : "-";
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `formatDateTime` (format date time). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function formatDateTime
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 export const formatDateTime = (value) =>
   value ? new Date(value).toLocaleString("vi-VN", { hour12: false }) : "-";
 
+/**
+ * Lấy nghiệp vụ `getVehicleTypeLabel` (get vehicle type label). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function getVehicleTypeLabel
+ * @param {*} type - Giá trị `type` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 export const getVehicleTypeLabel = (type) => (type === "CAR" ? "Ô tô" : "Xe máy");
 
+/**
+ * Lấy nghiệp vụ `getStatusTone` (get status tone). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function getStatusTone
+ * @param {*} status - Giá trị `status` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 export const getStatusTone = (status) => {
   const normalized = String(status || "").toUpperCase();
   if (["ACTIVE", "APPROVED", "PAID", "SUCCESS", "AVAILABLE", "READY", "RETURNED"].includes(normalized)) return "success";
@@ -511,6 +625,10 @@ export const getStatusTone = (status) => {
   return "neutral";
 };
 
+/**
+ * Khai báo `statusLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/services/mockParkingData.js.
+ */
 export const statusLabels = {
   ACTIVE: "Đang hoạt động",
   APPROVED: "Đã duyệt",
@@ -543,4 +661,11 @@ export const statusLabels = {
   INACTIVE: "Ngưng hoạt động",
 };
 
+/**
+ * Lấy nghiệp vụ `getStatusLabel` (get status label). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function getStatusLabel
+ * @param {*} status - Giá trị `status` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 export const getStatusLabel = (status) => statusLabels[status] || status || "-";

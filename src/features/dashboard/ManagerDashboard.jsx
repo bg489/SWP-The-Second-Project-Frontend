@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình ManagerDashboard, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -24,18 +30,62 @@ import { formatCurrency } from "../../services/mockParkingData";
 import { fetchReportsRequest } from "../backend/parking/parkingSlice";
 import "./ManagerDashboard.css";
 
+/**
+ * Khai báo `EMPTY_OBJECT` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/dashboard/ManagerDashboard.jsx.
+ */
 const EMPTY_OBJECT = Object.freeze({});
+/**
+ * Khai báo `EMPTY_ROWS` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/dashboard/ManagerDashboard.jsx.
+ */
 const EMPTY_ROWS = Object.freeze([]);
+/**
+ * Thực hiện nghiệp vụ `asRows` (as rows). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function asRows
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const asRows = (value) => (Array.isArray(value) ? value : EMPTY_ROWS);
+/**
+ * Thực hiện nghiệp vụ `toNumber` (to number). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function toNumber
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const toNumber = (value) => Number(value || 0);
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `formatNumber` (format number). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function formatNumber
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const formatNumber = (value) => toNumber(value).toLocaleString("vi-VN");
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `formatPercentage` (format percentage). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function formatPercentage
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const formatPercentage = (value) => `${toNumber(value).toLocaleString("vi-VN", { maximumFractionDigits: 2 })}%`;
 
+/**
+ * Thực hiện nghiệp vụ `ManagerDashboard` (manager dashboard). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function ManagerDashboard
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const ManagerDashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { reports } = useSelector((state) => state.parking);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchReportsRequest());
   }, [dispatch]);
@@ -55,12 +105,15 @@ const ManagerDashboard = () => {
   const violationRows = asRows(violations.rows);
   const buildingCount = toNumber(report.scope?.buildingCount || capacityRows.length);
   const totalRevenue = toNumber(revenue.totalRevenue || revenue.paidRevenue);
+  /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const maxRevenue = Math.max(...revenueRows.map((row) => toNumber(row.amount)), 1);
   const registeredMix = customerMix.registeredUser || {};
   const walkInMix = customerMix.walkInGuest || {};
 
   const capacitySummary = useMemo(
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => capacityRows.reduce(
+      /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       (summary, row) => ({
         carMonthlySlots: summary.carMonthlySlots + toNumber(row.carMonthlySlots),
         carOccupiedSlots: summary.carOccupiedSlots + toNumber(row.carOccupiedSlots),
@@ -83,37 +136,49 @@ const ManagerDashboard = () => {
     [capacityRows]
   );
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const qrSummary = useMemo(() => {
     const statusRows = asRows(qrPasses.byStatus);
     const expiringRows = asRows(qrPasses.expiringSoon);
 
     return {
       active: statusRows
+        /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         .filter((row) => row.status === "ACTIVE")
+        /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         .reduce((sum, row) => sum + toNumber(row.total), 0),
       expired: statusRows
+        /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         .filter((row) => row.status === "EXPIRED")
+        /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         .reduce((sum, row) => sum + toNumber(row.total), 0),
+      /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       expiringSoon: expiringRows.reduce((sum, row) => sum + toNumber(row.expiringSoon), 0),
     };
   }, [qrPasses]);
 
   const violationSummary = useMemo(
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => ({
+      /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       count: violationRows.reduce((sum, row) => sum + toNumber(row.violationCount), 0),
       paidAmount: toNumber(
         violations.paidPenalty ||
+        /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         violationRows.reduce((sum, row) => sum + toNumber(row.paidPenalty), 0)
       ),
     }),
     [violationRows, violations.paidPenalty]
   );
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const buildingRows = useMemo(() => {
     const operationsByBuilding = new Map(
+      /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       operationRows.map((row) => [String(row.buildingId), row])
     );
 
+    /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return capacityRows.map((capacity) => ({
       ...capacity,
       ...(operationsByBuilding.get(String(capacity.buildingId)) || {}),
@@ -128,6 +193,13 @@ const ManagerDashboard = () => {
       header: "Xe vào / ra",
       key: "traffic",
       minWidth: 115,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => `${formatNumber(row.entryCount)} / ${formatNumber(row.exitCount)}`,
     },
     { header: "Đang gửi", key: "activeSessions" },
@@ -135,6 +207,13 @@ const ManagerDashboard = () => {
       header: "Xe máy đang gửi / sức chứa",
       key: "motorbikeCapacity",
       minWidth: 175,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => `${formatNumber(row.motorbikeCurrent)} / ${formatNumber(row.motorbikeCapacity)}`,
     },
     { header: "Xe máy còn nhận", key: "effectiveMotorbikeRemaining", minWidth: 130 },
@@ -142,22 +221,49 @@ const ManagerDashboard = () => {
       header: "Ô tô đang đỗ / tổng ô",
       key: "carSlots",
       minWidth: 150,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => `${formatNumber(row.carOccupiedSlots)} / ${formatNumber(row.carTotalSlots)}`,
     },
     {
       header: "Gói tháng xe máy / ô tô",
       key: "monthlyCapacity",
       minWidth: 170,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => `${formatNumber(row.motorbikeMonthlyPasses)} / ${formatNumber(row.carMonthlySlots)}`,
     },
     {
       header: "Người dùng / khách",
       key: "customerMix",
       minWidth: 160,
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => `${formatPercentage(row.registeredUserPercentage)} / ${formatPercentage(row.walkInGuestPercentage)}`,
     },
   ];
 
+  /**
+   * Thực hiện nghiệp vụ `refresh` (refresh). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function refresh
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const refresh = () => dispatch(fetchReportsRequest());
   const generatedAt = report.generatedAt
     ? new Date(report.generatedAt).toLocaleString("vi-VN")

@@ -1,9 +1,15 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/features/pages/ManagerViolationTypesPage.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.violation-special-grid`. */
 .violation-special-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.violation-special-card`. */
 .violation-special-card {
   min-width: 0;
   padding: 20px;
@@ -14,6 +20,7 @@
   border-top: 3px solid var(--orange);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.violation-special-icon`. */
 .violation-special-icon {
   width: 42px;
   height: 42px;
@@ -24,6 +31,7 @@
   background: color-mix(in srgb, var(--orange) 12%, transparent);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.violation-special-heading`. */
 .violation-special-heading {
   min-width: 0;
   display: grid;
@@ -32,6 +40,7 @@
   gap: 8px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.violation-special-heading h2`. */
 .violation-special-heading h2 {
   margin: 0;
   font-size: 18px;
@@ -39,39 +48,50 @@
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.violation-special-price,
+.violation-special-card > p,
+.violation-special-card > button`. */
 .violation-special-price,
 .violation-special-card > p,
 .violation-special-card > button {
   grid-column: 1 / -1;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.violation-special-price`. */
 .violation-special-price {
   color: var(--text-primary);
   font-size: 26px;
   line-height: 1.2;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.violation-special-card > p`. */
 .violation-special-card > p {
   margin: 0;
   color: var(--text-secondary);
   line-height: 1.55;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.violation-special-card > button`. */
 .violation-special-card > button {
   justify-self: start;
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 1100px)`. */
 @media (max-width: 1100px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.violation-special-grid`. */
   .violation-special-grid {
     grid-template-columns: 1fr;
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 520px)`. */
 @media (max-width: 520px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.violation-special-card`. */
   .violation-special-card {
     padding: 16px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.violation-special-price`. */
   .violation-special-price {
     font-size: 22px;
   }

@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình StaffWorkProfilePage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { BadgeCheck, IdCard, RefreshCcw, UserRound } from "lucide-react";
@@ -11,14 +17,23 @@ import {
   fetchStaffProfileRequest,
 } from "../backend/staffRoleRequests/staffRoleRequestSlice";
 
+/**
+ * Thực hiện nghiệp vụ `StaffWorkProfilePage` (staff work profile page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function StaffWorkProfilePage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const StaffWorkProfilePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { profile, profileLoading, error } = useSelector((state) => state.staffRoleRequests);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchStaffProfileRequest());
 
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => {
       dispatch(clearStaffProfile());
     };

@@ -1,9 +1,15 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/components/Layout/Layout.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.layout-root`. */
 .layout-root {
   position: relative;
   display: flex;
   min-height: 100vh;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.layout-main-wrapper`. */
 .layout-main-wrapper {
   display: flex;
   flex: 1;
@@ -13,6 +19,7 @@
   transition: padding var(--transition-normal);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.sidebar-container`. */
 .sidebar-container {
   position: fixed;
   inset: 16px auto 16px 16px;
@@ -29,14 +36,17 @@
   transition: transform var(--transition-normal);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.layout-main-wrapper.sidebar-hidden`. */
 .layout-main-wrapper.sidebar-hidden {
   padding-left: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.sidebar-container.collapsed:not(.open)`. */
 .sidebar-container.collapsed:not(.open) {
   transform: translateX(-112%);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.sidebar-desktop-toggle-btn`. */
 .sidebar-desktop-toggle-btn {
   display: grid;
   width: 40px;
@@ -50,11 +60,13 @@
   transition: all var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.sidebar-desktop-toggle-btn:hover`. */
 .sidebar-desktop-toggle-btn:hover {
   border-color: rgba(237, 153, 81, 0.42);
   color: var(--primary-hover);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.sidebar-brand`. */
 .sidebar-brand {
   display: flex;
   align-items: center;
@@ -63,6 +75,7 @@
   padding: 18px 18px 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.brand-logo`. */
 .brand-logo {
   display: flex;
   align-items: center;
@@ -72,6 +85,7 @@
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.brand-mark`. */
 .brand-mark {
   display: grid;
   width: 38px;
@@ -83,6 +97,7 @@
   box-shadow: 0 12px 26px rgba(237, 153, 81, 0.26);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.sidebar-close-btn`. */
 .sidebar-close-btn {
   display: none;
   border: 0;
@@ -92,6 +107,7 @@
   font-size: 28px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.sidebar-user-badge`. */
 .sidebar-user-badge {
   margin: 0 14px 12px;
   padding: 12px;
@@ -100,18 +116,21 @@
   background: linear-gradient(135deg, rgba(255, 184, 245, 0.18), rgba(237, 153, 81, 0.12));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.badge-role`. */
 .badge-role {
   color: var(--primary-hover);
   font-size: 12px;
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.badge-desc`. */
 .badge-desc {
   margin-top: 2px;
   color: var(--text-secondary);
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.sidebar-nav`. */
 .sidebar-nav {
   display: flex;
   flex: 1;
@@ -121,6 +140,7 @@
   padding: 8px 12px 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.nav-link`. */
 .nav-link {
   display: flex;
   align-items: center;
@@ -133,27 +153,32 @@
   transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.nav-link:hover`. */
 .nav-link:hover {
   transform: translateX(2px);
   background: rgba(255, 184, 245, 0.12);
   color: var(--text-primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.nav-link.active`. */
 .nav-link.active {
   background: linear-gradient(135deg, var(--primary-light), var(--accent-light));
   color: var(--primary-hover);
   box-shadow: inset 3px 0 0 var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.nav-icon`. */
 .nav-icon {
   flex-shrink: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.sidebar-footer`. */
 .sidebar-footer {
   padding: 14px;
   border-top: 1px solid var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.logout-btn`. */
 .logout-btn {
   display: flex;
   width: 100%;
@@ -170,12 +195,14 @@
   transition: all var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.logout-btn:hover`. */
 .logout-btn:hover {
   border-color: rgba(220, 74, 74, 0.3);
   background: var(--danger-light);
   color: var(--danger);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.header-container`. */
 .header-container {
   position: sticky;
   top: 0;
@@ -190,6 +217,8 @@
   backdrop-filter: var(--glass-blur);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.header-left,
+.header-right`. */
 .header-left,
 .header-right {
   display: flex;
@@ -198,6 +227,9 @@
   gap: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.menu-toggle-btn,
+.theme-toggle-btn,
+.sidebar-desktop-toggle-btn`. */
 .menu-toggle-btn,
 .theme-toggle-btn,
 .sidebar-desktop-toggle-btn {
@@ -213,16 +245,20 @@
   transition: all var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.menu-toggle-btn`. */
 .menu-toggle-btn {
   display: none;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.menu-toggle-btn:hover,
+.theme-toggle-btn:hover`. */
 .menu-toggle-btn:hover,
 .theme-toggle-btn:hover {
   border-color: rgba(237, 153, 81, 0.42);
   color: var(--primary-hover);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.header-title h2`. */
 .header-title h2 {
   color: var(--text-primary);
   font-size: 18px;
@@ -230,12 +266,14 @@
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.header-title p`. */
 .header-title p {
   color: var(--text-muted);
   font-size: 12px;
   font-weight: 700;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.role-switcher-widget`. */
 .role-switcher-widget {
   display: flex;
   min-width: 0;
@@ -247,16 +285,19 @@
   background: var(--card-bg);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.switcher-label`. */
 .switcher-label {
   color: var(--text-muted);
   font-size: 12px;
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.role-display-widget`. */
 .role-display-widget {
   cursor: default;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.role-display-value`. */
 .role-display-value {
   min-width: 0;
   overflow: hidden;
@@ -266,6 +307,7 @@
   white-space: nowrap;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.header-user-profile`. */
 .header-user-profile {
   display: flex;
   flex-shrink: 0;
@@ -277,6 +319,7 @@
   background: var(--card-bg);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.user-profile-avatar`. */
 .user-profile-avatar {
   display: grid;
   place-items: center;
@@ -287,11 +330,13 @@
   object-fit: cover;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.user-profile-avatar-crop`. */
 .user-profile-avatar-crop {
   overflow: hidden;
   padding: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.user-profile-avatar-crop img`. */
 .user-profile-avatar-crop img {
   width: 100%;
   height: 100%;
@@ -299,6 +344,7 @@
   transform-origin: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.avatar-fallback`. */
 .avatar-fallback {
   background: linear-gradient(135deg, var(--pink), var(--orange));
   color: #fff;
@@ -306,33 +352,39 @@
   font-weight: 900;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.user-profile-info`. */
 .user-profile-info {
   display: flex;
   min-width: 130px;
   flex-direction: column;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.profile-name`. */
 .profile-name {
   color: var(--text-primary);
   font-size: 13px;
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.profile-role`. */
 .profile-role {
   color: var(--text-muted);
   font-size: 11px;
   font-weight: 700;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-widget`. */
 .notification-widget {
   position: relative;
   flex-shrink: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-toggle-btn`. */
 .notification-toggle-btn {
   position: relative;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-badge`. */
 .notification-badge {
   position: absolute;
   top: -6px;
@@ -350,6 +402,7 @@
   font-weight: 900;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-popover`. */
 .notification-popover {
   position: absolute;
   top: calc(100% + 12px);
@@ -364,6 +417,7 @@
   animation: notificationDrop 0.22s ease-out both;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-popover-header`. */
 .notification-popover-header {
   display: flex;
   align-items: center;
@@ -374,18 +428,21 @@
   background: linear-gradient(135deg, rgba(255, 184, 245, 0.18), rgba(237, 153, 81, 0.12));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-popover-header strong`. */
 .notification-popover-header strong {
   display: block;
   color: var(--text-primary);
   font-size: 15px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-popover-header span`. */
 .notification-popover-header span {
   color: var(--text-muted);
   font-size: 12px;
   font-weight: 700;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-email-switch`. */
 .notification-email-switch {
   display: inline-flex;
   flex-shrink: 0;
@@ -402,23 +459,27 @@
   transition: all var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-email-switch.active`. */
 .notification-email-switch.active {
   border-color: rgba(28, 169, 103, 0.28);
   background: rgba(28, 169, 103, 0.1);
   color: var(--success);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-email-switch:disabled`. */
 .notification-email-switch:disabled {
   cursor: wait;
   opacity: 0.7;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-list`. */
 .notification-list {
   max-height: 360px;
   overflow-y: auto;
   padding: 8px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-item`. */
 .notification-item {
   display: grid;
   grid-template-columns: 10px 1fr;
@@ -427,10 +488,12 @@
   border-radius: var(--radius-sm);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-item:hover`. */
 .notification-item:hover {
   background: rgba(255, 184, 245, 0.12);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-dot`. */
 .notification-dot {
   width: 8px;
   height: 8px;
@@ -439,11 +502,13 @@
   background: linear-gradient(135deg, var(--pink), var(--orange));
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-item strong`. */
 .notification-item strong {
   color: var(--text-primary);
   font-size: 13px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-item p`. */
 .notification-item p {
   margin-top: 3px;
   color: var(--text-secondary);
@@ -451,6 +516,7 @@
   line-height: 1.45;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-item span`. */
 .notification-item span {
   display: inline-block;
   margin-top: 6px;
@@ -459,6 +525,7 @@
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.notification-empty`. */
 .notification-empty {
   padding: 22px 14px;
   color: var(--text-muted);
@@ -467,22 +534,27 @@
   font-weight: 700;
 }
 
+/* Định nghĩa các bước chuyển động cho hiệu ứng `notificationDrop`. */
 @keyframes notificationDrop {
+  /* Áp dụng bố cục và hình thức hiển thị cho `from`. */
   from {
     opacity: 0;
     transform: translateY(-8px) scale(0.98);
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `to`. */
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.layout-content-area`. */
 .layout-content-area {
   flex: 1;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.content-container`. */
 .content-container {
   width: 100%;
   max-width: 1440px;
@@ -490,44 +562,56 @@
   padding: 18px 30px 36px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.sidebar-overlay`. */
 .sidebar-overlay {
   display: none;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.animate-fade-in`. */
 .animate-fade-in {
   animation: fadeIn 0.28s ease-out both;
 }
 
+/* Định nghĩa các bước chuyển động cho hiệu ứng `fadeIn`. */
 @keyframes fadeIn {
+  /* Áp dụng bố cục và hình thức hiển thị cho `from`. */
   from {
     opacity: 0;
     transform: translateY(8px);
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `to`. */
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 1100px)`. */
 @media (max-width: 1100px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.layout-main-wrapper`. */
   .layout-main-wrapper {
     padding-left: 0;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.sidebar-container`. */
   .sidebar-container {
     transform: translateX(-112%);
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.sidebar-container.open`. */
   .sidebar-container.open {
     transform: translateX(0);
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.menu-toggle-btn,
+  .sidebar-close-btn`. */
   .menu-toggle-btn,
   .sidebar-close-btn {
     display: grid;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.sidebar-overlay`. */
   .sidebar-overlay {
     position: fixed;
     inset: 0;
@@ -537,32 +621,42 @@
     backdrop-filter: blur(6px);
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.sidebar-desktop-toggle-btn`. */
   .sidebar-desktop-toggle-btn {
     display: none;
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 760px)`. */
 @media (max-width: 760px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.header-container`. */
   .header-container {
     padding: 12px 16px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.content-container`. */
   .content-container {
     padding: 12px 16px 30px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.header-title p,
+  .switcher-label,
+  .user-profile-info`. */
   .header-title p,
   .switcher-label,
   .user-profile-info {
     display: none;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.header-right`. */
   .header-right {
     gap: 8px;
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 600px)`. */
 @media (max-width: 600px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.header-container`. */
   .header-container {
     flex-wrap: wrap;
     align-items: flex-start;
@@ -570,20 +664,24 @@
     padding: 12px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.header-left`. */
   .header-left {
     width: 100%;
     gap: 10px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.header-title`. */
   .header-title {
     min-width: 0;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.header-title h2`. */
   .header-title h2 {
     font-size: clamp(20px, 7vw, 28px);
     line-height: 1.12;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.header-right`. */
   .header-right {
     display: grid;
     width: 100%;
@@ -591,16 +689,21 @@
     gap: 8px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.role-switcher-widget`. */
   .role-switcher-widget {
     width: 100%;
     justify-content: space-between;
     padding: 8px 10px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.role-display-value`. */
   .role-display-value {
     font-size: 15px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.theme-toggle-btn,
+  .notification-toggle-btn,
+  .header-user-profile`. */
   .theme-toggle-btn,
   .notification-toggle-btn,
   .header-user-profile {
@@ -608,16 +711,19 @@
     height: 44px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.header-user-profile`. */
   .header-user-profile {
     justify-content: center;
     padding: 4px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.user-profile-avatar`. */
   .user-profile-avatar {
     width: 32px;
     height: 32px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.notification-popover`. */
   .notification-popover {
     position: fixed;
     top: 108px;
@@ -626,11 +732,13 @@
     width: auto;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.notification-popover-header`. */
   .notification-popover-header {
     align-items: flex-start;
     flex-direction: column;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.notification-email-switch`. */
   .notification-email-switch {
     width: 100%;
     justify-content: center;

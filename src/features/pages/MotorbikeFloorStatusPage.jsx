@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình MotorbikeFloorStatusPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Button from "../../components/Button/Button";
@@ -6,11 +12,20 @@ import { getStatusLabel, getStatusTone } from "../../services/mockParkingData";
 import { fetchFloorsRequest } from "../backend/floors/floorSlice";
 import { AlertTriangle, ArrowDownLeft, ArrowUpRight, CheckCircle, Layers } from "lucide-react";
 
+/**
+ * Thực hiện nghiệp vụ `MotorbikeFloorStatusPage` (motorbike floor status page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function MotorbikeFloorStatusPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const MotorbikeFloorStatusPage = () => {
   const dispatch = useDispatch();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { user } = useSelector((state) => state.auth);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { floors, loading, error } = useSelector((state) => state.floors);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(
       fetchFloorsRequest({
@@ -22,8 +37,11 @@ const MotorbikeFloorStatusPage = () => {
     );
   }, [dispatch, user?.buildingId]);
 
+  /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const motorbikeFloors = floors.filter((floor) => floor.floorType === "MOTORBIKE");
+  /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const totalCapacity = motorbikeFloors.reduce((sum, floor) => sum + Number(floor.capacity || 0), 0);
+  /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const totalCount = motorbikeFloors.reduce((sum, floor) => sum + Number(floor.currentCount || 0), 0);
   const totalPercent = totalCapacity ? Math.round((totalCount / totalCapacity) * 100) : 0;
 

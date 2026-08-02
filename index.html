@@ -1,14 +1,25 @@
 <!doctype html>
+<!-- Tệp gốc của frontend: khai báo metadata trình duyệt và điểm gắn ứng dụng React. -->
+<!-- Đặt ngôn ngữ mặc định của tài liệu là tiếng Việt. -->
 <html lang="vi">
+  <!-- Nhóm cấu hình được trình duyệt đọc trước khi hiển thị nội dung. -->
   <head>
+    <!-- Dùng UTF-8 để hiển thị chính xác tiếng Việt và ký tự đặc biệt. -->
     <meta charset="UTF-8" />
+    <!-- Gắn biểu tượng của Sunrise Parking lên tab trình duyệt. -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Giữ tỷ lệ và chiều rộng giao diện phù hợp trên thiết bị di động. -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Giới hạn lượng thông tin nguồn được gửi khi trình duyệt mở liên kết khác. -->
     <meta name="referrer" content="no-referrer-when-downgrade" />
+    <!-- Đặt tên hiển thị của tab trình duyệt. -->
     <title>Sunrise Parking</title>
   </head>
+  <!-- Chứa điểm gắn giao diện và script khởi động ứng dụng. -->
   <body>
+    <!-- Phần tử gốc để React render toàn bộ giao diện Sunrise Parking. -->
     <div id="root"></div>
+    <!-- Nạp entry point main.jsx dưới dạng JavaScript module. -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -1,36 +1,49 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/features/pages/MyQRPassPage.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.my-qr-pass-page`. */
 .my-qr-pass-page {
   min-width: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.my-qr-grid`. */
 .my-qr-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
   gap: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-card`. */
 .qr-pass-card {
   display: flex;
   min-width: 0;
   flex-direction: column;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-card-header`. */
 .qr-pass-card-header {
   align-items: flex-start;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-card-header > div`. */
 .qr-pass-card-header > div {
   min-width: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-card-header .section-title,
+.qr-pass-card-header .section-copy`. */
 .qr-pass-card-header .section-title,
 .qr-pass-card-header .section-copy {
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-card-header .pill`. */
 .qr-pass-card-header .pill {
   flex: 0 0 auto;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-card-body`. */
 .qr-pass-card-body {
   display: grid;
   grid-template-columns: 118px minmax(0, 1fr);
@@ -39,6 +52,7 @@
   min-width: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-thumb`. */
 .qr-pass-thumb {
   cursor: zoom-in;
   transition:
@@ -47,12 +61,14 @@
     transform var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-thumb:hover:not(:disabled)`. */
 .qr-pass-thumb:hover:not(:disabled) {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-glow), var(--shadow-sm);
   transform: translateY(-2px);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-information`. */
 .qr-pass-information {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -60,11 +76,13 @@
   min-width: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-information.compact`. */
 .qr-pass-information.compact {
   grid-template-columns: 1fr;
   gap: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-information > div`. */
 .qr-pass-information > div {
   display: grid;
   min-width: 0;
@@ -75,6 +93,7 @@
   background: var(--bg-soft);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-information.compact > div`. */
 .qr-pass-information.compact > div {
   padding: 8px 0;
   border-width: 0 0 1px;
@@ -82,15 +101,18 @@
   background: transparent;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-information.compact > div:first-child`. */
 .qr-pass-information.compact > div:first-child {
   padding-top: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-information.compact > div:last-child`. */
 .qr-pass-information.compact > div:last-child {
   padding-bottom: 0;
   border-bottom: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-information span`. */
 .qr-pass-information span {
   display: inline-flex;
   align-items: center;
@@ -101,11 +123,13 @@
   text-transform: uppercase;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-information span svg`. */
 .qr-pass-information span svg {
   flex: 0 0 auto;
   color: var(--primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-information strong`. */
 .qr-pass-information strong {
   min-width: 0;
   color: var(--text-primary);
@@ -113,24 +137,29 @@
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-code`. */
 .qr-pass-code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   letter-spacing: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-actions`. */
 .qr-pass-actions {
   margin-top: auto;
   padding-top: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-empty`. */
 .qr-pass-empty {
   grid-column: 1 / -1;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-backdrop`. */
 .qr-pass-modal-backdrop {
   z-index: 1400;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-card`. */
 .qr-pass-modal-card {
   width: min(790px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
@@ -138,6 +167,7 @@
   padding: 22px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-header`. */
 .qr-pass-modal-header {
   position: sticky;
   top: -22px;
@@ -148,12 +178,14 @@
   background: var(--card-bg);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-heading-actions`. */
 .qr-pass-modal-heading-actions {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-body`. */
 .qr-pass-modal-body {
   display: grid;
   grid-template-columns: 270px minmax(0, 1fr);
@@ -161,6 +193,7 @@
   align-items: start;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-code`. */
 .qr-pass-modal-code {
   display: grid;
   justify-items: center;
@@ -168,65 +201,80 @@
   text-align: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-code .qr-box`. */
 .qr-pass-modal-code .qr-box {
   width: 250px;
   height: 250px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-code > strong`. */
 .qr-pass-modal-code > strong {
   color: var(--text-primary);
   font-size: 20px;
   overflow-wrap: anywhere;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-code > span`. */
 .qr-pass-modal-code > span {
   color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.5;
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 760px)`. */
 @media (max-width: 760px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-body`. */
   .qr-pass-modal-body {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-code .qr-box`. */
   .qr-pass-modal-code .qr-box {
     width: min(250px, 100%);
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 560px)`. */
 @media (max-width: 560px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-card-body`. */
   .qr-pass-card-body {
     grid-template-columns: 104px minmax(0, 1fr);
     gap: 12px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-thumb`. */
   .qr-pass-thumb {
     width: 104px;
     height: 104px;
     padding: 6px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-thumb .qr-image,
+  .qr-pass-thumb .qr-image-error`. */
   .qr-pass-thumb .qr-image,
   .qr-pass-thumb .qr-image-error {
     width: 88px !important;
     height: 88px !important;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-actions`. */
   .qr-pass-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-actions .btn`. */
   .qr-pass-actions .btn {
     width: 100%;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-backdrop`. */
   .qr-pass-modal-backdrop {
     align-items: end;
     padding: 0;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-card`. */
   .qr-pass-modal-card {
     width: 100%;
     max-height: 94dvh;
@@ -234,51 +282,63 @@
     border-radius: 8px 8px 0 0;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-header`. */
   .qr-pass-modal-header {
     top: -16px;
     margin: -16px -16px 16px;
     padding: 16px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-header`. */
   .qr-pass-modal-header {
     align-items: flex-start;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-heading-actions`. */
   .qr-pass-modal-heading-actions {
     align-items: flex-end;
     flex-direction: column-reverse;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-information`. */
   .qr-pass-information {
     grid-template-columns: 1fr;
   }
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 390px)`. */
 @media (max-width: 390px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-card-body`. */
   .qr-pass-card-body {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-thumb`. */
   .qr-pass-thumb {
     width: 118px;
     height: 118px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-thumb .qr-image,
+  .qr-pass-thumb .qr-image-error`. */
   .qr-pass-thumb .qr-image,
   .qr-pass-thumb .qr-image-error {
     width: 96px !important;
     height: 96px !important;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-actions`. */
   .qr-pass-actions {
     grid-template-columns: 1fr;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-code .qr-box`. */
   .qr-pass-modal-code .qr-box {
     width: 232px;
     height: 232px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.qr-pass-modal-code .qr-image`. */
   .qr-pass-modal-code .qr-image {
     width: 208px;
     height: 208px;

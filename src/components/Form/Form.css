@@ -1,3 +1,8 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/components/Form/Form.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.form-field`. */
 .form-field {
   display: flex;
   flex-direction: column;
@@ -5,6 +10,7 @@
   width: 100%;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.form-label`. */
 .form-label {
   display: flex;
   align-items: center;
@@ -14,10 +20,14 @@
   font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.label-required`. */
 .label-required {
   color: var(--danger);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.form-control-wrapper,
+.input-wrapper,
+.select-wrapper`. */
 .form-control-wrapper,
 .input-wrapper,
 .select-wrapper {
@@ -25,12 +35,15 @@
   width: 100%;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.input-wrapper,
+.select-wrapper`. */
 .input-wrapper,
 .select-wrapper {
   display: flex;
   align-items: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.input-icon`. */
 .input-icon {
   position: absolute;
   left: 14px;
@@ -38,6 +51,8 @@
   pointer-events: none;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.form-input,
+.form-select`. */
 .form-input,
 .form-select {
   width: 100%;
@@ -53,14 +68,17 @@
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.has-icon .form-input`. */
 .has-icon .form-input {
   padding-left: 42px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.has-right-element .form-input`. */
 .has-right-element .form-input {
   padding-right: 46px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.input-right-element`. */
 .input-right-element {
   position: absolute;
   right: 8px;
@@ -69,6 +87,7 @@
   justify-content: center;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.input-icon-button`. */
 .input-icon-button {
   width: 32px;
   height: 32px;
@@ -83,21 +102,26 @@
   transition: background var(--transition-fast), color var(--transition-fast);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.input-icon-button:hover`. */
 .input-icon-button:hover {
   background: var(--bg-secondary);
   color: var(--text-primary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.form-input::placeholder`. */
 .form-input::placeholder {
   color: var(--text-muted);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.form-input:focus,
+.form-select:focus`. */
 .form-input:focus,
 .form-select:focus {
   border-color: var(--input-focus-border);
   box-shadow: 0 0 0 4px var(--primary-glow);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.form-select`. */
 .form-select {
   padding-right: 40px;
   appearance: none;
@@ -107,6 +131,10 @@
   background-size: 16px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.has-error .form-input,
+.has-error .form-select,
+.form-field.has-error .form-input,
+.form-field.has-error .form-select`. */
 .has-error .form-input,
 .has-error .form-select,
 .form-field.has-error .form-input,
@@ -114,11 +142,14 @@
   border-color: var(--danger);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.has-error .form-input:focus,
+.has-error .form-select:focus`. */
 .has-error .form-input:focus,
 .has-error .form-select:focus {
   box-shadow: 0 0 0 4px rgba(220, 74, 74, 0.16);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.form-error-msg`. */
 .form-error-msg {
   color: var(--danger);
   font-size: 12px;

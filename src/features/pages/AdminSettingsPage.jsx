@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình AdminSettingsPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useState } from "react";
 import Button from "../../components/Button/Button";
 import StatusBanner from "../../components/Feedback/StatusBanner";
@@ -15,13 +21,27 @@ import {
 } from "../../services/mockParkingData";
 import { CreditCard, QrCode, Save, Settings, ShieldCheck } from "lucide-react";
 
+/**
+ * Thực hiện nghiệp vụ `AdminSettingsPage` (admin settings page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function AdminSettingsPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const AdminSettingsPage = () => {
   const [policy, setPolicy] = useState(pricingPolicy);
   const [notice, setNotice] = useState("");
 
+  /**
+   * Xử lý nghiệp vụ `handleSave` (handle save). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleSave
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleSave = (event) => {
     event.preventDefault();
     setNotice("Đã lưu quy tắc chung.");
+    /* Callback nội bộ của lời gọi `setTimeout`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setTimeout(() => setNotice(""), 2400);
   };
 
@@ -31,6 +51,13 @@ const AdminSettingsPage = () => {
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => <span className={`pill ${getStatusTone(row.status)}`}>{getStatusLabel(row.status)}</span>,
     },
     { header: "Ghi chú", key: "note" },
@@ -39,10 +66,24 @@ const AdminSettingsPage = () => {
   const paymentColumns = [
     { header: "Mã giao dịch", key: "transactionRef" },
     { header: "Đơn vị xử lý", key: "provider" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Số tiền", key: "amount", render: (row) => formatCurrency(row.amount) },
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => <span className={`pill ${getStatusTone(row.status)}`}>{getStatusLabel(row.status)}</span>,
     },
   ];

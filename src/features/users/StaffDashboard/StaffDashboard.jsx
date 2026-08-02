@@ -1,6 +1,18 @@
+/**
+ * @fileoverview Khai báo chức năng frontend của module StaffDashboard.
+ *
+ * Luồng chính: Dữ liệu đầu vào -> xử lý theo trách nhiệm của module -> xuất kết quả cho lớp gọi.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useState } from 'react';
 import './StaffDashboard.css';
 
+/**
+ * Thực hiện nghiệp vụ `StaffDashboard` (staff dashboard). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function StaffDashboard
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const StaffDashboard = () => {
     // Thống kê bãi xe
     const [parkingStats, setParkingStats] = useState({
@@ -60,6 +72,12 @@ const StaffDashboard = () => {
         else setScanResult({ licensePlate: "Không rõ", type: "Không rõ", packageStatus: "Chưa đăng ký", packageName: "Không có", isValid: false, reason: "Mã QR không tồn tại." });
     };
 
+    /**
+     * Xử lý nghiệp vụ `handleAcceptVehicle` (handle accept vehicle). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+     *
+     * @function handleAcceptVehicle
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleAcceptVehicle = () => {
         if (!scanResult) return;
         const newSession = {
@@ -72,6 +90,7 @@ const StaffDashboard = () => {
             violations: [] // Mặc định xe vào chưa có vi phạm
         };
         setActiveSessions([newSession, ...activeSessions]);
+        /* Callback nội bộ của lời gọi `setParkingStats`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setParkingStats(prev => ({
             ...prev,
             totalCheckInToday: prev.totalCheckInToday + 1,
@@ -88,6 +107,7 @@ const StaffDashboard = () => {
         e.preventDefault();
         if (!manualPlate.trim() || !manualCard.trim()) return alert("Vui lòng điền đủ thông tin!");
         const formattedCard = manualCard.toUpperCase().trim();
+        /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         if (activeSessions.some(s => s.cardCode === formattedCard)) return alert("Mã thẻ này đang được sử dụng!");
 
         const newManualSession = {
@@ -100,6 +120,7 @@ const StaffDashboard = () => {
             violations: []
         };
         setActiveSessions([newManualSession, ...activeSessions]);
+        /* Callback nội bộ của lời gọi `setParkingStats`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setParkingStats(prev => ({
             ...prev,
             totalCheckInToday: prev.totalCheckInToday + 1,
@@ -130,6 +151,7 @@ const StaffDashboard = () => {
         };
 
         // Tìm phiên gửi xe được chọn và đẩy vi phạm vào mảng violations của xe đó
+        /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         const updatedSessions = activeSessions.map(session => {
             if (session.id === parseInt(selectedSessionId)) {
                 return {

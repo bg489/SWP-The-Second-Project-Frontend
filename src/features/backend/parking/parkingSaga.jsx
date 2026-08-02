@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Điều phối các tác vụ bất đồng bộ của parkingSaga, gọi API và phát action kết quả về Redux.
+ *
+ * Luồng chính: Action yêu cầu -> Saga gọi API -> action thành công/thất bại -> reducer cập nhật giao diện.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { call, put, takeEvery, takeLatest } from "redux-saga/effects";
 import api from "../../../services/api";
 import { PAYMENT_RETURN_STORAGE_KEY } from "../../../utils/paymentReturn";
@@ -206,6 +212,10 @@ import {
     validateQrPassSuccess,
 } from "./parkingSlice";
 
+/**
+ * Khai báo `pricingPolicySeed` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/backend/parking/parkingSaga.jsx.
+ */
 const pricingPolicySeed = [
     {
         id: "PRICE-MOTORBIKE-TURN",
@@ -223,14 +233,34 @@ const pricingPolicySeed = [
     },
 ];
 
+/**
+ * Khai báo `packagePlanSeed` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/backend/parking/parkingSaga.jsx.
+ */
+/* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
 const packagePlanSeed = monthlyPackages.map((plan) => ({
     ...plan,
     durationDays: Number(String(plan.duration).replace(/\D/g, "")) || 30,
     status: "ACTIVE",
 }));
 
+/**
+ * Thực hiện nghiệp vụ `extractData` (extract data). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function extractData
+ * @param {*} response - Giá trị `response` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const extractData = (response) => response?.data?.data || response?.data || null;
 
+/**
+ * Thực hiện nghiệp vụ `extractList` (extract list). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function extractList
+ * @param {*} response - Giá trị `response` được hàm sử dụng trong quá trình xử lý.
+ * @param {*} keys - Giá trị `keys` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const extractList = (response, keys = []) => {
     const data = extractData(response);
 
@@ -246,22 +276,62 @@ const extractList = (response, keys = []) => {
     return [];
 };
 
+/**
+ * Lấy nghiệp vụ `getErrorMessage` (get error message). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function getErrorMessage
+ * @param {*} error - Giá trị `error` được hàm sử dụng trong quá trình xử lý.
+ * @param {*} fallback - Giá trị `fallback` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getErrorMessage = (error, fallback) =>
     error?.response?.data?.message || error?.message || fallback;
 
+/**
+ * Thực hiện nghiệp vụ `splitSyncOptions` (split sync options). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function splitSyncOptions
+ * @param {*} payload - Dữ liệu nghiệp vụ được truyền vào hàm.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const splitSyncOptions = (payload) => {
     const { silent = false, ...params } = payload || {};
     return { params, silent };
 };
 
+/**
+ * Thực hiện nghiệp vụ `syncCollectionPayload` (sync collection payload). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function syncCollectionPayload
+ * @param {*} items - Giá trị `items` được hàm sử dụng trong quá trình xử lý.
+ * @param {*} silent - Giá trị `silent` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const syncCollectionPayload = (items, silent) => ({
     items,
     silent,
 });
 
+/**
+ * Kiểm tra nghiệp vụ `shouldUseSample` (should use sample). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function shouldUseSample
+ * @param {*} error - Giá trị `error` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const shouldUseSample = (error) => !error?.response;
 
+/**
+ * Khai báo `TEMP_QR_STORAGE_KEY` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/backend/parking/parkingSaga.jsx.
+ */
 const TEMP_QR_STORAGE_KEY = "parking_temp_qr_cards";
+/**
+ * Lấy nghiệp vụ `readStoredTempQrCards` (read stored temp qr cards). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function readStoredTempQrCards
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const readStoredTempQrCards = () => {
     try {
         const stored = localStorage.getItem(TEMP_QR_STORAGE_KEY);
@@ -272,6 +342,13 @@ const readStoredTempQrCards = () => {
     }
 };
 
+/**
+ * Thực hiện nghiệp vụ `writeStoredTempQrCards` (write stored temp qr cards). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function writeStoredTempQrCards
+ * @param {*} cards - Giá trị `cards` được hàm sử dụng trong quá trình xử lý.
+ * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+ */
 const writeStoredTempQrCards = (cards) => {
     try {
         localStorage.setItem(TEMP_QR_STORAGE_KEY, JSON.stringify(cards));
@@ -280,12 +357,26 @@ const writeStoredTempQrCards = (cards) => {
     }
 };
 
+/**
+ * Thực hiện nghiệp vụ `extractPaymentUrl` (extract payment url). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function extractPaymentUrl
+ * @param {*} data - Giá trị `data` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const extractPaymentUrl = (data) =>
     data?.payment?.paymentUrl ||
     data?.paymentUrl ||
     data?.registration?.paymentUrl ||
     data?.monthlyPass?.paymentUrl;
 
+/**
+ * Thực hiện nghiệp vụ `redirectToPayment` (redirect to payment). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function redirectToPayment
+ * @param {*} paymentUrl - Giá trị `paymentUrl` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const redirectToPayment = (paymentUrl) => {
     if (!paymentUrl || paymentUrl === "#") return;
 
@@ -296,11 +387,25 @@ const redirectToPayment = (paymentUrl) => {
     window.location.assign(paymentUrl);
 };
 
+/**
+ * Thực hiện nghiệp vụ `withId` (with id). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function withId
+ * @param {*} payload - Dữ liệu nghiệp vụ được truyền vào hàm.
+ * @param {*} prefix - Giá trị `prefix` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const withId = (payload, prefix) => ({
     id: payload?.id || `${prefix}-${Date.now()}`,
     ...payload,
 });
 
+/**
+ * Tạo nghiệp vụ `buildReportFallback` (build report fallback). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại.
+ *
+ * @function buildReportFallback
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const buildReportFallback = () => ({
     traffic: {
         trafficIn: reportSummary.trafficIn,
@@ -330,10 +435,17 @@ const buildReportFallback = () => ({
     },
     violations: {
         total: violations.length,
+        /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         pendingAmount: violations.reduce((sum, item) => sum + Number(item.fine || 0), 0),
     },
 });
 
+/**
+ * Xử lý nghiệp vụ `handleHealth` (handle health). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleHealth
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleHealth() {
     try {
         yield call([api, api.get], "/health");
@@ -343,12 +455,19 @@ function* handleHealth() {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchMyVehicles` (handle fetch my vehicles). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchMyVehicles
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchMyVehicles() {
     try {
         const response = yield call([api, api.get], "/vehicles/my");
         yield put(fetchMyVehiclesSuccess(extractList(response, ["vehicles"])));
     } catch (error) {
         if (shouldUseSample(error)) {
+            /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
             yield put(fetchMyVehiclesSuccess(vehicles.filter((vehicle) => vehicle.userId === 1)));
             return;
         }
@@ -357,6 +476,13 @@ function* handleFetchMyVehicles() {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchAllVehicles` (handle fetch all vehicles). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchAllVehicles
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchAllVehicles(action) {
     try {
         const response = yield call([api, api.get], "/vehicles", {
@@ -368,6 +494,7 @@ function* handleFetchAllVehicles(action) {
             const status = action.payload?.status;
             yield put(
                 fetchAllVehiclesSuccess(
+                    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
                     status ? vehicles.filter((vehicle) => vehicle.status === status) : vehicles
                 )
             );
@@ -378,6 +505,13 @@ function* handleFetchAllVehicles(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleCreateVehicle` (handle create vehicle). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleCreateVehicle
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleCreateVehicle(action) {
     try {
         const response = yield call([api, api.post], "/vehicles", action.payload);
@@ -406,6 +540,13 @@ function* handleCreateVehicle(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleApproveVehicle` (handle approve vehicle). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleApproveVehicle
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleApproveVehicle(action) {
     try {
         const { id } = action.payload;
@@ -427,6 +568,13 @@ function* handleApproveVehicle(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleRejectVehicle` (handle reject vehicle). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleRejectVehicle
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleRejectVehicle(action) {
     try {
         const { id } = action.payload;
@@ -448,6 +596,13 @@ function* handleRejectVehicle(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchPricingPolicies` (handle fetch pricing policies). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchPricingPolicies
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchPricingPolicies(action) {
     try {
         const response = yield call([api, api.get], "/pricing-policies", {
@@ -464,6 +619,13 @@ function* handleFetchPricingPolicies(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleSavePricingPolicy` (handle save pricing policy). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleSavePricingPolicy
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleSavePricingPolicy(action) {
     try {
         const payload = action.payload;
@@ -484,6 +646,13 @@ function* handleSavePricingPolicy(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchPackagePlans` (handle fetch package plans). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchPackagePlans
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchPackagePlans(action) {
     try {
         const response = yield call([api, api.get], "/package-plans", {
@@ -500,6 +669,13 @@ function* handleFetchPackagePlans(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleSavePackagePlan` (handle save package plan). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleSavePackagePlan
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleSavePackagePlan(action) {
     try {
         const payload = action.payload;
@@ -520,6 +696,13 @@ function* handleSavePackagePlan(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleDeactivatePackagePlan` (handle deactivate package plan). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleDeactivatePackagePlan
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleDeactivatePackagePlan(action) {
     try {
         const { id } = action.payload;
@@ -535,6 +718,13 @@ function* handleDeactivatePackagePlan(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleBuyPackagePlan` (handle buy package plan). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleBuyPackagePlan
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleBuyPackagePlan(action) {
     try {
         const { id, ...payload } = action.payload;
@@ -561,6 +751,13 @@ function* handleBuyPackagePlan(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchMonthlyPasses` (handle fetch monthly passes). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchMonthlyPasses
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchMonthlyPasses(action) {
     try {
         const response = yield call([api, api.get], "/monthly-passes", {
@@ -577,6 +774,12 @@ function* handleFetchMonthlyPasses(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchMyMonthlyPasses` (handle fetch my monthly passes). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchMyMonthlyPasses
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchMyMonthlyPasses() {
     try {
         const response = yield call([api, api.get], "/monthly-passes/my");
@@ -585,6 +788,7 @@ function* handleFetchMyMonthlyPasses() {
         if (shouldUseSample(error)) {
             yield put(
                 fetchMyMonthlyPassesSuccess(
+                    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
                     monthlyPasses.filter((pass) => pass.userId === 1)
                 )
             );
@@ -595,6 +799,13 @@ function* handleFetchMyMonthlyPasses() {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleCreateMonthlyPass` (handle create monthly pass). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleCreateMonthlyPass
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleCreateMonthlyPass(action) {
     try {
         const response = yield call([api, api.post], "/monthly-passes", action.payload);
@@ -610,6 +821,13 @@ function* handleCreateMonthlyPass(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleContinueMonthlyPassPayment` (handle continue monthly pass payment). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleContinueMonthlyPassPayment
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleContinueMonthlyPassPayment(action) {
     try {
         const { id, ...payload } = action.payload;
@@ -644,6 +862,13 @@ function* handleContinueMonthlyPassPayment(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchTempQrCards` (handle fetch temp qr cards). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchTempQrCards
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchTempQrCards(action) {
     const { params, silent } = splitSyncOptions(action.payload);
 
@@ -662,6 +887,7 @@ function* handleFetchTempQrCards(action) {
             const cards = readStoredTempQrCards();
             yield put(
                 fetchTempQrCardsSuccess(syncCollectionPayload(
+                    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
                     cards.filter((card) =>
                         (!status || card.status === status) &&
                         (!buildingId || String(card.buildingId || 1) === String(buildingId))
@@ -679,6 +905,13 @@ function* handleFetchTempQrCards(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleCreateTempQrCard` (handle create temp qr card). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleCreateTempQrCard
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleCreateTempQrCard(action) {
     try {
         const response = yield call([api, api.post], "/temp-qr-cards", action.payload);
@@ -698,6 +931,7 @@ function* handleCreateTempQrCard(action) {
                 },
                 "TMP"
             );
+            /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
             const cards = [card, ...readStoredTempQrCards().filter((item) => item.cardCode !== card.cardCode)];
             writeStoredTempQrCards(cards);
             yield put(
@@ -710,6 +944,13 @@ function* handleCreateTempQrCard(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleUpdateTempQrCardStatus` (handle update temp qr card status). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleUpdateTempQrCardStatus
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleUpdateTempQrCardStatus(action) {
     try {
         const { id, status } = action.payload;
@@ -719,6 +960,7 @@ function* handleUpdateTempQrCardStatus(action) {
         yield put(updateTempQrCardStatusSuccess(extractData(response)));
     } catch (error) {
         if (shouldUseSample(error)) {
+            /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
             const cards = readStoredTempQrCards().map((card) =>
                 String(card.id) === String(action.payload.id) ? { ...card, ...action.payload } : card
             );
@@ -731,12 +973,19 @@ function* handleUpdateTempQrCardStatus(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchMyQrPasses` (handle fetch my qr passes). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchMyQrPasses
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchMyQrPasses() {
     try {
         const response = yield call([api, api.get], "/qr-passes/my");
         yield put(fetchMyQrPassesSuccess(extractList(response, ["qrPasses", "passes"])));
     } catch (error) {
         if (shouldUseSample(error)) {
+            /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
             yield put(fetchMyQrPassesSuccess(monthlyPasses.filter((pass) => pass.userId === 1)));
             return;
         }
@@ -745,6 +994,13 @@ function* handleFetchMyQrPasses() {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchQrPasses` (handle fetch qr passes). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchQrPasses
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchQrPasses(action) {
     try {
         const response = yield call([api, api.get], "/qr-passes", {
@@ -761,6 +1017,13 @@ function* handleFetchQrPasses(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleValidateQrPass` (handle validate qr pass). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleValidateQrPass
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleValidateQrPass(action) {
     try {
         const response = yield call([api, api.post], "/qr-passes/validate", action.payload);
@@ -768,6 +1031,7 @@ function* handleValidateQrPass(action) {
     } catch (error) {
         if (shouldUseSample(error)) {
             const qrCode = action.payload?.qrCode;
+            /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
             const pass = monthlyPasses.find((item) => item.qrCode === qrCode);
             yield put(
                 validateQrPassSuccess({
@@ -783,6 +1047,13 @@ function* handleValidateQrPass(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleUpdateQrPassStatus` (handle update qr pass status). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleUpdateQrPassStatus
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleUpdateQrPassStatus(action) {
     try {
         const { id, status } = action.payload;
@@ -800,12 +1071,19 @@ function* handleUpdateQrPassStatus(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchMySlotRegistrations` (handle fetch my slot registrations). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchMySlotRegistrations
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchMySlotRegistrations() {
     try {
         const response = yield call([api, api.get], "/slot-registrations/my");
         yield put(fetchMySlotRegistrationsSuccess(extractList(response, ["slotRegistrations", "registrations"])));
     } catch (error) {
         if (shouldUseSample(error)) {
+            /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
             yield put(fetchMySlotRegistrationsSuccess(slotRegistrations.filter((item) => item.userId === 1)));
             return;
         }
@@ -814,6 +1092,13 @@ function* handleFetchMySlotRegistrations() {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleCreateSlotRegistration` (handle create slot registration). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleCreateSlotRegistration
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleCreateSlotRegistration(action) {
     try {
         const response = yield call([api, api.post], "/slot-registrations", action.payload);
@@ -843,6 +1128,12 @@ function* handleCreateSlotRegistration(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchMyNotifications` (handle fetch my notifications). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchMyNotifications
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchMyNotifications() {
     try {
         const response = yield call([api, api.get], "/notifications/my");
@@ -852,6 +1143,13 @@ function* handleFetchMyNotifications() {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleMarkNotificationRead` (handle mark notification read). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleMarkNotificationRead
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleMarkNotificationRead(action) {
     try {
         const response = yield call(
@@ -868,6 +1166,12 @@ function* handleMarkNotificationRead(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleMarkAllNotificationsRead` (handle mark all notifications read). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleMarkAllNotificationsRead
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleMarkAllNotificationsRead() {
     try {
         yield call([api, api.patch], "/notifications/my/read-all");
@@ -881,6 +1185,12 @@ function* handleMarkAllNotificationsRead() {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchNotificationPreferences` (handle fetch notification preferences). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchNotificationPreferences
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchNotificationPreferences() {
     try {
         const response = yield call([api, api.get], "/notifications/preferences");
@@ -894,6 +1204,13 @@ function* handleFetchNotificationPreferences() {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleUpdateNotificationPreferences` (handle update notification preferences). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleUpdateNotificationPreferences
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleUpdateNotificationPreferences(action) {
     try {
         const response = yield call(
@@ -911,6 +1228,13 @@ function* handleUpdateNotificationPreferences(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchStaffAssignments` (handle fetch staff assignments). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchStaffAssignments
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchStaffAssignments(action) {
     try {
         const response = yield call([api, api.get], "/users/staff-candidates", {
@@ -932,6 +1256,13 @@ function* handleFetchStaffAssignments(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleAssignStaffToBuilding` (handle assign staff to building). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleAssignStaffToBuilding
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleAssignStaffToBuilding(action) {
     try {
         const { id } = action.payload;
@@ -948,6 +1279,13 @@ function* handleAssignStaffToBuilding(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchWrongSlotCases` (handle fetch wrong slot cases). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchWrongSlotCases
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchWrongSlotCases(action) {
     const { params, silent } = splitSyncOptions(action.payload);
 
@@ -967,6 +1305,13 @@ function* handleFetchWrongSlotCases(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchMyWrongSlotCases` (handle fetch my wrong slot cases). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchMyWrongSlotCases
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchMyWrongSlotCases(action) {
     const { params, silent } = splitSyncOptions(action.payload);
 
@@ -990,6 +1335,13 @@ function* handleFetchMyWrongSlotCases(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleMarkMyWrongSlotMoved` (handle mark my wrong slot moved). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleMarkMyWrongSlotMoved
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleMarkMyWrongSlotMoved(action) {
     try {
         const response = yield call(
@@ -1009,6 +1361,13 @@ function* handleMarkMyWrongSlotMoved(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleReportWrongSlot` (handle report wrong slot). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleReportWrongSlot
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleReportWrongSlot(action) {
     try {
         const { buildingId, ...payload } = action.payload || {};
@@ -1027,6 +1386,13 @@ function* handleReportWrongSlot(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleConfirmWrongSlot` (handle confirm wrong slot). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleConfirmWrongSlot
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleConfirmWrongSlot(action) {
     try {
         const { buildingId, id, ...payload } = action.payload;
@@ -1046,6 +1412,13 @@ function* handleConfirmWrongSlot(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchHourlyReservationAvailability` (handle fetch hourly reservation availability). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchHourlyReservationAvailability
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchHourlyReservationAvailability(action) {
     try {
         const response = yield call(
@@ -1068,6 +1441,13 @@ function* handleFetchHourlyReservationAvailability(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchHourlyCheckInMatch` (handle fetch hourly check in match). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchHourlyCheckInMatch
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchHourlyCheckInMatch(action) {
     try {
         const response = yield call(
@@ -1081,6 +1461,12 @@ function* handleFetchHourlyCheckInMatch(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchMyHourlyReservations` (handle fetch my hourly reservations). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchMyHourlyReservations
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchMyHourlyReservations() {
     try {
         const response = yield call(
@@ -1101,6 +1487,13 @@ function* handleFetchMyHourlyReservations() {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchStaffHourlyReservations` (handle fetch staff hourly reservations). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchStaffHourlyReservations
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchStaffHourlyReservations(action) {
     try {
         const response = yield call(
@@ -1125,6 +1518,13 @@ function* handleFetchStaffHourlyReservations(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleCreateUserHourlyReservation` (handle create user hourly reservation). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleCreateUserHourlyReservation
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleCreateUserHourlyReservation(action) {
     try {
         const response = yield call(
@@ -1146,6 +1546,13 @@ function* handleCreateUserHourlyReservation(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleCreateGuestHourlyReservation` (handle create guest hourly reservation). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleCreateGuestHourlyReservation
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleCreateGuestHourlyReservation(action) {
     try {
         const response = yield call(
@@ -1181,6 +1588,13 @@ function* handleCreateGuestHourlyReservation(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleMarkWrongSlotMoved` (handle mark wrong slot moved). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleMarkWrongSlotMoved
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleMarkWrongSlotMoved(action) {
     try {
         const {
@@ -1214,6 +1628,13 @@ function* handleMarkWrongSlotMoved(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchFloorMismatchCases` (handle fetch floor mismatch cases). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchFloorMismatchCases
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchFloorMismatchCases(action) {
     const { params, silent } = splitSyncOptions(action.payload);
 
@@ -1237,6 +1658,13 @@ function* handleFetchFloorMismatchCases(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchMyFloorMismatchCases` (handle fetch my floor mismatch cases). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchMyFloorMismatchCases
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchMyFloorMismatchCases(action) {
     const { params, silent } = splitSyncOptions(action.payload);
 
@@ -1260,6 +1688,13 @@ function* handleFetchMyFloorMismatchCases(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleMarkMyFloorMismatchMoved` (handle mark my floor mismatch moved). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleMarkMyFloorMismatchMoved
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleMarkMyFloorMismatchMoved(action) {
     try {
         const response = yield call(
@@ -1278,6 +1713,13 @@ function* handleMarkMyFloorMismatchMoved(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleReportFloorMismatch` (handle report floor mismatch). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleReportFloorMismatch
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleReportFloorMismatch(action) {
     try {
         const { buildingId, ...payload } = action.payload || {};
@@ -1301,6 +1743,13 @@ function* handleReportFloorMismatch(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleConfirmFloorMismatch` (handle confirm floor mismatch). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleConfirmFloorMismatch
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleConfirmFloorMismatch(action) {
     try {
         const { buildingId, id, ...payload } = action.payload;
@@ -1324,6 +1773,13 @@ function* handleConfirmFloorMismatch(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleMarkFloorMismatchMoved` (handle mark floor mismatch moved). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleMarkFloorMismatchMoved
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleMarkFloorMismatchMoved(action) {
     try {
         const {
@@ -1357,6 +1813,13 @@ function* handleMarkFloorMismatchMoved(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchActiveParkingSessions` (handle fetch active parking sessions). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchActiveParkingSessions
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchActiveParkingSessions(action) {
     const { params, silent } = splitSyncOptions(action.payload);
 
@@ -1372,6 +1835,7 @@ function* handleFetchActiveParkingSessions(action) {
         if (shouldUseSample(error)) {
             yield put(
                 fetchActiveParkingSessionsSuccess(syncCollectionPayload(
+                    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
                     parkingSessions.filter((session) =>
                         ["ACTIVE", "PENDING_PAYMENT"].includes(session.status)
                     ),
@@ -1388,6 +1852,13 @@ function* handleFetchActiveParkingSessions(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchDailyParkingActivity` (handle fetch daily parking activity). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchDailyParkingActivity
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchDailyParkingActivity(action) {
     try {
         const response = yield call([api, api.get], "/parking-sessions/daily-activity", {
@@ -1403,6 +1874,13 @@ function* handleFetchDailyParkingActivity(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleRecognizePlate` (handle recognize plate). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleRecognizePlate
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleRecognizePlate(action) {
     const requestId = action.payload?.requestId;
 
@@ -1426,6 +1904,12 @@ function* handleRecognizePlate(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchMyActiveParkingSessions` (handle fetch my active parking sessions). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchMyActiveParkingSessions
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchMyActiveParkingSessions() {
     try {
         const response = yield call([api, api.get], "/parking-sessions/my-active");
@@ -1434,6 +1918,7 @@ function* handleFetchMyActiveParkingSessions() {
         if (shouldUseSample(error)) {
             yield put(
                 fetchMyActiveParkingSessionsSuccess(
+                    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
                     parkingSessions.filter((session) =>
                         session.userId === 1 &&
                         ["ACTIVE", "PENDING_PAYMENT"].includes(session.status)
@@ -1447,6 +1932,13 @@ function* handleFetchMyActiveParkingSessions() {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleCheckIn` (handle check in). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleCheckIn
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleCheckIn(action) {
     try {
         const response = yield call([api, api.post], "/parking-sessions/check-in", action.payload);
@@ -1474,6 +1966,13 @@ function* handleCheckIn(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleCheckOut` (handle check out). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleCheckOut
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleCheckOut(action) {
     try {
         const { id, ...payload } = action.payload;
@@ -1500,6 +1999,13 @@ function* handleCheckOut(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleCheckOutByQr` (handle check out by qr). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleCheckOutByQr
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleCheckOutByQr(action) {
     try {
         const response = yield call([api, api.post], "/parking-sessions/check-out-by-qr", action.payload);
@@ -1524,6 +2030,13 @@ function* handleCheckOutByQr(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchViolations` (handle fetch violations). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchViolations
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchViolations(action) {
     try {
         const response = yield call([api, api.get], "/violations", {
@@ -1536,6 +2049,7 @@ function* handleFetchViolations(action) {
             yield put(
                 fetchViolationsSuccess(
                     parkingSessionId
+                        /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
                         ? violations.filter((item) => String(item.sessionId) === String(parkingSessionId))
                         : violations
                 )
@@ -1547,6 +2061,13 @@ function* handleFetchViolations(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleCreateViolation` (handle create violation). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleCreateViolation
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleCreateViolation(action) {
     try {
         const response = yield call([api, api.post], "/violations", action.payload);
@@ -1576,6 +2097,13 @@ function* handleCreateViolation(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleUpdateViolationStatus` (handle update violation status). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleUpdateViolationStatus
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleUpdateViolationStatus(action) {
     try {
         const { id, status } = action.payload;
@@ -1593,6 +2121,13 @@ function* handleUpdateViolationStatus(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleFetchReports` (handle fetch reports). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchReports
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchReports(action) {
     try {
         const params = action.payload;
@@ -1614,6 +2149,13 @@ function* handleFetchReports(action) {
         yield put(fetchReportsFailure(getErrorMessage(error, "Không lấy được báo cáo.")));
     }
 }
+/**
+ * Xử lý nghiệp vụ `handleFetchViolationTypes` (handle fetch violation types). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleFetchViolationTypes
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleFetchViolationTypes(action) {
     try {
         const includeInactive = Boolean(action.payload?.includeInactive);
@@ -1628,6 +2170,13 @@ function* handleFetchViolationTypes(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleSaveViolationType` (handle save violation type). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleSaveViolationType
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleSaveViolationType(action) {
     try {
         const { includeInactive, ...payload } = action.payload;
@@ -1645,6 +2194,13 @@ function* handleSaveViolationType(action) {
     }
 }
 
+/**
+ * Xử lý nghiệp vụ `handleDeactivateViolationType` (handle deactivate violation type). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ *
+ * @function handleDeactivateViolationType
+ * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
+ * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
+ */
 function* handleDeactivateViolationType(action) {
     try {
         const response = yield call([api, api.delete], `/violation-types/${action.payload.id}`);

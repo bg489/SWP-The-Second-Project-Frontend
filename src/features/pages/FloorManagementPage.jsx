@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình FloorManagementPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -26,11 +32,19 @@ import {
 } from "../backend/floors/floorSlice";
 import CarSlotManagementPanel from "../backend/pages/CarSlotManagementPanel";
 
+/**
+ * Khai báo `floorTypeLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/FloorManagementPage.jsx.
+ */
 const floorTypeLabels = {
   MOTORBIKE: "Tầng xe máy",
   CAR: "Tầng ô tô",
 };
 
+/**
+ * Khai báo `statusLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/FloorManagementPage.jsx.
+ */
 const statusLabels = {
   ACTIVE: "Đang hoạt động",
   LOCKED: "Đã khóa",
@@ -38,6 +52,10 @@ const statusLabels = {
   INACTIVE: "Ngưng hoạt động",
 };
 
+/**
+ * Khai báo `emptyForm` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/FloorManagementPage.jsx.
+ */
 const emptyForm = {
   buildingId: "",
   name: "",
@@ -50,6 +68,13 @@ const emptyForm = {
   operationNote: "",
 };
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `normalizeSlotPrefixPreview` (normalize slot prefix preview). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function normalizeSlotPrefixPreview
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const normalizeSlotPrefixPreview = (value) => {
   const normalized = String(value || "")
     .trim()
@@ -62,15 +87,44 @@ const normalizeSlotPrefixPreview = (value) => {
   return normalized || "CAR";
 };
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `normalizeText` (normalize text). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function normalizeText
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const normalizeText = (value) =>
   String(value ?? "")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
+/**
+ * Lấy nghiệp vụ `getFloorType` (get floor type). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getFloorType
+ * @param {*} floor - Giá trị `floor` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getFloorType = (floor) => floor.floorType || floor.floor_type;
+/**
+ * Lấy nghiệp vụ `getBuildingId` (get building id). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getBuildingId
+ * @param {*} floor - Giá trị `floor` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getBuildingId = (floor) => floor.buildingId || floor.building_id;
 
+/**
+ * Lấy nghiệp vụ `getFloorSearchValue` (get floor search value). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getFloorSearchValue
+ * @param {*} floor - Giá trị `floor` được hàm sử dụng trong quá trình xử lý.
+ * @param {*} column - Giá trị `column` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getFloorSearchValue = (floor, column) => {
   const floorType = getFloorType(floor);
   const capacityOrSlot =
@@ -95,11 +149,18 @@ const getFloorSearchValue = (floor, column) => {
   return values[column] ?? "";
 };
 
+/**
+ * Thực hiện nghiệp vụ `FloorManagementPage` (floor management page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function FloorManagementPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const FloorManagementPage = () => {
   const dispatch = useDispatch();
   const formSectionRef = useRef(null);
 
   const { buildings, loading: buildingsLoading } = useSelector(
+    /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (state) => state.buildings
   );
 
@@ -112,6 +173,7 @@ const FloorManagementPage = () => {
     deletingId,
     mutationError,
     mutationSuccess,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.floors);
 
   const [editingId, setEditingId] = useState(null);
@@ -128,23 +190,31 @@ const FloorManagementPage = () => {
 
   const isEditing = Boolean(editingId);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const selectedCarFloor = useMemo(() => {
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return floors.find((floor) => Number(floor.id) === Number(selectedCarFloorId));
   }, [floors, selectedCarFloorId]);
 
   const motorbikeCount = useMemo(
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => floors.filter((floor) => getFloorType(floor) === "MOTORBIKE").length,
     [floors]
   );
 
   const carCount = useMemo(
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => floors.filter((floor) => getFloorType(floor) === "CAR").length,
     [floors]
   );
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const filteredFloors = useMemo(() => {
     const search = normalizeText(filters.searchText);
 
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return floors.filter((floor) => {
       const floorType = getFloorType(floor);
       const buildingId = getBuildingId(floor);
@@ -160,11 +230,13 @@ const FloorManagementPage = () => {
     });
   }, [floors, filters]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const previewSlotCodes = useMemo(() => {
     if (form.floorType !== "CAR" || isEditing) return [];
 
     const manualSlots = form.slotsText
       .split("\n")
+      /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       .map((slot) => slot.trim().toUpperCase())
       .filter(Boolean);
 
@@ -176,13 +248,21 @@ const FloorManagementPage = () => {
     const previewCount = Math.min(count, 12);
     const prefix = normalizeSlotPrefixPreview(form.slotPrefix || form.name);
 
+    /* Callback nội bộ của lời gọi `from`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return Array.from({ length: previewCount }, (_, index) => {
       const slotNumber = String(index + 1).padStart(2, "0");
       return `${prefix}-${slotNumber}`;
     });
   }, [form.floorType, form.name, form.slotCount, form.slotPrefix, form.slotsText, isEditing]);
 
+  /**
+   * Thực hiện nghiệp vụ `scrollToForm` (scroll to form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function scrollToForm
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const scrollToForm = () => {
+    /* Callback nội bộ của lời gọi `setTimeout`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setTimeout(() => {
       formSectionRef.current?.scrollIntoView({
         behavior: "smooth",
@@ -191,17 +271,28 @@ const FloorManagementPage = () => {
     }, 80);
   };
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchBuildingsRequest());
     dispatch(fetchFloorsRequest());
   }, [dispatch]);
 
+  /**
+   * Cập nhật nghiệp vụ `updateField` (update field). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function updateField
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const updateField = (field, value) => {
+    /* Callback nội bộ của lời gọi `setForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setForm((prev) => ({
       ...prev,
       [field]: value,
     }));
 
+    /* Callback nội bộ của lời gọi `setFormErrors`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setFormErrors((prev) => ({
       ...prev,
       [field]: "",
@@ -210,13 +301,28 @@ const FloorManagementPage = () => {
     dispatch(clearFloorNotice());
   };
 
+  /**
+   * Cập nhật nghiệp vụ `updateFilter` (update filter). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function updateFilter
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const updateFilter = (field, value) => {
+    /* Callback nội bộ của lời gọi `setFilters`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setFilters((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
+  /**
+   * Kiểm tra nghiệp vụ `validateForm` (validate form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function validateForm
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const validateForm = () => {
     const nextErrors = {};
 
@@ -240,6 +346,12 @@ const FloorManagementPage = () => {
     return Object.keys(nextErrors).length === 0;
   };
 
+  /**
+   * Tạo nghiệp vụ `buildPayload` (build payload). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function buildPayload
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const buildPayload = () => {
     const payload = {
       buildingId: Number(form.buildingId),
@@ -267,6 +379,7 @@ const FloorManagementPage = () => {
 
       const slots = form.slotsText
         .split("\n")
+        /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         .map((slot) => slot.trim())
         .filter(Boolean);
 
@@ -278,6 +391,12 @@ const FloorManagementPage = () => {
     return payload;
   };
 
+  /**
+   * Xóa hoặc đặt lại nghiệp vụ `resetForm` (reset form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function resetForm
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const resetForm = () => {
     setEditingId(null);
     setForm(emptyForm);
@@ -292,6 +411,13 @@ const FloorManagementPage = () => {
     onSuccess: resetForm,
   });
 
+  /**
+   * Xử lý nghiệp vụ `handleSubmit` (handle submit). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleSubmit
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleSubmit = (event) => {
     event.preventDefault();
 
@@ -312,6 +438,13 @@ const FloorManagementPage = () => {
     }
   };
 
+  /**
+   * Thực hiện nghiệp vụ `startEdit` (start edit). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function startEdit
+   * @param {*} floor - Giá trị `floor` được hàm sử dụng trong quá trình xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const startEdit = (floor) => {
     dispatch(clearFloorNotice());
     setEditingId(floor.id);
@@ -336,6 +469,13 @@ const FloorManagementPage = () => {
     scrollToForm();
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleDelete` (handle delete). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleDelete
+   * @param {*} floor - Giá trị `floor` được hàm sử dụng trong quá trình xử lý.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const handleDelete = (floor) => {
     const ok = window.confirm(`Bạn chắc muốn xóa tầng "${floor.name}" không?`);
 
@@ -344,23 +484,64 @@ const FloorManagementPage = () => {
     dispatch(deleteFloorRequest({ id: floor.id }));
   };
 
+  /**
+   * Xử lý nghiệp vụ `handleRefresh` (handle refresh). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function handleRefresh
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const handleRefresh = () => {
     dispatch(clearFloorNotice());
     dispatch(fetchFloorsRequest());
   };
 
   const columns = [
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} floor - Giá trị `floor` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Mã", key: "id", render: (floor) => `#${floor.id}` },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} floor - Giá trị `floor` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Tên tầng", key: "name", render: (floor) => <strong>{floor.name}</strong> },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} floor - Giá trị `floor` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Tòa nhà", key: "buildingName", render: (floor) => floor.buildingName || floor.building_name || "-" },
     {
       header: "Loại",
       key: "floorType",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} floor - Giá trị `floor` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (floor) => floorTypeLabels[getFloorType(floor)] || getFloorType(floor),
     },
     {
       header: "Sức chứa / Ô đỗ",
       key: "capacity",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} floor - Giá trị `floor` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (floor) =>
         getFloorType(floor) === "MOTORBIKE"
           ? `${floor.capacity || 0} xe máy`
@@ -369,16 +550,37 @@ const FloorManagementPage = () => {
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} floor - Giá trị `floor` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (floor) => statusLabels[floor.status] || floor.status || "-",
     },
     {
       header: "Ghi chú",
       key: "operationNote",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} floor - Giá trị `floor` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (floor) => floor.operationNote || floor.operation_note || "-",
     },
     {
       header: "Thao tác",
       key: "actions",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} floor - Giá trị `floor` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (floor) => (
         <div className="action-row">
           <Button

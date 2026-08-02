@@ -1,9 +1,15 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/features/pages/UserParkingIssuesPage.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.parking-issue-grid`. */
 .parking-issue-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
   gap: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.parking-issue-card`. */
 .parking-issue-card {
   display: grid;
   gap: 14px;
@@ -14,6 +20,7 @@
   background: var(--surface-soft);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.parking-issue-head`. */
 .parking-issue-head {
   display: flex;
   gap: 12px;
@@ -21,6 +28,7 @@
   justify-content: space-between;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.parking-issue-head span:first-child`. */
 .parking-issue-head span:first-child {
   color: var(--text-muted);
   font-size: 12px;
@@ -28,16 +36,19 @@
   text-transform: uppercase;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.parking-issue-head h3`. */
 .parking-issue-head h3 {
   margin: 5px 0 0;
   font-size: 22px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.parking-issue-details`. */
 .parking-issue-details {
   display: grid;
   gap: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.parking-issue-details > div`. */
 .parking-issue-details > div {
   display: flex;
   gap: 12px;
@@ -47,6 +58,7 @@
   border-bottom: 1px dashed var(--border-color);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.parking-issue-details span`. */
 .parking-issue-details span {
   display: inline-flex;
   gap: 5px;
@@ -54,10 +66,12 @@
   color: var(--text-secondary);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.parking-issue-details strong`. */
 .parking-issue-details strong {
   text-align: right;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.parking-issue-evidence`. */
 .parking-issue-evidence {
   width: 100%;
   max-height: 240px;
@@ -65,21 +79,27 @@
   border-radius: 7px;
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 560px)`. */
 @media (max-width: 560px) {
+  /* Áp dụng bố cục và hình thức hiển thị cho `.parking-issue-card`. */
   .parking-issue-card {
     padding: 14px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.parking-issue-head,
+  .parking-issue-details > div`. */
   .parking-issue-head,
   .parking-issue-details > div {
     align-items: flex-start;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.parking-issue-details > div`. */
   .parking-issue-details > div {
     flex-direction: column;
     gap: 5px;
   }
 
+  /* Áp dụng bố cục và hình thức hiển thị cho `.parking-issue-details strong`. */
   .parking-issue-details strong {
     text-align: left;
   }

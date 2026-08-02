@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình UserBuildingChangeRequestPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Building2, RefreshCcw, Send } from "lucide-react";
@@ -13,6 +19,10 @@ import {
     submitBuildingChangeRequest,
 } from "../buildingChange/buildingChangeSlice";
 
+/**
+ * Khai báo `statusLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/backend/pages/UserBuildingChangeRequestPage.jsx.
+ */
 const statusLabels = {
     PENDING: "Chờ quản trị viên duyệt",
     APPROVED: "Đã duyệt",
@@ -20,6 +30,10 @@ const statusLabels = {
     CANCELLED: "Đã hủy",
 };
 
+/**
+ * Khai báo `statusTone` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/backend/pages/UserBuildingChangeRequestPage.jsx.
+ */
 const statusTone = {
     PENDING: "warning",
     APPROVED: "success",
@@ -27,8 +41,15 @@ const statusTone = {
     CANCELLED: "neutral",
 };
 
+/**
+ * Thực hiện nghiệp vụ `UserBuildingChangeRequestPage` (user building change request page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function UserBuildingChangeRequestPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const UserBuildingChangeRequestPage = () => {
     const dispatch = useDispatch();
+    /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const { user } = useSelector((state) => state.auth);
     const {
         buildings,
@@ -39,6 +60,7 @@ const UserBuildingChangeRequestPage = () => {
         submitLoading,
         error,
         notice,
+    /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     } = useSelector((state) => state.buildingChange);
 
     const [form, setForm] = useState({
@@ -48,7 +70,9 @@ const UserBuildingChangeRequestPage = () => {
     const [formError, setFormError] = useState("");
 
     const currentBuildingId = user?.buildingId;
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const currentBuilding = useMemo(() => {
+        /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         return buildings.find((building) => Number(building.id) === Number(currentBuildingId)) || {
             id: currentBuildingId,
             name: user?.buildingName || "Chưa có tòa nhà",
@@ -56,15 +80,24 @@ const UserBuildingChangeRequestPage = () => {
         };
     }, [buildings, currentBuildingId, user?.buildingAddress, user?.buildingName]);
 
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const availableBuildings = useMemo(() => {
+        /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         return buildings.filter((building) => Number(building.id) !== Number(currentBuildingId));
     }, [buildings, currentBuildingId]);
 
+    /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     useEffect(() => {
         dispatch(fetchBuildingsRequest());
         dispatch(fetchMyBuildingChangeRequestsRequest());
     }, [dispatch]);
 
+    /**
+     * Xóa hoặc đặt lại nghiệp vụ `resetRequestForm` (reset request form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function resetRequestForm
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const resetRequestForm = () => {
         setForm({
             requestedBuildingId: "",
@@ -80,6 +113,13 @@ const UserBuildingChangeRequestPage = () => {
         onSuccess: resetRequestForm,
     });
 
+    /**
+     * Xử lý nghiệp vụ `handleSubmit` (handle submit). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function handleSubmit
+     * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleSubmit = (event) => {
         event.preventDefault();
 
@@ -97,24 +137,58 @@ const UserBuildingChangeRequestPage = () => {
         );
     };
 
+    /**
+     * Thực hiện nghiệp vụ `refresh` (refresh). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function refresh
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const refresh = () => {
         dispatch(fetchBuildingsRequest());
         dispatch(fetchMyBuildingChangeRequestsRequest());
     };
 
     const columns = [
+        /**
+         * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+         *
+         * @function render
+         * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+         * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+         */
         { header: "Mã", key: "id", render: (request) => `#${request.id}` },
         { header: "Tòa nhà muốn chuyển", key: "requestedBuildingName" },
+        /**
+         * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+         *
+         * @function render
+         * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+         * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+         */
         { header: "Lý do", key: "reason", render: (request) => request.reason || "-" },
         {
             header: "Trạng thái",
             key: "status",
+            /**
+             * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+             *
+             * @function render
+             * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+             * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+             */
             render: (request) => (
                 <span className={`pill ${statusTone[request.status] || "neutral"}`}>
                     {statusLabels[request.status] || request.status}
                 </span>
             ),
         },
+        /**
+         * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+         *
+         * @function render
+         * @param {*} request - Giá trị `request` được hàm sử dụng trong quá trình xử lý.
+         * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+         */
         { header: "Ghi chú duyệt", key: "adminNote", render: (request) => request.adminNote || "-" },
     ];
 

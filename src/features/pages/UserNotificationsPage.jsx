@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình UserNotificationsPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -14,8 +20,19 @@ import {
 import { formatDateTime } from "../../services/mockParkingData";
 import "./UserNotificationsPage.css";
 
+/**
+ * Khai báo `PAGE_SIZE` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/UserNotificationsPage.jsx.
+ */
 const PAGE_SIZE = 10;
 
+/**
+ * Lấy nghiệp vụ `getNotificationTarget` (get notification target). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getNotificationTarget
+ * @param {*} item - Giá trị `item` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getNotificationTarget = (item) => {
   if (item.relatedType === "WRONG_SLOT_CASE") {
     return `/user/parking-issues?type=wrong-slot&id=${item.relatedId || ""}`;
@@ -36,27 +53,40 @@ const getNotificationTarget = (item) => {
   return "";
 };
 
+/**
+ * Thực hiện nghiệp vụ `UserNotificationsPage` (user notifications page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function UserNotificationsPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const UserNotificationsPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { notifications } = useSelector((state) => state.parking);
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchMyNotificationsRequest());
+    /* Callback nội bộ của lời gọi `setInterval`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const timer = window.setInterval(() => {
       dispatch(fetchMyNotificationsRequest());
     }, 15000);
 
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => window.clearInterval(timer);
   }, [dispatch]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const filtered = useMemo(() => {
     if (!status) return notifications.mine || [];
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return (notifications.mine || []).filter((item) => item.status === status);
   }, [notifications.mine, status]);
   const unreadCount = (notifications.mine || []).filter(
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     (item) => item.status === "UNREAD"
   ).length;
   const totalPages = Math.max(Math.ceil(filtered.length / PAGE_SIZE), 1);
@@ -66,6 +96,13 @@ const UserNotificationsPage = () => {
     safePage * PAGE_SIZE
   );
 
+  /**
+   * Hiển thị nghiệp vụ `openNotification` (open notification). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function openNotification
+   * @param {*} item - Giá trị `item` được hàm sử dụng trong quá trình xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const openNotification = (item) => {
     if (item.status === "UNREAD") {
       dispatch(markNotificationReadRequest({ id: item.id }));

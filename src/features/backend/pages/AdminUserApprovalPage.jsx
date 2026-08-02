@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình AdminUserApprovalPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -29,6 +35,10 @@ import {
 } from "../adminUsers/adminUserSlice";
 import { fetchBuildingsRequest } from "../buildings/buildingSlice";
 
+/**
+ * Khai báo `statusOptions` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/backend/pages/AdminUserApprovalPage.jsx.
+ */
 const statusOptions = [
     { label: "Tất cả", value: "" },
     { label: "Chờ duyệt", value: "PENDING" },
@@ -37,6 +47,10 @@ const statusOptions = [
     { label: "Không hoạt động", value: "INACTIVE" },
 ];
 
+/**
+ * Khai báo `roleOptions` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/backend/pages/AdminUserApprovalPage.jsx.
+ */
 const roleOptions = [
     { label: "Cư dân", value: "USER" },
     { label: "Nhân viên bãi xe", value: "STAFF" },
@@ -44,6 +58,10 @@ const roleOptions = [
     { label: "Quản trị viên", value: "ADMIN" },
 ];
 
+/**
+ * Khai báo `roleCreationMeta` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/backend/pages/AdminUserApprovalPage.jsx.
+ */
 const roleCreationMeta = {
     USER: {
         title: "Tài khoản cư dân",
@@ -67,10 +85,19 @@ const roleCreationMeta = {
     },
 };
 
+/**
+ * Khai báo `roleLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/backend/pages/AdminUserApprovalPage.jsx.
+ */
 const roleLabels = Object.fromEntries(
+    /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     roleOptions.map((option) => [option.value, option.label])
 );
 
+/**
+ * Khai báo `emptyCreateForm` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/backend/pages/AdminUserApprovalPage.jsx.
+ */
 const emptyCreateForm = {
     name: "",
     email: "",
@@ -81,6 +108,10 @@ const emptyCreateForm = {
     portraitImageUrl: "",
 };
 
+/**
+ * Khai báo `statusLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/backend/pages/AdminUserApprovalPage.jsx.
+ */
 const statusLabels = {
     PENDING: "Chờ duyệt",
     ACTIVE: "Đang hoạt động",
@@ -88,6 +119,10 @@ const statusLabels = {
     INACTIVE: "Không hoạt động",
 };
 
+/**
+ * Khai báo `statusTone` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/backend/pages/AdminUserApprovalPage.jsx.
+ */
 const statusTone = {
     PENDING: "warning",
     ACTIVE: "success",
@@ -95,6 +130,12 @@ const statusTone = {
     INACTIVE: "neutral",
 };
 
+/**
+ * Thực hiện nghiệp vụ `AdminUserApprovalPage` (admin user approval page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function AdminUserApprovalPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const AdminUserApprovalPage = () => {
     const dispatch = useDispatch();
     const {
@@ -106,8 +147,10 @@ const AdminUserApprovalPage = () => {
         updatingId,
         updateError,
         updateSuccess,
+    /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     } = useSelector((state) => state.adminUsers);
     const { buildings, loading: buildingsLoading, error: buildingsError } = useSelector(
+        /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         (state) => state.buildings
     );
     const [filters, setFilters] = useState({
@@ -122,14 +165,20 @@ const AdminUserApprovalPage = () => {
     const [processingImage, setProcessingImage] = useState(false);
 
     const pendingCount = useMemo(
+        /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+        /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         () => users.filter((user) => user.status === "PENDING").length,
         [users]
     );
     const activeCount = useMemo(
+        /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+        /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         () => users.filter((user) => user.status === "ACTIVE").length,
         [users]
     );
     const buildingOptions = useMemo(
+        /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+        /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         () => buildings.map((building) => ({
             value: String(building.id),
             label: `${building.name}${building.address ? ` - ${building.address}` : ""}`,
@@ -138,6 +187,12 @@ const AdminUserApprovalPage = () => {
     );
     const accountNeedsBuilding = ["USER", "STAFF"].includes(createForm.role);
 
+    /**
+     * Lấy nghiệp vụ `getRefreshParams` (get refresh params). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function getRefreshParams
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const getRefreshParams = () => ({
         q: filters.q || undefined,
         status: filters.status || undefined,
@@ -146,10 +201,12 @@ const AdminUserApprovalPage = () => {
         limit: filters.limit,
     });
 
+    /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     useEffect(() => {
         dispatch(fetchBuildingsRequest());
     }, [dispatch]);
 
+    /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     useEffect(() => {
         dispatch(fetchAdminUsersRequest({
             q: filters.q || undefined,
@@ -164,28 +221,60 @@ const AdminUserApprovalPage = () => {
         submitting: creating,
         success: updateSuccess,
         error: updateError,
+        /**
+         * Xử lý nghiệp vụ `onSuccess` (on success). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+         *
+         * @function onSuccess
+         * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+         */
         onSuccess: () => {
             setCreateForm(emptyCreateForm);
             setCreateErrors({});
         },
     });
 
+    /**
+     * Cập nhật nghiệp vụ `updateFilter` (update filter). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function updateFilter
+     * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+     * @param {*} value - Giá trị đầu vào cần xử lý.
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const updateFilter = (field, value) => {
         dispatch(clearAdminUserNotice());
+        /* Callback nội bộ của lời gọi `setFilters`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setFilters((current) => ({ ...current, [field]: value, page: 1 }));
     };
 
+    /**
+     * Cập nhật nghiệp vụ `updateCreateForm` (update create form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function updateCreateForm
+     * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+     * @param {*} value - Giá trị đầu vào cần xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const updateCreateForm = (field, value) => {
         dispatch(clearAdminUserNotice());
+        /* Callback nội bộ của lời gọi `setCreateForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setCreateForm((current) => {
             const next = { ...current, [field]: value };
             if (field === "role" && value !== "STAFF") next.portraitImageUrl = "";
             if (field === "role" && !["USER", "STAFF"].includes(value)) next.buildingId = "";
             return next;
         });
+        /* Callback nội bộ của lời gọi `setCreateErrors`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setCreateErrors((current) => ({ ...current, [field]: "" }));
     };
 
+    /**
+     * Xử lý nghiệp vụ `handlePortrait` (handle portrait). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function handlePortrait
+     * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+     * @returns {Promise<*>} Promise chứa kết quả khi toàn bộ thao tác bất đồng bộ hoàn tất.
+     */
     const handlePortrait = async (event) => {
         const file = event.target.files?.[0];
         event.target.value = "";
@@ -200,7 +289,9 @@ const AdminUserApprovalPage = () => {
             });
             updateCreateForm("portraitImageUrl", portraitImageUrl);
         } catch (imageError) {
+            /* Callback nội bộ của lời gọi `setCreateForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
             setCreateForm((current) => ({ ...current, portraitImageUrl: "" }));
+            /* Callback nội bộ của lời gọi `setCreateErrors`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
             setCreateErrors((current) => ({
                 ...current,
                 portraitImageUrl: imageError.message || "Không chuẩn bị được ảnh chân dung.",
@@ -210,6 +301,12 @@ const AdminUserApprovalPage = () => {
         }
     };
 
+    /**
+     * Kiểm tra nghiệp vụ `validateCreateForm` (validate create form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function validateCreateForm
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const validateCreateForm = () => {
         const nextErrors = {};
         if (createForm.name.trim().length < 2) nextErrors.name = "Vui lòng nhập họ tên đầy đủ.";
@@ -230,6 +327,13 @@ const AdminUserApprovalPage = () => {
         return Object.keys(nextErrors).length === 0;
     };
 
+    /**
+     * Xử lý nghiệp vụ `handleCreateAccount` (handle create account). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function handleCreateAccount
+     * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleCreateAccount = (event) => {
         event.preventDefault();
         dispatch(clearAdminUserNotice());
@@ -250,6 +354,14 @@ const AdminUserApprovalPage = () => {
         }));
     };
 
+    /**
+     * Cập nhật nghiệp vụ `setAccountLock` (set account lock). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function setAccountLock
+     * @param {*} user - Giá trị `user` được hàm sử dụng trong quá trình xử lý.
+     * @param {*} locked - Giá trị `locked` được hàm sử dụng trong quá trình xử lý.
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const setAccountLock = (user, locked) => {
         dispatch(setAdminUserLockRequest({
             id: user.id,
@@ -259,11 +371,25 @@ const AdminUserApprovalPage = () => {
     };
 
     const columns = [
+        /**
+         * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+         *
+         * @function render
+         * @param {*} user - Giá trị `user` được hàm sử dụng trong quá trình xử lý.
+         * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+         */
         { header: "Mã", key: "id", render: (user) => `#${user.id}` },
         {
             header: "Người dùng",
             key: "name",
             minWidth: "180px",
+            /**
+             * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+             *
+             * @function render
+             * @param {*} user - Giá trị `user` được hàm sử dụng trong quá trình xử lý.
+             * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+             */
             render: (user) => (
                 <>
                     <strong>{user.name}</strong>
@@ -276,6 +402,13 @@ const AdminUserApprovalPage = () => {
             header: "Liên hệ",
             key: "email",
             minWidth: "210px",
+            /**
+             * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+             *
+             * @function render
+             * @param {*} user - Giá trị `user` được hàm sử dụng trong quá trình xử lý.
+             * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+             */
             render: (user) => (
                 <>
                     <span>{user.email}</span>
@@ -288,6 +421,13 @@ const AdminUserApprovalPage = () => {
             header: "Thông tin hồ sơ",
             key: "approvalInfo",
             minWidth: "190px",
+            /**
+             * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+             *
+             * @function render
+             * @param {*} user - Giá trị `user` được hàm sử dụng trong quá trình xử lý.
+             * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+             */
             render: (user) => (
                 <>
                     <strong>{user.role === "STAFF" ? "Tài khoản Staff riêng" : user.role}</strong>
@@ -300,6 +440,13 @@ const AdminUserApprovalPage = () => {
             header: "Vai trò",
             key: "role",
             minWidth: "220px",
+            /**
+             * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+             *
+             * @function render
+             * @param {*} user - Giá trị `user` được hàm sử dụng trong quá trình xử lý.
+             * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+             */
             render: (user) => (
                 <div className="admin-role-static">
                     <strong>{roleLabels[user.role] || user.role}</strong>
@@ -310,6 +457,13 @@ const AdminUserApprovalPage = () => {
         {
             header: "Trạng thái",
             key: "status",
+            /**
+             * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+             *
+             * @function render
+             * @param {*} user - Giá trị `user` được hàm sử dụng trong quá trình xử lý.
+             * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+             */
             render: (user) => (
                 <span className={`pill ${statusTone[user.status] || "neutral"}`}>
                     {statusLabels[user.status] || user.status}
@@ -319,6 +473,13 @@ const AdminUserApprovalPage = () => {
         {
             header: "Ngày tạo",
             key: "createdAt",
+            /**
+             * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+             *
+             * @function render
+             * @param {*} user - Giá trị `user` được hàm sử dụng trong quá trình xử lý.
+             * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+             */
             render: (user) => user.createdAt
                 ? new Date(user.createdAt).toLocaleDateString("vi-VN")
                 : "-",
@@ -327,6 +488,13 @@ const AdminUserApprovalPage = () => {
             header: "Thao tác",
             key: "actions",
             minWidth: "150px",
+            /**
+             * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+             *
+             * @function render
+             * @param {*} user - Giá trị `user` được hàm sử dụng trong quá trình xử lý.
+             * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+             */
             render: (user) => {
                 const isLocked = user.status === "LOCKED";
                 const isActive = user.status === "ACTIVE";
@@ -576,6 +744,13 @@ const AdminUserApprovalPage = () => {
                         currentPage: Number(pagination.page || filters.page || 1),
                         totalPages: Number(pagination.totalPages || 1),
                         totalItems: Number(pagination.total || users.length),
+                        /**
+                         * Xử lý nghiệp vụ `onPageChange` (on page change). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+                         *
+                         * @function onPageChange
+                         * @param {*} page - Giá trị `page` được hàm sử dụng trong quá trình xử lý.
+                         * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+                         */
                         onPageChange: (page) => setFilters((current) => ({
                             ...current,
                             page: Math.max(1, page),

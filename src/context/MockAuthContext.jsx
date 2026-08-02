@@ -1,9 +1,26 @@
+/**
+ * @fileoverview Khai báo chức năng frontend của module MockAuthContext.
+ *
+ * Luồng chính: Dữ liệu đầu vào -> xử lý theo trách nhiệm của module -> xuất kết quả cho lớp gọi.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ROLE_KEYS, roleHomePaths } from "../services/mockParkingData";
 
+/**
+ * Khai báo `MockAuthContext` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/context/MockAuthContext.jsx.
+ */
 const MockAuthContext = createContext();
 
+/**
+ * Thực hiện nghiệp vụ `safeJsonParse` (safe json parse). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function safeJsonParse
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const safeJsonParse = (value) => {
   try {
     return value ? JSON.parse(value) : null;
@@ -12,6 +29,10 @@ const safeJsonParse = (value) => {
   }
 };
 
+/**
+ * Khai báo `backendToFrontendRole` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/context/MockAuthContext.jsx.
+ */
 const backendToFrontendRole = {
   ADMIN: ROLE_KEYS.ADMIN,
   USER: ROLE_KEYS.USER,
@@ -21,23 +42,41 @@ const backendToFrontendRole = {
   PARKING_STAFF: ROLE_KEYS.PARKING_STAFF,
 };
 
+/**
+ * Chuẩn hóa hoặc chuyển đổi nghiệp vụ `normalizeRole` (normalize role). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function normalizeRole
+ * @param {*} role - Giá trị `role` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const normalizeRole = (role) => backendToFrontendRole[String(role || "").toUpperCase()] || ROLE_KEYS.USER;
 
+/**
+ * Thực hiện nghiệp vụ `MockAuthProvider` (mock auth provider). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function MockAuthProvider
+ * @param {*} options - Giá trị `options` được hàm sử dụng trong quá trình xử lý.
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 export const MockAuthProvider = ({ children }) => {
   const initialUser = safeJsonParse(localStorage.getItem("auth_user"));
   const initialToken = localStorage.getItem("access_token");
+  /* Callback nội bộ của lời gọi `useState`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const [role, setRole] = useState(() =>
     localStorage.getItem("mock_role") || normalizeRole(initialUser?.role)
   );
   const [user, setUser] = useState(initialUser);
   const [isAuthenticated, setIsAuthenticated] = useState(Boolean(initialToken));
+  /* Callback nội bộ của lời gọi `useState`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     document.body.classList.toggle("dark-theme", isDarkMode);
     localStorage.setItem("theme", isDarkMode ? "dark" : "light");
   }, [isDarkMode]);
 
+  /* Callback nội bộ của lời gọi `useCallback`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const login = useCallback((selectedRole, nextUser, token) => {
     const nextRole = normalizeRole(selectedRole || nextUser?.role);
 
@@ -58,6 +97,7 @@ export const MockAuthProvider = ({ children }) => {
     return roleHomePaths[nextRole] || "/login";
   }, []);
 
+  /* Callback nội bộ của lời gọi `useCallback`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const updateUser = useCallback((nextUser) => {
     setUser(nextUser || null);
 
@@ -69,6 +109,7 @@ export const MockAuthProvider = ({ children }) => {
     }
   }, []);
 
+  /* Callback nội bộ của lời gọi `useCallback`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const logout = useCallback(() => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("auth_user");
@@ -79,11 +120,14 @@ export const MockAuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   }, []);
 
+  /* Callback nội bộ của lời gọi `useCallback`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const toggleDarkMode = useCallback(() => {
+    /* Callback nội bộ của lời gọi `setIsDarkMode`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setIsDarkMode((prev) => !prev);
   }, []);
 
   const value = useMemo(
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => ({
       role,
       user,
@@ -100,6 +144,12 @@ export const MockAuthProvider = ({ children }) => {
   return <MockAuthContext.Provider value={value}>{children}</MockAuthContext.Provider>;
 };
 
+/**
+ * Thực hiện nghiệp vụ `useMockAuth` (use mock auth). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function useMockAuth
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 export const useMockAuth = () => {
   const context = useContext(MockAuthContext);
   if (!context) {

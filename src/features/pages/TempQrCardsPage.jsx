@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình TempQrCardsPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Maximize2, QrCode, RefreshCcw, Save, ShieldAlert, X } from "lucide-react";
@@ -20,6 +26,10 @@ import {
 import { fetchBuildingsRequest } from "../backend/buildings/buildingSlice";
 import { getStatusLabel, getStatusTone } from "../../services/mockParkingData";
 
+/**
+ * Khai báo `statusOptions` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/TempQrCardsPage.jsx.
+ */
 const statusOptions = [
   { value: "READY", label: "Sẵn sàng phát" },
   { value: "IN_USE", label: "Đang dùng" },
@@ -29,6 +39,13 @@ const statusOptions = [
   { value: "LOST", label: "Mất thẻ" },
 ];
 
+/**
+ * Tạo nghiệp vụ `buildBuildingPrefix` (build building prefix). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function buildBuildingPrefix
+ * @param {*} buildingName - Giá trị `buildingName` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const buildBuildingPrefix = (buildingName = "") => {
   const normalized = buildingName
     .normalize("NFD")
@@ -38,6 +55,7 @@ const buildBuildingPrefix = (buildingName = "") => {
   const prefix = normalized
     .split(/\s+/)
     .filter(Boolean)
+    /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     .map((word) => word[0])
     .join("")
     .toUpperCase();
@@ -45,9 +63,18 @@ const buildBuildingPrefix = (buildingName = "") => {
   return prefix || "QR";
 };
 
+/**
+ * Lấy nghiệp vụ `getNextPreviewNumber` (get next preview number). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getNextPreviewNumber
+ * @param {*} cards - Giá trị `cards` được hàm sử dụng trong quá trình xử lý.
+ * @param {*} prefix - Giá trị `prefix` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getNextPreviewNumber = (cards, prefix) => {
   const matcher = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-(\\d+)$`);
 
+  /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   return cards.reduce((max, card) => {
     const match = String(card.cardCode || "").match(matcher);
     if (!match) return max;
@@ -56,16 +83,33 @@ const getNextPreviewNumber = (cards, prefix) => {
   }, 0) + 1;
 };
 
+/**
+ * Lấy nghiệp vụ `getExistingCardPrefix` (get existing card prefix). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getExistingCardPrefix
+ * @param {*} cards - Giá trị `cards` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getExistingCardPrefix = (cards) =>
   cards
+    /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     .map((card) => String(card.cardCode || "").match(/^([A-Z0-9]+)-\d+$/)?.[1])
     .find(Boolean);
 
+/**
+ * Thực hiện nghiệp vụ `TempQrCardsPage` (temp qr cards page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function TempQrCardsPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const TempQrCardsPage = () => {
   const dispatch = useDispatch();
   const { role } = useMockAuth();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { user: authUser, frontendRole } = useSelector((state) => state.auth);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { tempQrCards, notice } = useSelector((state) => state.parking);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { buildings, loading: buildingsLoading } = useSelector((state) => state.buildings);
   const effectiveRole = frontendRole || role;
   const canCreate = effectiveRole === "PARKING_MANAGER";
@@ -84,10 +128,12 @@ const TempQrCardsPage = () => {
     ? selectedBuildingId || (buildings[0]?.id ? String(buildings[0].id) : "")
     : authUser?.buildingId ? String(authUser.buildingId) : "";
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchBuildingsRequest());
   }, [dispatch]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!effectiveBuildingId) return;
 
@@ -99,15 +145,20 @@ const TempQrCardsPage = () => {
     );
   }, [dispatch, effectiveBuildingId, filter]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const cards = useMemo(() => {
     if (!filter) return tempQrCards.items;
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return tempQrCards.items.filter((card) => card.status === filter);
   }, [filter, tempQrCards.items]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const readyCount = useMemo(() => {
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return tempQrCards.items.filter((card) => card.status === "READY").length;
   }, [tempQrCards.items]);
 
+  /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const selectedBuilding = buildings.find((building) => String(building.id) === String(effectiveBuildingId));
   const previewPrefix =
     getExistingCardPrefix(tempQrCards.items) ||
@@ -117,9 +168,18 @@ const TempQrCardsPage = () => {
   const previewFirstCode = `${previewPrefix}-${String(previewStart).padStart(4, "0")}`;
   const previewLastCode = `${previewPrefix}-${String(previewEnd).padStart(4, "0")}`;
 
+  /**
+   * Cập nhật nghiệp vụ `updateForm` (update form). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function updateForm
+   * @param {*} field - Giá trị `field` được hàm sử dụng trong quá trình xử lý.
+   * @param {*} value - Giá trị đầu vào cần xử lý.
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const updateForm = (field, value) => {
     dispatch(clearParkingNotice());
     setFormError("");
+    /* Callback nội bộ của lời gọi `setForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     setForm((prev) => ({
       ...prev,
       [field]: field === "quantity" ? value.replace(/\D/g, "").slice(0, 3) : value,
@@ -130,6 +190,12 @@ const TempQrCardsPage = () => {
     submitting: tempQrCards.saving,
     success: notice,
     error: tempQrCards.error,
+    /**
+     * Xử lý nghiệp vụ `onSuccess` (on success). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function onSuccess
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     onSuccess: () => {
       setForm({
         quantity: "",
@@ -140,6 +206,13 @@ const TempQrCardsPage = () => {
     },
   });
 
+  /**
+   * Tạo nghiệp vụ `createCard` (create card). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function createCard
+   * @param {*} event - Sự kiện phát sinh từ thao tác của người dùng.
+   * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+   */
   const createCard = (event) => {
     event.preventDefault();
     const quantity = Number(form.quantity);
@@ -164,6 +237,12 @@ const TempQrCardsPage = () => {
     );
   };
 
+  /**
+   * Thực hiện nghiệp vụ `refresh` (refresh). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+   *
+   * @function refresh
+   * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+   */
   const refresh = () => {
     dispatch(clearParkingNotice());
     dispatch(fetchTempQrCardsRequest({
@@ -177,6 +256,13 @@ const TempQrCardsPage = () => {
       header: "Mã QR",
       key: "qrPreview",
       width: "94px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => {
         const value = row.cardCode || row.id;
 
@@ -195,19 +281,61 @@ const TempQrCardsPage = () => {
     {
       header: "Mã thẻ",
       key: "cardCode",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => <strong>{row.cardCode || row.id}</strong>,
     },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Tòa nhà", key: "buildingName", render: (row) => row.buildingName || "-" },
     {
       header: "Trạng thái",
       key: "status",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => <span className={`pill ${getStatusTone(row.status)}`}>{getStatusLabel(row.status)}</span>,
     },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Gắn với lượt gửi", key: "currentSessionId", render: (row) => row.currentSessionId || "Chưa dùng" },
+    /**
+     * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function render
+     * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     { header: "Ghi chú", key: "note", render: (row) => row.note || "-" },
     {
       header: "Đổi trạng thái",
       key: "actions",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <Select
           value={row.status}

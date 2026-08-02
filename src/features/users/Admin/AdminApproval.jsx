@@ -1,6 +1,18 @@
+/**
+ * @fileoverview Khai báo chức năng frontend của module AdminApproval.
+ *
+ * Luồng chính: Dữ liệu đầu vào -> xử lý theo trách nhiệm của module -> xuất kết quả cho lớp gọi.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useState } from 'react';
 import './AdminApproval.css';
 
+/**
+ * Thực hiện nghiệp vụ `AdminApproval` (admin approval). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function AdminApproval
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const AdminApproval = () => {
     // Tình trạng Tab hiện tại: 'approval', 'packages', hoặc 'cards'
     const [adminTab, setAdminTab] = useState('approval');
@@ -15,21 +27,39 @@ const AdminApproval = () => {
     ]);
     const [approvalHistory, setApprovalHistory] = useState([]);
 
+    /**
+     * Xử lý nghiệp vụ `handleApprove` (handle approve). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+     *
+     * @function handleApprove
+     * @param {*} id - Mã định danh của bản ghi cần xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleApprove = (id) => {
+        /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         const request = pendingRequests.find(item => item.id === id);
         if (!request) return;
         alert(`✔️ Đã DUYỆT phương tiện ${request.licensePlate} vào hệ thống.`);
         setApprovalHistory([{ ...request, status: 'approved', actionTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }, ...approvalHistory]);
+        /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setPendingRequests(pendingRequests.filter(item => item.id !== id));
     };
 
+    /**
+     * Xử lý nghiệp vụ `handleReject` (handle reject). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+     *
+     * @function handleReject
+     * @param {*} id - Mã định danh của bản ghi cần xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleReject = (id) => {
+        /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         const request = pendingRequests.find(item => item.id === id);
         if (!request) return;
         const reason = prompt("Nhập lý do từ chối phê duyệt xe:", "Ảnh chụp biển số mờ, không rõ ký tự");
         if (reason === null) return;
         alert(`❌ Đã TỪ CHỐI xe ${request.licensePlate}. Lý do: ${reason}`);
         setApprovalHistory([{ ...request, status: 'rejected', reason, actionTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }, ...approvalHistory]);
+        /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         setPendingRequests(pendingRequests.filter(item => item.id !== id));
     };
 
@@ -50,25 +80,56 @@ const AdminApproval = () => {
     const [pkgDuration, setPkgDuration] = useState('30');
     const [pkgStatus, setPkgStatus] = useState('Hoạt động');
 
+    /**
+     * Xử lý nghiệp vụ `handleSavePackage` (handle save package). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+     *
+     * @function handleSavePackage
+     * @param {*} e - Giá trị `e` được hàm sử dụng trong quá trình xử lý.
+     * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+     */
     const handleSavePackage = (e) => {
         e.preventDefault();
         if (!pkgName.trim() || !pkgPrice) return alert("⚠️ Vui lòng nhập đủ thông tin!");
         if (isEditing) {
+            /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
             setPackages(packages.map(p => p.id === editId ? { ...p, name: pkgName.trim(), vehicleType: pkgVehicleType, price: parseInt(pkgPrice), duration: parseInt(pkgDuration), status: pkgStatus } : p));
             alert("✔️ Cập nhật gói cước thành công!");
         } else {
+            /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
             const nextId = packages.length ? Math.max(...packages.map((pkg) => pkg.id)) + 1 : 1;
             setPackages([...packages, { id: nextId, name: pkgName.trim(), vehicleType: pkgVehicleType, price: parseInt(pkgPrice), duration: parseInt(pkgDuration), status: pkgStatus }]);
             alert("🚀 Thêm mới gói cước thành công!");
         }
         resetPkgForm();
     };
+    /**
+     * Xử lý nghiệp vụ `handleStartEdit` (handle start edit). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+     *
+     * @function handleStartEdit
+     * @param {*} pkg - Giá trị `pkg` được hàm sử dụng trong quá trình xử lý.
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const handleStartEdit = (pkg) => {
         setIsEditing(true); setEditId(pkg.id); setPkgName(pkg.name); setPkgVehicleType(pkg.vehicleType); setPkgPrice(pkg.price); setPkgDuration(pkg.duration); setPkgStatus(pkg.status);
     };
+    /**
+     * Xử lý nghiệp vụ `handleDeletePackage` (handle delete package). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+     *
+     * @function handleDeletePackage
+     * @param {*} id - Mã định danh của bản ghi cần xử lý.
+     * @param {*} name - Giá trị `name` được hàm sử dụng trong quá trình xử lý.
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const handleDeletePackage = (id, name) => {
+        /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         if (window.confirm(`⚠️ Xóa gói cước "${name}"?`)) { setPackages(packages.filter(p => p.id !== id)); alert("🗑️ Đã xóa gói."); }
     };
+    /**
+     * Xóa hoặc đặt lại nghiệp vụ `resetPkgForm` (reset pkg form). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+     *
+     * @function resetPkgForm
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const resetPkgForm = () => { setIsEditing(false); setEditId(null); setPkgName(''); setPkgVehicleType('Xe máy'); setPkgPrice(''); setPkgDuration('30'); setPkgStatus('Hoạt động'); };
 
 
@@ -94,6 +155,7 @@ const AdminApproval = () => {
         if (!newCardCode.trim()) return alert("⚠️ Vui lòng nhập mã thẻ!");
         const formattedCode = newCardCode.toUpperCase().trim();
 
+        /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         if (cards.some(c => c.code === formattedCode)) {
             return alert("❌ Mã thẻ này đã tồn tại trên hệ thống!");
         }
@@ -114,6 +176,7 @@ const AdminApproval = () => {
 
     // Hàm đổi trạng thái thẻ nhanh trên bảng
     const handleChangeCardStatus = (id, targetStatus) => {
+        /* Callback nội bộ của lời gọi `map`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
         const updated = cards.map(c => {
             if (c.id === id) {
                 let updatedNote = c.note;
@@ -129,11 +192,13 @@ const AdminApproval = () => {
     // Hàm xóa bỏ vĩnh viễn thẻ khỏi hệ thống cấu hình
     const handleDeleteCard = (id, code) => {
         if (window.confirm(`⚠️ Bạn có chắc muốn xóa thẻ ${code} khỏi cơ sở dữ liệu?`)) {
+            /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
             setCards(cards.filter(c => c.id !== id));
         }
     };
 
     // Lọc danh sách thẻ hiển thị
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     const filteredCards = cards.filter(c => filterStatus === 'Tất cả' || c.status === filterStatus);
 
     return (

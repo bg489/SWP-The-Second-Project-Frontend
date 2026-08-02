@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình UserParkingIssuesPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AlertTriangle, Car, CheckCircle2, MapPin, RefreshCcw, ShieldAlert } from "lucide-react";
@@ -16,6 +22,10 @@ import {
 import { formatDateTime } from "../../services/mockParkingData";
 import "./UserParkingIssuesPage.css";
 
+/**
+ * Khai báo `wrongStatusLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/UserParkingIssuesPage.jsx.
+ */
 const wrongStatusLabels = {
   ALLOWED: "Được phép đậu, không tính phí",
   WAITING_USER: "Đang chờ dời xe",
@@ -24,6 +34,10 @@ const wrongStatusLabels = {
   CANCELLED: "Đã hủy",
 };
 
+/**
+ * Khai báo `floorStatusLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/UserParkingIssuesPage.jsx.
+ */
 const floorStatusLabels = {
   LOCKED_AND_PENALIZED: "Đã khóa xe và tính phí",
   WAITING_USER: "Đang chờ dời xe",
@@ -32,6 +46,10 @@ const floorStatusLabels = {
   CANCELLED: "Đã hủy",
 };
 
+/**
+ * Khai báo `restorationLabels` để định nghĩa tập lựa chọn, nhãn hoặc quy tắc hợp lệ dùng xuyên suốt module.
+ * Phạm vi sử dụng: src/features/pages/UserParkingIssuesPage.jsx.
+ */
 const restorationLabels = {
   NONE: "Chưa cần gán ô tạm",
   TEMP_ASSIGNED: "Đang sử dụng ô được gán tạm",
@@ -39,23 +57,45 @@ const restorationLabels = {
   RESTORED: "Đã khôi phục ô đăng ký ban đầu",
 };
 
+/**
+ * Thực hiện nghiệp vụ `toneForStatus` (tone for status). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function toneForStatus
+ * @param {*} status - Giá trị `status` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const toneForStatus = (status) => {
   if (["USER_MOVED", "ALLOWED"].includes(status)) return "success";
   if (status === "WAITING_USER") return "warning";
   return "danger";
 };
 
+/**
+ * Thực hiện nghiệp vụ `UserParkingIssuesPage` (user parking issues page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function UserParkingIssuesPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const UserParkingIssuesPage = () => {
   const dispatch = useDispatch();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { user } = useSelector((state) => state.auth);
   const {
     floorMismatchCases,
     notice,
     slotRegistrations,
     wrongSlotCases,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.parking);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
+    /**
+     * Thực hiện nghiệp vụ `refresh` (refresh). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+     *
+     * @function refresh
+     * @returns {void} Hàm hoàn tất bằng tác động lên state, response hoặc luồng xử lý hiện tại.
+     */
     const refresh = () => {
       dispatch(fetchMyWrongSlotCasesRequest());
       dispatch(fetchMyFloorMismatchCasesRequest());
@@ -64,13 +104,16 @@ const UserParkingIssuesPage = () => {
 
     refresh();
     const timer = window.setInterval(refresh, 5000);
+    /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => window.clearInterval(timer);
   }, [dispatch]);
 
   const activeIssueCount = useMemo(
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => [
       ...(wrongSlotCases.myItems || []),
       ...(floorMismatchCases.myItems || []),
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     ].filter((item) => item.status === "WAITING_USER").length,
     [floorMismatchCases.myItems, wrongSlotCases.myItems]
   );

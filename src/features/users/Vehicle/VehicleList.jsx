@@ -1,6 +1,18 @@
+/**
+ * @fileoverview Khai báo chức năng frontend của module VehicleList.
+ *
+ * Luồng chính: Dữ liệu đầu vào -> xử lý theo trách nhiệm của module -> xuất kết quả cho lớp gọi.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useState } from 'react';
 import './VehicleList.css';
 
+/**
+ * Thực hiện nghiệp vụ `VehicleList` (vehicle list). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function VehicleList
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const VehicleList = () => {
     // 1. Dữ liệu Mock danh sách xe ban đầu của cá nhân User
     const [vehicles, setVehicles] = useState([

@@ -1,3 +1,8 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/components/Feedback/DeadlineCountdown.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
+/* Áp dụng bố cục và hình thức hiển thị cho `.deadline-countdown`. */
 .deadline-countdown {
   display: inline-flex;
   align-items: center;
@@ -12,11 +17,13 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.deadline-countdown.compact`. */
 .deadline-countdown.compact {
   padding: 5px 8px;
   font-size: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.deadline-countdown.urgent`. */
 .deadline-countdown.urgent {
   color: var(--danger);
   border-color: color-mix(in srgb, var(--danger) 55%, var(--border-color));
@@ -24,7 +31,9 @@
   animation: deadline-pulse 1.1s ease-in-out infinite;
 }
 
+/* Định nghĩa các bước chuyển động cho hiệu ứng `deadline-pulse`. */
 @keyframes deadline-pulse {
+  /* Áp dụng bố cục và hình thức hiển thị cho `50%`. */
   50% {
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 10%, transparent);
   }

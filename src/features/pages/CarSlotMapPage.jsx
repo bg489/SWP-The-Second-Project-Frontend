@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình CarSlotMapPage, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Building2, Car, ShieldAlert, Wrench, X } from "lucide-react";
@@ -13,6 +19,10 @@ import {
   getStatusTone,
 } from "../../services/mockParkingData";
 
+/**
+ * Khai báo `slotClass` để giữ dữ liệu hoặc cấu hình mà các hàm trong module cùng sử dụng.
+ * Phạm vi sử dụng: src/features/pages/CarSlotMapPage.jsx.
+ */
 const slotClass = {
   AVAILABLE: "available",
   OCCUPIED: "occupied",
@@ -22,8 +32,22 @@ const slotClass = {
   CONFLICT: "conflict",
 };
 
+/**
+ * Lấy nghiệp vụ `getSlotClass` (get slot class). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getSlotClass
+ * @param {*} status - Giá trị `status` được hàm sử dụng trong quá trình xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getSlotClass = (status) => slotClass[String(status || "AVAILABLE").toUpperCase()] || "available";
 
+/**
+ * Lấy nghiệp vụ `getSizeLabel` (get size label). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function getSizeLabel
+ * @param {*} value - Giá trị đầu vào cần xử lý.
+ * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+ */
 const getSizeLabel = (value) => {
   const normalized = String(value || "").toUpperCase();
   if (normalized === "STANDARD") return "Tiêu chuẩn";
@@ -31,18 +55,30 @@ const getSizeLabel = (value) => {
   return value || "-";
 };
 
+/**
+ * Thực hiện nghiệp vụ `CarSlotMapPage` (car slot map page). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function CarSlotMapPage
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const CarSlotMapPage = () => {
   const dispatch = useDispatch();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { user } = useSelector((state) => state.auth);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { buildings, error: buildingsError } = useSelector((state) => state.buildings);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { floors, loading: floorsLoading, error: floorsError } = useSelector((state) => state.floors);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { slotsByFloor, loading: slotsLoading, error: slotsError } = useSelector((state) => state.slots);
 
   const [selectedFloorId, setSelectedFloorId] = useState("");
   const [selectedSlotId, setSelectedSlotId] = useState(null);
 
   const currentBuildingId = user?.buildingId;
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const currentBuilding = useMemo(() => {
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return buildings.find((building) => Number(building.id) === Number(currentBuildingId)) || {
       id: currentBuildingId,
       name: user?.buildingName || "Chưa có tòa nhà",
@@ -50,8 +86,10 @@ const CarSlotMapPage = () => {
     };
   }, [buildings, currentBuildingId, user?.buildingAddress, user?.buildingName]);
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const carFloors = useMemo(() => {
     return floors.filter(
+      /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       (floor) =>
         Number(floor.buildingId) === Number(currentBuildingId) &&
         floor.floorType === "CAR" &&
@@ -60,22 +98,30 @@ const CarSlotMapPage = () => {
   }, [floors, currentBuildingId]);
 
   const effectiveFloorId = selectedFloorId || (carFloors[0]?.id ? String(carFloors[0].id) : "");
+  /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const selectedFloor = carFloors.find((floor) => String(floor.id) === String(effectiveFloorId));
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const slots = useMemo(() => {
     return effectiveFloorId ? slotsByFloor[effectiveFloorId] || [] : [];
   }, [effectiveFloorId, slotsByFloor]);
   const autoSelectedSlotId =
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     slots.find((slot) => slot.status === "CONFLICT")?.id ||
+    /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     slots.find((slot) => slot.status === "OCCUPIED")?.id ||
     slots[0]?.id ||
     null;
+  /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const selectedSlotStillExists = slots.some((slot) => String(slot.id) === String(selectedSlotId));
   const effectiveSelectedSlotId =
     selectedSlotId === "__CLOSED__" ? null : selectedSlotStillExists ? selectedSlotId : autoSelectedSlotId;
+  /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const selectedSlot = slots.find((slot) => String(slot.id) === String(effectiveSelectedSlotId)) || null;
 
+  /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const summary = useMemo(() => {
     return slots.reduce(
+      /* Callback nội bộ của lời gọi `reduce`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
       (sum, slot) => {
         const status = String(slot.status || "AVAILABLE").toUpperCase();
         return {
@@ -90,15 +136,18 @@ const CarSlotMapPage = () => {
     );
   }, [slots]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchBuildingsRequest());
   }, [dispatch]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!currentBuildingId) return;
     dispatch(fetchFloorsRequest({ buildingId: currentBuildingId, status: "ACTIVE", limit: 100 }));
   }, [currentBuildingId, dispatch]);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (!effectiveFloorId) return;
     dispatch(fetchSlotsByFloorRequest({ floorId: effectiveFloorId }));

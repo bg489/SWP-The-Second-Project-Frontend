@@ -1,3 +1,7 @@
+/*
+ * Vai trò của stylesheet: định nghĩa toàn bộ kiểu hiển thị thuộc src/features/users/StaffDashboard/StaffDashboard.css.
+ * Mỗi chú thích bên dưới cho biết selector hoặc điều kiện responsive đang tác động đến phần nào.
+ */
 /* --- BIẾN MÀU SẮC CHỦ ĐẠO (CSS VARIABLES) --- */
 :root {
     --bg-main: #0b0c10;
@@ -25,6 +29,7 @@
     box-sizing: border-box;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-content`. */
 .staff-content {
     background: #14171c;
     border: 1px solid #232931;
@@ -45,6 +50,7 @@
     margin-bottom: 30px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-header h2`. */
 .staff-header h2 {
     margin: 0;
     font-size: 26px;
@@ -55,12 +61,14 @@
     -webkit-text-fill-color: transparent;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-sub`. */
 .staff-sub {
     margin: 6px 0 0 0;
     color: #7a889b;
     font-size: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.live-badge`. */
 .live-badge {
     background: rgba(46, 204, 113, 0.1);
     color: var(--color-green);
@@ -82,6 +90,7 @@
     box-shadow: var(--shadow-premium);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.tab-header`. */
 .tab-header {
     display: flex;
     background: #111419;
@@ -89,6 +98,7 @@
     gap: 4px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.tab-btn`. */
 .tab-btn {
     flex: 1;
     background: none;
@@ -102,17 +112,20 @@
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.tab-btn:hover`. */
 .tab-btn:hover {
     color: #fff;
     background: rgba(255, 255, 255, 0.03);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.tab-btn.active`. */
 .tab-btn.active {
     color: var(--color-blue);
     background: #1a1e24;
     position: relative;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.tab-btn.active::after`. */
 .tab-btn.active::after {
     content: '';
     position: absolute;
@@ -124,6 +137,7 @@
     box-shadow: 0 -4px 10px var(--color-blue);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.tab-body`. */
 .tab-body {
     padding: 25px;
 }
@@ -135,12 +149,15 @@
     gap: 30px;
 }
 
+/* Điều chỉnh giao diện khi thỏa điều kiện màn hình `(max-width: 820px)`. */
 @media (max-width: 820px) {
+    /* Áp dụng bố cục và hình thức hiển thị cho `.qr-grid`. */
     .qr-grid {
         grid-template-columns: 1fr;
     }
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-form label`. */
 .qr-form label {
     font-size: 13.5px;
     color: #94a3b8;
@@ -149,11 +166,13 @@
     font-weight: 500;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-input-group`. */
 .qr-input-group {
     display: flex;
     gap: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-input-group input`. */
 .qr-input-group input {
     flex: 1;
     background: #111419;
@@ -166,12 +185,14 @@
     transition: all 0.2s;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.qr-input-group input:focus`. */
 .qr-input-group input:focus {
     outline: none;
     border-color: var(--color-blue);
     box-shadow: 0 0 0 3px rgba(69, 243, 255, 0.15);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.verify-btn`. */
 .verify-btn {
     background: linear-gradient(135deg, #3498db, #2980b9);
     color: white;
@@ -184,6 +205,7 @@
     transition: all 0.2s;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.verify-btn:hover`. */
 .verify-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
@@ -198,6 +220,7 @@
     border: 1px solid #232931;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.mock-hints p`. */
 .mock-hints p {
     margin: 0 0 12px 0;
     font-size: 12.5px;
@@ -207,12 +230,14 @@
     letter-spacing: 0.5px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hint-wrap`. */
 .hint-wrap {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hint-btn`. */
 .hint-btn {
     background: #1a1e24;
     border: 1px solid #334155;
@@ -224,34 +249,41 @@
     transition: all 0.2s;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hint-btn:hover`. */
 .hint-btn:hover {
     background: #232931;
     border-color: #475569;
     transform: translateY(-1px);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hint-btn.text-green`. */
 .hint-btn.text-green {
     color: var(--color-green);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hint-btn.text-green:hover`. */
 .hint-btn.text-green:hover {
     background: rgba(46, 204, 113, 0.1);
     border-color: var(--color-green);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hint-btn.text-orange`. */
 .hint-btn.text-orange {
     color: var(--color-orange);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hint-btn.text-orange:hover`. */
 .hint-btn.text-orange:hover {
     background: rgba(255, 159, 67, 0.1);
     border-color: var(--color-orange);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hint-btn.text-red`. */
 .hint-btn.text-red {
     color: var(--color-red);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.hint-btn.text-red:hover`. */
 .hint-btn.text-red:hover {
     background: rgba(255, 77, 77, 0.1);
     border-color: var(--color-red);
@@ -275,6 +307,7 @@
     box-sizing: border-box;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.result-box`. */
 .result-box {
     border-radius: 10px;
     padding: 20px;
@@ -284,18 +317,21 @@
     flex-direction: column;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.valid-bg`. */
 .valid-bg {
     background: linear-gradient(180deg, rgba(46, 204, 113, 0.03) 0%, rgba(46, 204, 113, 0.08) 100%);
     border: 1px solid rgba(46, 204, 113, 0.3);
     box-shadow: 0 10px 30px rgba(46, 204, 113, 0.05);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.invalid-bg`. */
 .invalid-bg {
     background: linear-gradient(180deg, rgba(255, 77, 77, 0.03) 0%, rgba(255, 77, 77, 0.08) 100%);
     border: 1px solid rgba(255, 77, 77, 0.3);
     box-shadow: 0 10px 30px rgba(255, 77, 77, 0.05);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.result-card-header`. */
 .result-card-header {
     display: flex;
     justify-content: space-between;
@@ -305,6 +341,7 @@
     padding-bottom: 12px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.result-card-header h4`. */
 .result-card-header h4 {
     margin: 0;
     font-size: 12px;
@@ -313,6 +350,7 @@
     letter-spacing: 0.5px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.status-pill`. */
 .status-pill {
     font-size: 11px;
     font-weight: 800;
@@ -321,16 +359,19 @@
     letter-spacing: 0.5px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pill-approved`. */
 .pill-approved {
     background: rgba(46, 204, 113, 0.15);
     color: #2ecc71;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pill-rejected`. */
 .pill-rejected {
     background: rgba(255, 77, 77, 0.15);
     color: #ff4d4d;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.result-details-list`. */
 .result-details-list {
     display: flex;
     flex-direction: column;
@@ -338,6 +379,7 @@
     margin-bottom: 15px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.result-detail-item`. */
 .result-detail-item {
     display: flex;
     justify-content: space-between;
@@ -345,15 +387,18 @@
     font-size: 14px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.detail-label`. */
 .detail-label {
     color: #94a3b8;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.detail-value-white`. */
 .detail-value-white {
     color: #fff;
     font-weight: 600;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.result-plate`. */
 .result-plate {
     font-family: 'SFMono-Regular', Consolas, monospace;
     font-weight: 700;
@@ -365,12 +410,14 @@
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.package-info-block`. */
 .package-info-block {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.badge-status`. */
 .badge-status {
     padding: 3px 8px;
     border-radius: 4px;
@@ -378,21 +425,25 @@
     font-weight: 700;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.badge-status.status-green`. */
 .badge-status.status-green {
     background: rgba(46, 204, 113, 0.15);
     color: #2ecc71;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.badge-status.status-red`. */
 .badge-status.status-red {
     background: rgba(255, 77, 77, 0.15);
     color: #ff4d4d;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.package-name-sub`. */
 .package-name-sub {
     font-size: 13px;
     color: #64748b;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.result-divider`. */
 .result-divider {
     border: none;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -408,6 +459,7 @@
     flex-grow: 1;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.direction-title`. */
 .direction-title {
     font-size: 12px;
     color: #64748b;
@@ -417,32 +469,39 @@
     text-transform: uppercase;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.direction-content p`. */
 .direction-content p {
     margin: 0 0 6px 0;
     font-size: 13.5px;
     line-height: 1.5;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.direction-content p:last-child`. */
 .direction-content p:last-child {
     margin-bottom: 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.valid-text`. */
 .valid-text {
     color: #94a3b8;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.valid-text strong`. */
 .valid-text strong {
     color: var(--color-green);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.invalid-text`. */
 .invalid-text {
     color: #94a3b8;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.invalid-text strong`. */
 .invalid-text strong {
     color: var(--color-red);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.accept-entry-btn`. */
 .accept-entry-btn {
     margin-top: 18px;
     width: 100%;
@@ -458,6 +517,7 @@
     transition: all 0.2s ease;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.accept-entry-btn:hover`. */
 .accept-entry-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 20px rgba(46, 204, 113, 0.35);
@@ -470,12 +530,14 @@
     padding: 10px 0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manual-form-wrapper`. */
 .manual-form-wrapper {
     width: 100%;
     max-width: 460px;
     text-align: left;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manual-form-wrapper h4`. */
 .manual-form-wrapper h4 {
     margin: 0 0 6px 0;
     color: #fff;
@@ -483,6 +545,7 @@
     font-weight: 700;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manual-desc`. */
 .manual-desc {
     font-size: 13px;
     color: #64748b;
@@ -490,24 +553,28 @@
     line-height: 1.5;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manual-dashboard-form`. */
 .manual-dashboard-form {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manual-form-group`. */
 .manual-form-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manual-form-group label`. */
 .manual-form-group label {
     font-size: 13px;
     color: #94a3b8;
     font-weight: 600;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manual-form-group input[type="text"]`. */
 .manual-form-group input[type="text"] {
     background: #111419;
     border: 1px solid #334155;
@@ -520,18 +587,21 @@
     font-family: 'SFMono-Regular', Consolas, monospace;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manual-form-group input[type="text"]:focus`. */
 .manual-form-group input[type="text"]:focus {
     outline: none;
     border-color: #e67e22;
     box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.15);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manual-radio-group`. */
 .manual-radio-group {
     display: flex;
     gap: 35px;
     margin-top: 4px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manual-radio-label`. */
 .manual-radio-label {
     display: flex;
     align-items: center;
@@ -543,6 +613,7 @@
     font-weight: 500;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manual-radio-label input[type="radio"]`. */
 .manual-radio-label input[type="radio"] {
     width: 19px;
     height: 19px;
@@ -550,6 +621,7 @@
     cursor: pointer;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manual-submit-btn`. */
 .manual-submit-btn {
     background: linear-gradient(135deg, #e67e22, #d35400);
     color: #fff;
@@ -564,6 +636,7 @@
     margin-top: 5px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.manual-submit-btn:hover`. */
 .manual-submit-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 20px rgba(230, 126, 34, 0.35);
@@ -577,6 +650,7 @@
     margin-bottom: 35px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.stat-item`. */
 .stat-item {
     background: #1a1e24;
     border-radius: 12px;
@@ -588,22 +662,27 @@
     border: 1px solid #232931;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.border-blue`. */
 .border-blue {
     border-left: 5px solid #3498db;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.border-green`. */
 .border-green {
     border-left: 5px solid #2ecc71;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.border-yellow`. */
 .border-yellow {
     border-left: 5px solid #f1c40f;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.stat-icon`. */
 .stat-icon {
     font-size: 32px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.stat-info h3`. */
 .stat-info h3 {
     margin: 0;
     font-size: 28px;
@@ -611,6 +690,7 @@
     font-weight: 800;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.stat-info p`. */
 .stat-info p {
     margin: 3px 0 0 0;
     color: #64748b;
@@ -628,6 +708,7 @@
     border: 1px solid #232931;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.section-title h3`. */
 .section-title h3 {
     margin: 0 0 18px 0;
     font-size: 16px;
@@ -636,17 +717,20 @@
     letter-spacing: 0.5px;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.table-wrapper`. */
 .table-wrapper {
     overflow-x: auto;
     border-radius: 8px;
     border: 1px solid #28303d;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-table`. */
 .staff-table {
     width: 100%;
     border-collapse: collapse;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-table th`. */
 .staff-table th {
     background: #111419;
     color: #94a3b8;
@@ -658,6 +742,7 @@
     border-bottom: 1px solid #28303d;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-table td`. */
 .staff-table td {
     padding: 14px 16px;
     border-bottom: 1px solid #232931;
@@ -665,14 +750,17 @@
     color: #e2e8f0;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-table tbody tr:last-child td`. */
 .staff-table tbody tr:last-child td {
     border-bottom: none;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-table tbody tr:hover`. */
 .staff-table tbody tr:hover {
     background: rgba(255, 255, 255, 0.02);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.staff-plate`. */
 .staff-plate {
     font-family: 'SFMono-Regular', Consolas, monospace;
     font-weight: 700;
@@ -682,6 +770,7 @@
     border: 1px solid #28303d;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.pos-badge`. */
 .pos-badge {
     background: rgba(52, 152, 219, 0.12);
     color: #3498db;
@@ -705,16 +794,19 @@
     cursor: pointer;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.violation-select:focus`. */
 .violation-select:focus {
     border-color: #ff4d4d;
     box-shadow: 0 0 0 3px rgba(255, 77, 77, 0.15);
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.violation-select option`. */
 .violation-select option {
     background: #14171c;
     color: #fff;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.violation-textarea`. */
 .violation-textarea {
     background: #111419;
     border: 1px solid #334155;
@@ -729,6 +821,7 @@
     box-sizing: border-box;
 }
 
+/* Áp dụng bố cục và hình thức hiển thị cho `.violation-textarea:focus`. */
 .violation-textarea:focus {
     border-color: #ff4d4d;
     box-shadow: 0 0 0 3px rgba(255, 77, 77, 0.15);

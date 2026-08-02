@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Xây dựng màn hình AdminDashboard, kết nối state, dữ liệu API và các thao tác người dùng.
+ *
+ * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -26,29 +32,41 @@ import { fetchAdminBuildingChangeRequestsRequest } from "../backend/buildingChan
 import { fetchAllVehiclesRequest } from "../backend/parking/parkingSlice";
 import { fetchAdminStaffRoleRequestsRequest } from "../backend/staffRoleRequests/staffRoleRequestSlice";
 
+/**
+ * Thực hiện nghiệp vụ `AdminDashboard` (admin dashboard). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+ *
+ * @function AdminDashboard
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const AdminDashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user: mockUser } = useMockAuth();
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { user: authUser } = useSelector((state) => state.auth);
   const user = authUser || mockUser;
   const {
     users,
     loading: usersLoading,
     error: usersError,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.adminUsers);
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const { vehicles } = useSelector((state) => state.parking);
   const {
     adminRequests,
     adminLoading,
     error: buildingChangeError,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.buildingChange);
   const {
     adminRequests: staffRoleRequests,
     adminLoading: staffRoleLoading,
     error: staffRoleError,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.staffRoleRequests);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     dispatch(fetchAdminUsersRequest({ limit: 100 }));
     dispatch(fetchAllVehiclesRequest());
@@ -57,22 +75,32 @@ const AdminDashboard = () => {
   }, [dispatch]);
 
   const pendingUsers = useMemo(
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => users.filter((item) => item.status === "PENDING"),
     [users]
   );
   const activeUsers = useMemo(
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => users.filter((item) => item.status === "ACTIVE"),
     [users]
   );
   const pendingVehicles = useMemo(
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => vehicles.all.filter((vehicle) => vehicle.status === "PENDING"),
     [vehicles.all]
   );
   const pendingBuildingChanges = useMemo(
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => adminRequests.filter((request) => request.status === "PENDING"),
     [adminRequests]
   );
   const pendingStaffRoles = useMemo(
+    /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+    /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => staffRoleRequests.filter((request) => request.status === "PENDING"),
     [staffRoleRequests]
   );
@@ -86,6 +114,13 @@ const AdminDashboard = () => {
       header: "Người đăng ký",
       key: "name",
       minWidth: "210px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <>
           <strong>{row.name || "Chưa cập nhật họ tên"}</strong>
@@ -99,27 +134,61 @@ const AdminDashboard = () => {
     {
       header: "Tòa nhà",
       key: "buildingName",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => row.buildingName || "Chưa gán tòa nhà",
     },
     {
       header: "Quyền đề xuất",
       key: "role",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => roleLabels[row.role] || row.role,
     },
     {
       header: "Hồ sơ xe",
       key: "vehicleCount",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => `${Number(row.vehicleCount || 0)} xe`,
     },
     {
       header: "Ngày đăng ký",
       key: "createdAt",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => formatDate(row.createdAt),
     },
     {
       header: "Xử lý",
       key: "actions",
       minWidth: "160px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: () => (
         <Button
           size="sm"
@@ -136,6 +205,13 @@ const AdminDashboard = () => {
     {
       header: "Phương tiện",
       key: "plateNumber",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <>
           <strong>{row.plateNumber}</strong>
@@ -150,6 +226,13 @@ const AdminDashboard = () => {
       header: "Chủ xe",
       key: "ownerName",
       minWidth: "190px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <>
           <strong>{row.ownerName || row.owner || "-"}</strong>
@@ -161,11 +244,25 @@ const AdminDashboard = () => {
     {
       header: "Tòa nhà",
       key: "buildingName",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => row.buildingName || "Chưa gán tòa nhà",
     },
     {
       header: "Bộ ảnh",
       key: "vehicleImages",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => {
         const imageCount = [
           row.plateImageUrl,
@@ -183,12 +280,25 @@ const AdminDashboard = () => {
     {
       header: "Ngày gửi",
       key: "createdAt",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => formatDate(row.createdAt),
     },
     {
       header: "Xử lý",
       key: "actions",
       minWidth: "160px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: () => (
         <Button
           size="sm"
@@ -206,6 +316,13 @@ const AdminDashboard = () => {
       header: "Người yêu cầu",
       key: "userName",
       minWidth: "190px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <>
           <strong>{row.userName || "Chưa cập nhật họ tên"}</strong>
@@ -218,6 +335,13 @@ const AdminDashboard = () => {
       header: "Nơi chuyển",
       key: "route",
       minWidth: "260px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <div className="approval-building-route">
           <span>{row.currentBuildingName || "Chưa có tòa hiện tại"}</span>
@@ -229,17 +353,37 @@ const AdminDashboard = () => {
     {
       header: "Lý do",
       key: "reason",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => row.reason || "Không ghi lý do",
     },
     {
       header: "Ngày gửi",
       key: "createdAt",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => formatDate(row.createdAt),
     },
     {
       header: "Xử lý",
       key: "actions",
       minWidth: "160px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: () => (
         <Button
           size="sm"
@@ -256,11 +400,24 @@ const AdminDashboard = () => {
     {
       header: "Loại đề nghị",
       key: "requestType",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: () => <span className="pill success">Tạo Staff</span>,
     },
     {
       header: "Ảnh chân dung",
       key: "portraitImageUrl",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => {
         const portrait = row.portraitImageUrl
           || row.staffPortraitImageUrl
@@ -278,6 +435,13 @@ const AdminDashboard = () => {
       header: "Người được đề nghị",
       key: "userName",
       minWidth: "210px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <>
           <strong>{row.userName}</strong>
@@ -290,12 +454,26 @@ const AdminDashboard = () => {
       header: "Tòa nhà",
       key: "buildingName",
       minWidth: "190px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => row.buildingName,
     },
     {
       header: "Người đề nghị",
       key: "managerName",
       minWidth: "190px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => (
         <>
           <strong>{row.managerName}</strong>
@@ -307,12 +485,25 @@ const AdminDashboard = () => {
     {
       header: "Ngày gửi",
       key: "createdAt",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @param {*} row - Giá trị `row` được hàm sử dụng trong quá trình xử lý.
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: (row) => formatDate(row.createdAt),
     },
     {
       header: "Xử lý",
       key: "actions",
       minWidth: "160px",
+      /**
+       * Hiển thị nghiệp vụ `render` (render). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
+       *
+       * @function render
+       * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
+       */
       render: () => (
         <Button
           size="sm"

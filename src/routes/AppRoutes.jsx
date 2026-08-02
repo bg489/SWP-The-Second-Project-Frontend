@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Khai báo bản đồ điều hướng, phân quyền truy cập và component tương ứng cho từng đường dẫn.
+ *
+ * Luồng chính: Dữ liệu đầu vào -> xử lý theo trách nhiệm của module -> xuất kết quả cho lớp gọi.
+ * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
+ */
 import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -46,12 +52,19 @@ import {
   getStoredPaymentReturnTarget,
 } from "../utils/paymentReturn";
 
+/**
+ * Thực hiện nghiệp vụ `DefaultRedirect` (default redirect). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function DefaultRedirect
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const DefaultRedirect = () => {
   const { isAuthenticated: contextAuthenticated, role: contextRole } = useMockAuth();
   const {
     isAuthenticated: storeAuthenticated,
     frontendRole,
     requiresBuildingSelection,
+  /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   } = useSelector((state) => state.auth);
   const isAuthenticated = contextAuthenticated && storeAuthenticated;
   const role = frontendRole || contextRole;
@@ -67,10 +80,17 @@ const DefaultRedirect = () => {
   return <Navigate to={roleHomePaths[role] || "/login"} replace />;
 };
 
+/**
+ * Thực hiện nghiệp vụ `AppRoutes` (app routes). Hàm đóng gói một bước xử lý để các phần khác có thể tái sử dụng nhất quán.
+ *
+ * @function AppRoutes
+ * @returns {JSX.Element} Cấu trúc giao diện React của component.
+ */
 const AppRoutes = () => {
   const location = useLocation();
   const paymentReturnTarget = getStoredPaymentReturnTarget(location);
 
+  /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
     if (paymentReturnTarget) {
       sessionStorage.removeItem(PAYMENT_RETURN_STORAGE_KEY);
