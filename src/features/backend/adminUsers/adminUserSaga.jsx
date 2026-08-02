@@ -7,9 +7,9 @@ import {
     fetchAdminUsersFailure,
     fetchAdminUsersRequest,
     fetchAdminUsersSuccess,
-    updateAdminUserStatusFailure,
-    updateAdminUserStatusRequest,
-    updateAdminUserStatusSuccess,
+    setAdminUserLockFailure,
+    setAdminUserLockRequest,
+    setAdminUserLockSuccess,
 } from "./adminUserSlice";
 
 const extractData = (response) => {
@@ -62,34 +62,31 @@ function* handleCreateAdminUser(action) {
     }
 }
 
-function* handleUpdateAdminUserStatus(action) {
+function* handleSetAdminUserLock(action) {
     try {
-        const { id, role, status } = action.payload;
+        const { id, locked, refreshParams } = action.payload;
 
         const response = yield call(
             [api, api.patch],
-            `/admin/users/${id}/role-status`,
-            {
-                role,
-                status,
-            },
+            `/admin/users/${id}/${locked ? "lock" : "unlock"}`,
+            {},
             { timeout: 15000 }
         );
 
         const updatedUser = extractData(response);
 
-        yield put(updateAdminUserStatusSuccess(updatedUser));
+        yield put(setAdminUserLockSuccess(updatedUser));
 
-        if (action.payload.refreshParams) {
-            yield put(fetchAdminUsersRequest(action.payload.refreshParams));
+        if (refreshParams) {
+            yield put(fetchAdminUsersRequest(refreshParams));
         }
     } catch (error) {
         const message =
             error?.response?.data?.message ||
             error?.message ||
-            "Cập nhật tài khoản thất bại.";
+            "Không thể cập nhật trạng thái khóa của tài khoản.";
 
-        yield put(updateAdminUserStatusFailure(message));
+        yield put(setAdminUserLockFailure(message));
     }
 }
 
@@ -97,7 +94,7 @@ export default function* adminUserSaga() {
     yield takeLatest(fetchAdminUsersRequest.type, handleFetchAdminUsers);
     yield takeLatest(createAdminUserRequest.type, handleCreateAdminUser);
     yield takeEvery(
-        updateAdminUserStatusRequest.type,
-        handleUpdateAdminUserStatus
+        setAdminUserLockRequest.type,
+        handleSetAdminUserLock
     );
 }

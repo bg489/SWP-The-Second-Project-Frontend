@@ -1432,20 +1432,18 @@ body.dark-theme .login-panel-wrap .section-card {
   color: var(--text-primary);
 }
 
-.admin-role-control {
+.admin-role-static {
   display: grid;
-  gap: 6px;
+  gap: 4px;
   min-width: 190px;
 }
 
-.admin-role-select {
-  min-width: 190px;
-  padding-right: 34px;
+.admin-role-static strong {
+  color: var(--text-primary);
   font-weight: 700;
-  text-overflow: ellipsis;
 }
 
-.admin-role-caption {
+.admin-role-static span {
   color: var(--text-muted);
   font-size: 11px;
   line-height: 1.35;
@@ -1959,6 +1957,66 @@ body.dark-theme .login-panel-wrap .section-card {
   background: linear-gradient(145deg, rgba(255, 184, 245, 0.12), rgba(237, 153, 81, 0.1));
   cursor: pointer;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.role-account-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 16px;
+  border: 1px solid rgba(237, 153, 81, 0.3);
+  border-left: 4px solid #ffb8f5;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(255, 184, 245, 0.14), rgba(237, 153, 81, 0.1));
+}
+
+.role-account-summary--staff,
+.role-account-summary--admin {
+  border-left-color: #ed9951;
+}
+
+.role-account-summary > svg {
+  color: var(--accent);
+}
+
+.role-account-summary > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.role-account-summary strong {
+  color: var(--text-primary);
+  font-size: 15px;
+}
+
+.role-account-summary span {
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.role-account-requirement {
+  padding: 7px 10px;
+  border: 1px solid rgba(237, 153, 81, 0.28);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-primary) !important;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .role-account-summary {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .role-account-requirement {
+    grid-column: 1 / -1;
+    justify-self: start;
+    white-space: normal;
+  }
 }
 
 .staff-portrait-upload:hover {

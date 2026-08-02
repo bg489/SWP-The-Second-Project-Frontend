@@ -55,25 +55,27 @@ const adminUserSlice = createSlice({
             state.updateError = action.payload;
         },
 
-        updateAdminUserStatusRequest: (state, action) => {
+        setAdminUserLockRequest: (state, action) => {
             state.updatingId = action.payload.id;
             state.updateError = null;
             state.updateSuccess = null;
         },
 
-        updateAdminUserStatusSuccess: (state, action) => {
+        setAdminUserLockSuccess: (state, action) => {
             state.updatingId = null;
             state.updateError = null;
-            state.updateSuccess = "Cập nhật tài khoản thành công.";
 
             const updatedUser = action.payload?.user || action.payload;
+            state.updateSuccess = updatedUser?.status === "LOCKED"
+                ? "Đã khóa tài khoản thành công."
+                : "Đã mở khóa tài khoản thành công.";
 
             state.users = state.users.map((user) =>
                 Number(user.id) === Number(updatedUser.id) ? { ...user, ...updatedUser } : user
             );
         },
 
-        updateAdminUserStatusFailure: (state, action) => {
+        setAdminUserLockFailure: (state, action) => {
             state.updatingId = null;
             state.updateError = action.payload;
         },
@@ -92,9 +94,9 @@ export const {
     fetchAdminUsersRequest,
     fetchAdminUsersSuccess,
     fetchAdminUsersFailure,
-    updateAdminUserStatusRequest,
-    updateAdminUserStatusSuccess,
-    updateAdminUserStatusFailure,
+    setAdminUserLockRequest,
+    setAdminUserLockSuccess,
+    setAdminUserLockFailure,
     clearAdminUserNotice,
 } = adminUserSlice.actions;
 

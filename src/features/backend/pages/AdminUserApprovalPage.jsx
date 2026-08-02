@@ -6,7 +6,6 @@ import {
     Mail,
     Plus,
     RefreshCcw,
-    Save,
     Search,
     ShieldCheck,
     UserCheck,
@@ -26,7 +25,7 @@ import {
     createAdminUserRequest,
     clearAdminUserNotice,
     fetchAdminUsersRequest,
-    updateAdminUserStatusRequest,
+    setAdminUserLockRequest,
 } from "../adminUsers/adminUserSlice";
 import { fetchBuildingsRequest } from "../buildings/buildingSlice";
 
@@ -45,6 +44,33 @@ const roleOptions = [
     { label: "Quản trị viên", value: "ADMIN" },
 ];
 
+const roleCreationMeta = {
+    USER: {
+        title: "Tài khoản cư dân",
+        description: "Dùng các chức năng đăng ký xe, mua gói tháng và nhận thông báo tại tòa nhà đang ở.",
+        requirement: "Bắt buộc chọn tòa nhà",
+    },
+    STAFF: {
+        title: "Tài khoản nhân viên bãi xe",
+        description: "Được gắn với một tòa nhà và có hồ sơ nhân viên riêng, tách biệt hoàn toàn với cư dân.",
+        requirement: "Tòa nhà và ảnh hồ sơ bắt buộc",
+    },
+    MANAGER: {
+        title: "Tài khoản quản lý bãi xe",
+        description: "Quản lý vận hành trên toàn hệ thống và không bị gắn cố định với một tòa nhà.",
+        requirement: "Quyền quản lý toàn hệ thống",
+    },
+    ADMIN: {
+        title: "Tài khoản quản trị viên",
+        description: "Quản lý tài khoản và các yêu cầu cấp Staff trên toàn hệ thống.",
+        requirement: "Quyền quản trị toàn hệ thống",
+    },
+};
+
+const roleLabels = Object.fromEntries(
+    roleOptions.map((option) => [option.value, option.label])
+);
+
 const emptyCreateForm = {
     name: "",
     email: "",
@@ -53,22 +79,6 @@ const emptyCreateForm = {
     role: "USER",
     buildingId: "",
     portraitImageUrl: "",
-};
-
-const getDirectRoleOptions = (user) => {
-    const currentRole = user.role || "USER";
-    if (currentRole === "STAFF") {
-        return roleOptions.filter((option) => option.value === "STAFF");
-    }
-    if (["USER", "MANAGER"].includes(currentRole)) {
-        return roleOptions.filter((option) => ["USER", "MANAGER", "ADMIN"].includes(option.value));
-    }
-    return roleOptions.filter((option) => ["MANAGER", "ADMIN"].includes(option.value));
-};
-
-const getRoleCaption = (role) => {
-    if (role === "STAFF") return "Staff là tài khoản riêng, không chuyển đổi sang User";
-    return "Không thể chuyển tài khoản này thành Staff";
 };
 
 const statusLabels = {
@@ -107,7 +117,6 @@ const AdminUserApprovalPage = () => {
         page: 1,
         limit: 10,
     });
-    const [roleDrafts, setRoleDrafts] = useState({});
     const [createForm, setCreateForm] = useState(emptyCreateForm);
     const [createErrors, setCreateErrors] = useState({});
     const [processingImage, setProcessingImage] = useState(false);
@@ -241,15 +250,10 @@ const AdminUserApprovalPage = () => {
         }));
     };
 
-    const handleRoleDraftChange = (userId, role) => {
-        setRoleDrafts((current) => ({ ...current, [userId]: role }));
-    };
-
-    const updateAccount = (user, status) => {
-        dispatch(updateAdminUserStatusRequest({
+    const setAccountLock = (user, locked) => {
+        dispatch(setAdminUserLockRequest({
             id: user.id,
-            role: roleDrafts[user.id] || user.role || "USER",
-            status,
+            locked,
             refreshParams: getRefreshParams(),
         }));
     };
@@ -297,19 +301,9 @@ const AdminUserApprovalPage = () => {
             key: "role",
             minWidth: "220px",
             render: (user) => (
-                <div className="admin-role-control">
-                    <select
-                        className="form-input admin-role-select"
-                        value={roleDrafts[user.id] || user.role || "USER"}
-                        onChange={(event) => handleRoleDraftChange(user.id, event.target.value)}
-                        disabled={updatingId === user.id}
-                        aria-label={`Vai trò của ${user.name}`}
-                    >
-                        {getDirectRoleOptions(user).map((option) => (
-                            <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                    </select>
-                    <span className="admin-role-caption">{getRoleCaption(user.role)}</span>
+                <div className="admin-role-static">
+                    <strong>{roleLabels[user.role] || user.role}</strong>
+                    <span>Vai trò cố định từ khi tạo</span>
                 </div>
             ),
         },
@@ -332,47 +326,22 @@ const AdminUserApprovalPage = () => {
         {
             header: "Thao tác",
             key: "actions",
-            minWidth: "230px",
+            minWidth: "150px",
             render: (user) => {
-                const isPending = user.status === "PENDING";
-                const isInactive = user.status === "INACTIVE";
                 const isLocked = user.status === "LOCKED";
                 const isActive = user.status === "ACTIVE";
-                const roleChanged = (roleDrafts[user.id] || user.role || "USER") !== user.role;
 
                 return (
                     <div className="action-row admin-account-actions">
-                        {(isPending || isInactive || isLocked) && (
+                        {isLocked && (
                             <Button
                                 size="sm"
                                 icon={UserCheck}
                                 loading={updatingId === user.id}
                                 disabled={updatingId === user.id}
-                                onClick={() => updateAccount(user, "ACTIVE")}
+                                onClick={() => setAccountLock(user, false)}
                             >
-                                {isPending ? "Duyệt" : isInactive ? "Kích hoạt" : "Mở khóa"}
-                            </Button>
-                        )}
-                        {isActive && (
-                            <Button
-                                size="sm"
-                                icon={Save}
-                                loading={updatingId === user.id}
-                                disabled={updatingId === user.id || !roleChanged}
-                                onClick={() => updateAccount(user, user.status)}
-                            >
-                                Lưu vai trò
-                            </Button>
-                        )}
-                        {isPending && (
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                icon={UserX}
-                                disabled={updatingId === user.id}
-                                onClick={() => updateAccount(user, "INACTIVE")}
-                            >
-                                Từ chối
+                                Mở khóa
                             </Button>
                         )}
                         {isActive && (
@@ -380,11 +349,15 @@ const AdminUserApprovalPage = () => {
                                 size="sm"
                                 variant="danger"
                                 icon={UserX}
+                                loading={updatingId === user.id}
                                 disabled={updatingId === user.id}
-                                onClick={() => updateAccount(user, "LOCKED")}
+                                onClick={() => setAccountLock(user, true)}
                             >
                                 Khóa
                             </Button>
+                        )}
+                        {!isActive && !isLocked && (
+                            <span className="metric-note">Không có thao tác</span>
                         )}
                     </div>
                 );
@@ -399,7 +372,7 @@ const AdminUserApprovalPage = () => {
                     <div className="page-eyebrow"><ShieldCheck size={16} /> Quản lý tài khoản</div>
                     <h1 className="page-title">Tạo và quản lý toàn bộ tài khoản</h1>
                     <p className="page-subtitle">
-                        Admin có thể tạo trực tiếp tài khoản User, Staff, Manager hoặc Admin và kích hoạt ngay. Staff luôn là tài khoản riêng, không được tạo bằng cách đổi quyền từ User.
+                        Admin tạo trực tiếp tài khoản Cư dân, Staff, Manager hoặc Admin và có thể khóa tài khoản khi cần. Vai trò được giữ cố định sau khi tạo.
                     </p>
                 </div>
                 <div className="page-hero-aside">
@@ -429,7 +402,7 @@ const AdminUserApprovalPage = () => {
                     <div>
                         <h2 className="section-title"><UserPlus size={19} /> Tạo tài khoản mới</h2>
                         <p className="section-copy">
-                            Tài khoản được xác minh và kích hoạt ngay. User và Staff cần chọn tòa nhà; Staff cần thêm ảnh chân dung nghề nghiệp.
+                            Mỗi vai trò có hồ sơ và phạm vi sử dụng riêng. Tài khoản được xác minh và kích hoạt ngay sau khi tạo.
                         </p>
                     </div>
                 </div>
@@ -494,6 +467,17 @@ const AdminUserApprovalPage = () => {
                                 />
                             </FormField>
                         )}
+                    </div>
+
+                    <div className={`role-account-summary role-account-summary--${createForm.role.toLowerCase()}`}>
+                        <ShieldCheck size={22} />
+                        <div>
+                            <strong>{roleCreationMeta[createForm.role].title}</strong>
+                            <span>{roleCreationMeta[createForm.role].description}</span>
+                        </div>
+                        <span className="role-account-requirement">
+                            {roleCreationMeta[createForm.role].requirement}
+                        </span>
                     </div>
 
                     {createForm.role === "STAFF" && (
@@ -578,7 +562,7 @@ const AdminUserApprovalPage = () => {
                     <div>
                         <h2 className="section-title">Danh sách tài khoản</h2>
                         <p className="section-copy">
-                            Có thể khóa, mở khóa và đổi vai trò giữa các tài khoản không phải Staff. Staff chỉ giữ vai trò Staff.
+                            Vai trò chỉ để xem và không thể chỉnh sửa. Admin chỉ có thể khóa hoặc mở khóa tài khoản đang hoạt động.
                         </p>
                     </div>
                 </div>
