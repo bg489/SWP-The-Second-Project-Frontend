@@ -31,7 +31,6 @@ import "./CheckOutQRPage.css";
 
 const paymentOptions = [
   { value: "CASH", label: "Tiền mặt" },
-  { value: "CARD", label: "Thẻ ngân hàng" },
   { value: "VNPAY", label: "VNPay" },
 ];
 
@@ -110,6 +109,7 @@ const ViolationFeeList = ({ items = [] }) => {
 };
 
 const getPaymentMethodLabel = (value) => {
+  if (value === "NO_PAYMENT") return "Không cần thanh toán";
   if (value === "MONTHLY_PASS") return "Gói tháng";
   return paymentOptions.find((item) => item.value === value)?.label || value || "-";
 };
@@ -231,12 +231,11 @@ const CheckOutQRPage = () => {
   });
 
   const getCheckoutPayload = () => {
-    const apiPaymentMethod = paymentMethod === "CARD" ? "VNPAY" : paymentMethod;
+    const totalAmount = Number(feeDetails?.total || 0);
 
     return {
-      paymentMethod: apiPaymentMethod,
-      bankCode: paymentMethod === "CARD" ? "NCB" : undefined,
-      totalAmount: feeDetails?.total || 0,
+      totalAmount,
+      ...(totalAmount > 0 ? { paymentMethod } : {}),
     };
   };
 
@@ -300,7 +299,7 @@ const CheckOutQRPage = () => {
   const receiptViolations = Array.isArray(receiptFeeDetail.violations)
     ? receiptFeeDetail.violations
     : [];
-  const receiptPaymentMethod =
+  const rawReceiptPaymentMethod =
     receipt?.payment?.method ||
     receipt?.payment?.provider ||
     receiptSession?.paymentMethod ||
@@ -321,6 +320,9 @@ const CheckOutQRPage = () => {
       receiptSession?.totalAmount ??
       receiptBaseFee + receiptViolationFee
   );
+  const receiptPaymentMethod = receiptTotal === 0
+    ? "NO_PAYMENT"
+    : rawReceiptPaymentMethod;
 
   return (
     <div className="parking-page">
@@ -430,14 +432,16 @@ const CheckOutQRPage = () => {
               </FormField>
             )}
 
-            <FormField label="Cách thanh toán">
-              <Select
-                value={paymentMethod}
-                onChange={(event) => setPaymentMethod(event.target.value)}
-                options={paymentOptions}
-                placeholder={null}
-              />
-            </FormField>
+            {feeDetails?.total > 0 && (
+              <FormField label="Cách thanh toán">
+                <Select
+                  value={paymentMethod}
+                  onChange={(event) => setPaymentMethod(event.target.value)}
+                  options={paymentOptions}
+                  placeholder={null}
+                />
+              </FormField>
+            )}
           </div>
 
           {currentSession && (
@@ -483,11 +487,23 @@ const CheckOutQRPage = () => {
                 <span className="metric-label">Tổng cần thu</span>
                 <strong className="metric-value">{formatCurrency(feeDetails.total)}</strong>
               </div>
-              {["VNPAY", "CARD"].includes(paymentMethod) && (
+              {feeDetails.total === 0 && (
+                <div className="soft-panel">
+                  <span className="pill success"><ShieldCheck size={14} /> Không cần thanh toán</span>
+                  <p className="section-copy">Lượt xe được hoàn tất trực tiếp vì không phát sinh khoản cần thu.</p>
+                </div>
+              )}
+              {feeDetails.total > 0 && paymentMethod === "VNPAY" && (
                 <p className="section-copy">Hệ thống sẽ chuyển sang trang thanh toán sandbox sau khi xác nhận xe ra.</p>
               )}
-              <Button variant="primary" icon={ArrowUpRight} onClick={confirmCheckout} loading={parkingSessions.checkingOut}>
-                Xác nhận xe ra
+              <Button
+                variant="primary"
+                icon={ArrowUpRight}
+                onClick={confirmCheckout}
+                loading={parkingSessions.checkingOut}
+                disabled={violations.loading || pricingPolicies.loading}
+              >
+                {feeDetails.total === 0 ? "Hoàn tất xe ra" : "Xác nhận xe ra"}
               </Button>
             </div>
           ) : (
