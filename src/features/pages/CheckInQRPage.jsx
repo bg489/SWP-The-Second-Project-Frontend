@@ -747,15 +747,6 @@ const CheckInQRPage = () => {
                       Đang kiểm tra lượt đặt ô đã thanh toán theo biển số...
                     </div>
                   )}
-                  {hourlyReservation && (
-                    <div className="soft-panel">
-                      <strong>Đã tìm thấy lượt đặt ô theo giờ</strong>
-                      <p className="section-copy">
-                        Hệ thống sẽ nhận xe vào ô {hourlyReservation.slotCode} tại {hourlyReservation.floorName}.
-                        Lượt đặt có hiệu lực đến {formatDateTime(hourlyReservation.endAt)}.
-                      </p>
-                    </div>
-                  )}
                   {carFloors.length > 1 && (
                     <Select
                       value={effectiveCarFloorId}
