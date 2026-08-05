@@ -6,6 +6,7 @@
  */
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import { ROLE_KEYS, roleHomePaths } from "../services/mockParkingData";
 
 /**
@@ -61,6 +62,11 @@ const normalizeRole = (role) => backendToFrontendRole[String(role || "").toUpper
 export const MockAuthProvider = ({ children }) => {
   const initialUser = safeJsonParse(localStorage.getItem("auth_user"));
   const initialToken = localStorage.getItem("access_token");
+  const {
+    frontendRole: storeRole,
+    isAuthenticated: storeAuthenticated,
+    user: storeUser,
+  } = useSelector((state) => state.auth);
   /* Callback nội bộ của lời gọi `useState`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const [role, setRole] = useState(() =>
     localStorage.getItem("mock_role") || normalizeRole(initialUser?.role)
@@ -126,19 +132,37 @@ export const MockAuthProvider = ({ children }) => {
     setIsDarkMode((prev) => !prev);
   }, []);
 
+  const hasLocalSession = Boolean(
+    isAuthenticated && localStorage.getItem("access_token")
+  );
+  const resolvedUser = storeAuthenticated ? storeUser : hasLocalSession ? user : null;
+  const resolvedRole = storeAuthenticated
+    ? storeRole || normalizeRole(storeUser?.role)
+    : role;
+  const resolvedAuthenticated = Boolean(storeAuthenticated || hasLocalSession);
+
   const value = useMemo(
     /* Callback nội bộ của lời gọi `useMemo`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     () => ({
-      role,
-      user,
-      isAuthenticated,
+      role: resolvedRole,
+      user: resolvedUser,
+      isAuthenticated: resolvedAuthenticated,
       isDarkMode,
       login,
       logout,
       toggleDarkMode,
       updateUser,
     }),
-    [isAuthenticated, isDarkMode, login, logout, role, toggleDarkMode, updateUser, user]
+    [
+      isDarkMode,
+      login,
+      logout,
+      resolvedAuthenticated,
+      resolvedRole,
+      resolvedUser,
+      toggleDarkMode,
+      updateUser,
+    ]
   );
 
   return <MockAuthContext.Provider value={value}>{children}</MockAuthContext.Provider>;
