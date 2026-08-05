@@ -191,6 +191,7 @@ const Header = ({ toggleSidebar, sidebarHidden, toggleSidebarHidden }) => {
                   style={{
                     objectPosition: `${Number(user.avatarCropX ?? 50)}% ${Number(user.avatarCropY ?? 50)}%`,
                     transform: `scale(${Number(user.avatarCropZoom ?? 1)})`,
+                    transformOrigin: `${Number(user.avatarCropX ?? 50)}% ${Number(user.avatarCropY ?? 50)}%`,
                   }}
                 />
               </span>
