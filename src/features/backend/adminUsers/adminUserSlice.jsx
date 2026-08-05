@@ -95,7 +95,12 @@ const adminUserSlice = createSlice({
         createAdminUserSuccess: (state, action) => {
             state.creating = false;
             state.updateError = null;
-            state.updateSuccess = "Đã tạo và kích hoạt tài khoản thành công.";
+            const emailNotification = action.payload?.accountEmailNotification;
+            state.updateSuccess = emailNotification
+                ? emailNotification.sent
+                    ? "Đã tạo tài khoản và gửi thông tin đăng nhập qua email."
+                    : "Đã tạo tài khoản nhưng chưa gửi được thông tin đăng nhập qua email."
+                : "Đã tạo và kích hoạt tài khoản thành công.";
 
             if (action.payload?.id) {
                 state.users = [action.payload, ...state.users];
