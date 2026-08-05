@@ -69,6 +69,9 @@ const getInitialState = () => {
 
         profileUpdateRequestId: null,
         profileUpdateNotice: null,
+        avatarImageUpload: null,
+        avatarImageUploadError: null,
+        avatarImageUploadLoading: false,
 
         onboardingLoading: false,
         onboardingError: null,
@@ -488,6 +491,30 @@ const authSlice = createSlice({
             state.onboardingError = action.payload;
         },
 
+        uploadAvatarImageRequest: (state) => {
+            state.avatarImageUpload = null;
+            state.avatarImageUploadError = null;
+            state.avatarImageUploadLoading = true;
+        },
+
+        uploadAvatarImageSuccess: (state, action) => {
+            state.avatarImageUpload = action.payload;
+            state.avatarImageUploadError = null;
+            state.avatarImageUploadLoading = false;
+        },
+
+        uploadAvatarImageFailure: (state, action) => {
+            state.avatarImageUpload = null;
+            state.avatarImageUploadError = action.payload;
+            state.avatarImageUploadLoading = false;
+        },
+
+        clearAvatarImageUpload: (state) => {
+            state.avatarImageUpload = null;
+            state.avatarImageUploadError = null;
+            state.avatarImageUploadLoading = false;
+        },
+
         /**
          * Cập nhật nghiệp vụ `updateAvatarRequest` (update avatar request). Hàm cập nhật phần state Redux thuộc phạm vi của slice này.
          *
@@ -849,6 +876,10 @@ export const {
     completeGoogleOnboardingRequest,
     completeGoogleOnboardingSuccess,
     completeGoogleOnboardingFailure,
+    uploadAvatarImageRequest,
+    uploadAvatarImageSuccess,
+    uploadAvatarImageFailure,
+    clearAvatarImageUpload,
     updateAvatarRequest,
     updateAvatarSuccess,
     updateAvatarFailure,

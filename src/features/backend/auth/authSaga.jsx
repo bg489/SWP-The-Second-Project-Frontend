@@ -10,6 +10,9 @@ import {
     completeGoogleOnboardingFailure,
     completeGoogleOnboardingRequest,
     completeGoogleOnboardingSuccess,
+    uploadAvatarImageFailure,
+    uploadAvatarImageRequest,
+    uploadAvatarImageSuccess,
     fetchRegisterBuildingsFailure,
     fetchRegisterBuildingsRequest,
     fetchRegisterBuildingsSuccess,
@@ -474,12 +477,36 @@ function* handleCompleteGoogleOnboarding(action) {
 }
 
 /**
- * Xử lý nghiệp vụ `handleUpdateAvatar` (handle update avatar). Hàm điều phối action Redux, tác vụ API và trạng thái thành công hoặc thất bại. Có gọi API backend và xử lý dữ liệu phản hồi. Được thực thi như generator để Redux Saga có thể kiểm soát thứ tự tác vụ.
+ * Tải tệp ảnh đại diện lên kho ảnh và trả đường dẫn công khai về Redux.
  *
- * @function handleUpdateAvatar
+ * @function handleUploadAvatarImage
  * @param {*} action - Redux action chứa loại thao tác và payload đi kèm.
  * @yields {*} Tác vụ trung gian để trình điều phối thực thi theo đúng thứ tự.
  */
+function* handleUploadAvatarImage(action) {
+    try {
+        const formData = new FormData();
+        formData.append("avatar", action.payload?.file);
+
+        const response = yield call(
+            [api, api.post],
+            "/users/me/avatar-upload",
+            formData
+        );
+        const image = response?.data?.data || response?.data;
+
+        yield put(uploadAvatarImageSuccess(image));
+    } catch (error) {
+        const message =
+            error?.response?.data?.message ||
+            error?.message ||
+            "Không tải được ảnh đại diện.";
+
+        yield put(uploadAvatarImageFailure(message));
+    }
+}
+
+/** Cập nhật trực tiếp đường dẫn ảnh đại diện đã có. */
 function* handleUpdateAvatar(action) {
     try {
         const response = yield call([api, api.patch], "/users/me/avatar", action.payload);
@@ -629,6 +656,7 @@ export default function* authSaga() {
         completeGoogleOnboardingRequest.type,
         handleCompleteGoogleOnboarding
     );
+    yield takeLatest(uploadAvatarImageRequest.type, handleUploadAvatarImage);
     yield takeLatest(updateAvatarRequest.type, handleUpdateAvatar);
     yield takeLatest(updateProfileRequest.type, handleUpdateProfile);
     yield takeLatest(requestProfileUpdateOtpRequest.type, handleRequestProfileUpdateOtp);

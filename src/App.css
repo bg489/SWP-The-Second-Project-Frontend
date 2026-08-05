@@ -423,6 +423,7 @@
   height: 100%;
   object-fit: cover;
   transform-origin: center;
+  transition: object-position 120ms ease, transform 120ms ease, transform-origin 120ms ease;
 }
 
 /* Áp dụng bố cục và hình thức hiển thị cho `.avatar-crop-controls`. */
@@ -444,6 +445,23 @@
 /* Áp dụng bố cục và hình thức hiển thị cho `.profile-avatar-upload input`. */
 .profile-avatar-upload input {
   display: none;
+}
+
+.profile-avatar-upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.profile-avatar-file-name {
+  max-width: min(100%, 280px);
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Áp dụng bố cục và hình thức hiển thị cho `.file-upload-panel`. */

@@ -16,8 +16,10 @@ import Select from "../../components/Form/Select";
 import Table from "../../components/Table/Table";
 import { useMockAuth } from "../../context/MockAuthContext";
 import {
+  clearAvatarImageUpload,
   confirmProfileUpdateRequest,
   requestProfileUpdateOtpRequest,
+  uploadAvatarImageRequest,
 } from "../backend/auth/authSlice";
 import {
   clearParkingNotice,
@@ -59,6 +61,11 @@ const createVehicleImageState = () => ({
   vehiclePortraitImageUrl: { error: "", fileName: "", processing: false },
   vehicleLandscapeImageUrl: { error: "", fileName: "", processing: false },
 });
+
+const getAvatarCropZoom = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(1.1, parsed) : 1.1;
+};
 
 /**
  * Thực hiện nghiệp vụ `VehiclePhotoCapture` (vehicle photo capture). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
@@ -154,6 +161,9 @@ const UserProfilePage = () => {
   const dispatch = useDispatch();
   const { user: mockUser } = useMockAuth();
   const {
+    avatarImageUpload,
+    avatarImageUploadError,
+    avatarImageUploadLoading,
     error: authError,
     frontendRole,
     loading: authLoading,
@@ -169,14 +179,18 @@ const UserProfilePage = () => {
   const [profileForm, setProfileForm] = useState({
     avatarCropX: Number(user?.avatarCropX ?? 50),
     avatarCropY: Number(user?.avatarCropY ?? 50),
-    avatarCropZoom: Number(user?.avatarCropZoom ?? 1),
+    avatarCropZoom: getAvatarCropZoom(user?.avatarCropZoom),
     name: user?.name || "",
     phone: user?.phone || "",
     avatarUrl: user?.avatarUrl || user?.avatar || "",
   });
   const [profileOtp, setProfileOtp] = useState("");
   const [profilePhoneError, setProfilePhoneError] = useState("");
-  const displayAvatar = profileForm.avatarUrl || user?.avatarUrl || user?.avatar || "";
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState("");
+  const [avatarFileName, setAvatarFileName] = useState("");
+  const [avatarFileError, setAvatarFileError] = useState("");
+  const avatarInputRef = useRef(null);
+  const displayAvatar = avatarPreviewUrl || profileForm.avatarUrl || user?.avatarUrl || user?.avatar || "";
   const vehicleSubmissionRef = useRef(false);
   const [vehicleImages, setVehicleImages] = useState(createVehicleImageState);
   const [form, setForm] = useState(createVehicleForm);
@@ -195,7 +209,7 @@ const UserProfilePage = () => {
       setProfileForm({
         avatarCropX: Number(user?.avatarCropX ?? 50),
         avatarCropY: Number(user?.avatarCropY ?? 50),
-        avatarCropZoom: Number(user?.avatarCropZoom ?? 1),
+        avatarCropZoom: getAvatarCropZoom(user?.avatarCropZoom),
         name: user?.name || "",
         phone: user?.phone || "",
         avatarUrl: user?.avatarUrl || user?.avatar || "",
@@ -210,8 +224,40 @@ const UserProfilePage = () => {
   useEffect(() => {
     if (!profileUpdateRequestId && profileUpdateNotice === "Cập nhật hồ sơ thành công.") {
       setProfileOtp("");
+      setAvatarFileName("");
+      setAvatarFileError("");
     }
   }, [profileUpdateNotice, profileUpdateRequestId]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+    };
+  }, [avatarPreviewUrl]);
+
+  useEffect(() => {
+    if (!avatarImageUpload?.url) return;
+
+    setProfileForm((prev) => ({
+      ...prev,
+      avatarCropX: 50,
+      avatarCropY: 50,
+      avatarCropZoom: 1.2,
+      avatarUrl: avatarImageUpload.url,
+    }));
+    setAvatarPreviewUrl("");
+    setAvatarFileError("");
+    dispatch(clearAvatarImageUpload());
+  }, [avatarImageUpload, dispatch]);
+
+  useEffect(() => {
+    if (!avatarImageUploadError) return;
+
+    setAvatarPreviewUrl("");
+    setAvatarFileName("");
+  }, [avatarImageUploadError]);
 
   /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
@@ -362,6 +408,39 @@ const UserProfilePage = () => {
       ...prev,
       [field]: { error: "", fileName: "", processing: false },
     }));
+  };
+
+  const handleAvatarImageChange = (file) => {
+    if (!file) return;
+
+    const supportedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
+    ];
+
+    if (!supportedTypes.includes(file.type)) {
+      setAvatarFileError("Vui lòng chọn ảnh JPEG, PNG, WebP hoặc HEIC.");
+      return;
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      setAvatarFileError("Ảnh đại diện không được lớn hơn 8 MB.");
+      return;
+    }
+
+    setAvatarFileError("");
+    setAvatarPreviewUrl(URL.createObjectURL(file));
+    setAvatarFileName(file.name || "Ảnh vừa chọn");
+    setProfileForm((prev) => ({
+      ...prev,
+      avatarCropX: 50,
+      avatarCropY: 50,
+      avatarCropZoom: 1.2,
+    }));
+    dispatch(uploadAvatarImageRequest({ file }));
   };
 
   /**
@@ -517,7 +596,10 @@ const UserProfilePage = () => {
         </div>
       </section>
 
-      <StatusBanner success={[notice, profileUpdateNotice]} errors={[vehicles.error, authError]} />
+      <StatusBanner
+        success={[notice, profileUpdateNotice]}
+        errors={[vehicles.error, authError, avatarImageUploadError, avatarFileError]}
+      />
 
       <div className={isResident ? "two-column-grid" : "dashboard-grid"}>
         <section className="card section-card">
@@ -537,6 +619,7 @@ const UserProfilePage = () => {
                     style={{
                       objectPosition: `${profileForm.avatarCropX}% ${profileForm.avatarCropY}%`,
                       transform: `scale(${profileForm.avatarCropZoom})`,
+                      transformOrigin: `${profileForm.avatarCropX}% ${profileForm.avatarCropY}%`,
                     }}
                   />
                 </span>
@@ -547,7 +630,33 @@ const UserProfilePage = () => {
               )}
               <div>
                 <strong>Ảnh đại diện</strong>
-                <p className="section-copy">Dán link ảnh từ nơi lưu ảnh của bạn. Ảnh sẽ được cắt vừa khung tròn khi hiển thị.</p>
+                <p className="section-copy">Chọn ảnh từ thiết bị, sau đó điều chỉnh vùng ảnh hiển thị trong khung tròn.</p>
+                <input
+                  ref={avatarInputRef}
+                  className="visually-hidden-input"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = "";
+                    handleAvatarImageChange(file);
+                  }}
+                />
+                <div className="profile-avatar-upload-actions">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    icon={Camera}
+                    loading={avatarImageUploadLoading}
+                    onClick={() => avatarInputRef.current?.click()}
+                  >
+                    {avatarImageUploadLoading ? "Đang tải ảnh" : "Chọn ảnh đại diện"}
+                  </Button>
+                  {avatarFileName && !avatarImageUploadLoading && (
+                    <span className="profile-avatar-file-name">{avatarFileName}</span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -567,16 +676,9 @@ const UserProfilePage = () => {
                 maxLength={10}
               />
             </FormField>
-            <FormField label="Link ảnh đại diện">
-              <Input
-                value={profileForm.avatarUrl}
-                onChange={(event) => updateProfileForm("avatarUrl", event.target.value)}
-                placeholder="https://..."
-              />
-            </FormField>
             {displayAvatar && (
               <div className="avatar-crop-controls">
-                <FormField label="Dịch ngang ảnh">
+                <FormField label={`Dịch ngang ảnh (${Math.round(Number(profileForm.avatarCropX))}%)`}>
                   <Input
                     type="range"
                     min="0"
@@ -585,7 +687,7 @@ const UserProfilePage = () => {
                     onChange={(event) => updateProfileForm("avatarCropX", event.target.value)}
                   />
                 </FormField>
-                <FormField label="Dịch dọc ảnh">
+                <FormField label={`Dịch dọc ảnh (${Math.round(Number(profileForm.avatarCropY))}%)`}>
                   <Input
                     type="range"
                     min="0"
@@ -594,10 +696,10 @@ const UserProfilePage = () => {
                     onChange={(event) => updateProfileForm("avatarCropY", event.target.value)}
                   />
                 </FormField>
-                <FormField label="Phóng ảnh">
+                <FormField label={`Phóng ảnh (${Number(profileForm.avatarCropZoom).toFixed(2)}x)`}>
                   <Input
                     type="range"
-                    min="1"
+                    min="1.1"
                     max="3"
                     step="0.05"
                     value={profileForm.avatarCropZoom}
@@ -609,7 +711,13 @@ const UserProfilePage = () => {
             <div className="data-row"><span>Email</span><strong>{user.email}</strong></div>
             <div className="data-row"><span>Tòa nhà</span><strong>{user.buildingName || "Chưa có tòa nhà"}</strong></div>
             <div className="data-row"><span>Ngày tham gia</span><strong>{formatDate(user.createdAt || "2026-06-01")}</strong></div>
-            <Button type="submit" variant="primary" icon={MailCheck} loading={authLoading}>
+            <Button
+              type="submit"
+              variant="primary"
+              icon={MailCheck}
+              loading={authLoading}
+              disabled={avatarImageUploadLoading}
+            >
               Gửi mã xác minh
             </Button>
             {profileUpdateRequestId && (
