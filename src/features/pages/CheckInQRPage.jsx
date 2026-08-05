@@ -121,9 +121,29 @@ const CheckInQRPage = () => {
     return buildingFloors.filter((floor) => floor.floorType === "CAR" && floor.status === "ACTIVE");
   }, [buildingFloors]);
 
-  const validQrPass = qrPasses.validation?.valid || qrPasses.validation?.isValid
+  const isQrPassValid = Boolean(
+    qrPasses.validation?.valid || qrPasses.validation?.isValid
+  );
+  const validQrPass = isQrPassValid
     ? qrPasses.validation.qrPass || qrPasses.validation.pass
     : null;
+  const monthlyQrPlateNumber = String(validQrPass?.plateNumber || "")
+    .trim()
+    .toUpperCase();
+  const validatedQrVehicleType = String(validQrPass?.vehicleType || "")
+    .trim()
+    .toUpperCase();
+  const hasValidatedVehicleQr = Boolean(
+    isQrPassValid &&
+    ["CAR", "MOTORBIKE"].includes(validatedQrVehicleType) &&
+    monthlyQrPlateNumber
+  );
+  const effectivePlateNumber = hasValidatedVehicleQr
+    ? monthlyQrPlateNumber
+    : form.plateNumber;
+  const effectiveVehicleType = hasValidatedVehicleQr
+    ? validatedQrVehicleType
+    : form.vehicleType;
   const registeredReservedSlotId = validQrPass?.slotId ? String(validQrPass.slotId) : "";
   const registeredSlotFloorId = validQrPass?.slotFloorId ? String(validQrPass.slotFloorId) : "";
   const hourlyReservation = hourlyReservations.checkInMatch;
@@ -160,10 +180,10 @@ const CheckInQRPage = () => {
 
   /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
-    const plateNumber = form.plateNumber.trim();
+    const plateNumber = effectivePlateNumber.trim();
 
     if (
-      form.vehicleType !== "CAR" ||
+      effectiveVehicleType !== "CAR" ||
       plateNumber.length < 4 ||
       !currentBuildingId
     ) {
@@ -183,7 +203,7 @@ const CheckInQRPage = () => {
 
     /* Callback nội bộ của biểu thức hiện tại; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     return () => window.clearTimeout(timer);
-  }, [currentBuildingId, dispatch, form.plateNumber, form.vehicleType]);
+  }, [currentBuildingId, dispatch, effectivePlateNumber, effectiveVehicleType]);
 
   /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
@@ -467,8 +487,8 @@ const CheckInQRPage = () => {
     }
 
     const payload = {
-      plateNumber: form.plateNumber.trim().toUpperCase(),
-      vehicleType: form.vehicleType,
+      plateNumber: effectivePlateNumber.trim().toUpperCase(),
+      vehicleType: effectiveVehicleType,
       buildingId: Number(currentBuildingId),
     };
 
@@ -490,7 +510,7 @@ const CheckInQRPage = () => {
       }
     }
 
-    if (form.vehicleType === "CAR") {
+    if (effectiveVehicleType === "CAR") {
       if (hourlyReservedSlotId) {
         payload.slotId = Number(hourlyReservedSlotId);
       }
@@ -631,9 +651,10 @@ const CheckInQRPage = () => {
             <FormField label="Biển số xe" required>
               <div className="plate-input-row">
                 <Input
-                  value={form.plateNumber}
+                  value={effectivePlateNumber}
                   onChange={(event) => updateForm("plateNumber", event.target.value.toUpperCase())}
                   placeholder="Ví dụ: 51G-123.45"
+                  readOnly={hasValidatedVehicleQr}
                 />
                 <Button type="button" variant="secondary" icon={Camera} onClick={() => setPlateScannerOpen(true)}>
                   Quét biển số
@@ -642,8 +663,9 @@ const CheckInQRPage = () => {
             </FormField>
             <FormField label="Loại xe">
               <Select
-                value={form.vehicleType}
+                value={effectiveVehicleType}
                 onChange={(event) => updateForm("vehicleType", event.target.value)}
+                disabled={hasValidatedVehicleQr}
                 options={[
                   { value: "MOTORBIKE", label: "Xe máy" },
                   { value: "CAR", label: "Ô tô" },
@@ -703,7 +725,7 @@ const CheckInQRPage = () => {
               </FormField>
             )}
 
-            {form.vehicleType === "MOTORBIKE" && (
+            {effectiveVehicleType === "MOTORBIKE" && (
               <FormField label="Tầng xe máy">
                 <Select
                   value={effectiveMotorbikeFloorId}
@@ -717,7 +739,7 @@ const CheckInQRPage = () => {
               </FormField>
             )}
 
-            {form.vehicleType === "CAR" && (
+            {effectiveVehicleType === "CAR" && (
               <FormField label="Ô đỗ ô tô">
                 <div style={{ display: "grid", gap: 12 }}>
                   {hourlyReservations.matchingCheckIn && (
@@ -802,14 +824,14 @@ const CheckInQRPage = () => {
             {qrPasses.validation && (
               <div className="soft-panel">
                 <strong>Mã QR tháng</strong>
-                <p className="section-copy">{qrPasses.validation.message || (qrPasses.validation.valid ? "Mã QR hợp lệ." : "Mã QR chưa hợp lệ.")}</p>
-                <span className={`pill ${qrPasses.validation.valid ? "success" : "danger"}`}>{qrPasses.validation.valid ? "Có thể dùng" : "Không dùng được"}</span>
+                <p className="section-copy">{qrPasses.validation.message || (isQrPassValid ? "Mã QR hợp lệ." : "Mã QR chưa hợp lệ.")}</p>
+                <span className={`pill ${isQrPassValid ? "success" : "danger"}`}>{isQrPassValid ? "Có thể dùng" : "Không dùng được"}</span>
               </div>
             )}
             <div className="soft-panel">
-              <strong>{form.vehicleType === "CAR" ? "Ô đỗ ô tô" : "Khu xe máy"}</strong>
+              <strong>{effectiveVehicleType === "CAR" ? "Ô đỗ ô tô" : "Khu xe máy"}</strong>
               <p className="section-copy">
-                {form.vehicleType === "CAR"
+                {effectiveVehicleType === "CAR"
                   ? selectedSlot
                     ? `Đã chọn ${selectedSlot.slotCode}. Còn ${availableCarSlots.length} ô trống và ${carSummary.reserved} ô đã đặt trước trên tầng này.`
                     : `${selectableCarSlots.length} ô có thể chọn.`
