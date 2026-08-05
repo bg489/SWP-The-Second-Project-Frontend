@@ -635,7 +635,7 @@ function* handleSavePricingPolicy(action) {
             : yield call([api, api.post], "/pricing-policies", payload);
 
         yield put(savePricingPolicySuccess(extractData(response)));
-        yield put(fetchPricingPoliciesRequest());
+        yield put(fetchPricingPoliciesRequest({ buildingId: payload.buildingId }));
     } catch (error) {
         if (shouldUseSample(error)) {
             yield put(savePricingPolicySuccess(withId(action.payload, "PRICE")));
@@ -685,7 +685,7 @@ function* handleSavePackagePlan(action) {
             : yield call([api, api.post], "/package-plans", payload);
 
         yield put(savePackagePlanSuccess(extractData(response)));
-        yield put(fetchPackagePlansRequest());
+        yield put(fetchPackagePlansRequest({ buildingId: payload.buildingId }));
     } catch (error) {
         if (shouldUseSample(error)) {
             yield put(savePackagePlanSuccess(withId(action.payload, "PKG")));
