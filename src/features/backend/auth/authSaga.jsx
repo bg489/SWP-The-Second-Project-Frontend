@@ -560,7 +560,23 @@ function* handleRequestProfileUpdateOtp(action) {
 function* handleConfirmProfileUpdate(action) {
     try {
         const response = yield call([api, api.patch], "/users/me/confirm-update", action.payload);
-        const user = response?.data?.data || response?.data;
+        const confirmedUser = response?.data?.data || response?.data;
+        let user = confirmedUser;
+
+        // Luôn lấy lại hồ sơ từ nguồn dữ liệu chính để giao diện không giữ
+        // thông tin cũ nếu response xác nhận chỉ chứa một phần tài khoản.
+        try {
+            const currentUserResponse = yield call([api, api.get], "/auth/me");
+            const currentUser = currentUserResponse?.data?.data || currentUserResponse?.data;
+
+            user = {
+                ...(confirmedUser || {}),
+                ...(currentUser || {}),
+            };
+        } catch {
+            // Hồ sơ trong response xác nhận vẫn đủ để hoàn tất cập nhật nếu
+            // lần tải lại tức thời gặp lỗi mạng tạm thời.
+        }
 
         localStorage.setItem("auth_user", JSON.stringify(user));
 

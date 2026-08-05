@@ -550,7 +550,10 @@ const authSlice = createSlice({
         updateProfileSuccess: (state, action) => {
             state.loading = false;
             state.error = null;
-            state.user = action.payload;
+            state.user = {
+                ...(state.user || {}),
+                ...(action.payload?.user || action.payload || {}),
+            };
         },
 
         /**
@@ -631,7 +634,10 @@ const authSlice = createSlice({
         confirmProfileUpdateSuccess: (state, action) => {
             state.loading = false;
             state.error = null;
-            state.user = action.payload?.user || action.payload;
+            state.user = {
+                ...(state.user || {}),
+                ...(action.payload?.user || action.payload || {}),
+            };
             state.profileUpdateNotice = "Cập nhật hồ sơ thành công.";
             state.profileUpdateRequestId = null;
         },
