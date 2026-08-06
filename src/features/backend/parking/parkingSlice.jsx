@@ -3030,6 +3030,12 @@ const parkingSlice = createSlice({
             state.reports.loading = false;
             state.reports.error = action.payload;
         },
+
+        clearQrPassValidation: (state) => {
+            state.qrPasses.validation = null;
+            state.qrPasses.error = null;
+            state.qrPasses.validating = false;
+        },
     },
 });
 
@@ -3228,6 +3234,7 @@ export const {
     saveViolationTypeFailure,
     deactivateViolationTypeRequest,
     deactivateViolationTypeSuccess,
+    clearQrPassValidation,
 } = parkingSlice.actions;
 
 export default parkingSlice.reducer;
