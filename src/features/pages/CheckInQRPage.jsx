@@ -21,6 +21,7 @@ import {
   checkInRequest,
   clearHourlyCheckInMatch,
   clearParkingNotice,
+  clearQrPassValidation,
   fetchHourlyCheckInMatchRequest,
   fetchActiveParkingSessionsRequest,
   fetchTempQrCardsRequest,
@@ -138,12 +139,8 @@ const CheckInQRPage = () => {
     ["CAR", "MOTORBIKE"].includes(validatedQrVehicleType) &&
     monthlyQrPlateNumber
   );
-  const effectivePlateNumber = hasValidatedVehicleQr
-    ? monthlyQrPlateNumber
-    : form.plateNumber;
-  const effectiveVehicleType = hasValidatedVehicleQr
-    ? validatedQrVehicleType
-    : form.vehicleType;
+  const effectivePlateNumber = form.plateNumber;
+  const effectiveVehicleType = form.vehicleType;
   const registeredReservedSlotId = validQrPass?.slotId ? String(validQrPass.slotId) : "";
   const registeredSlotFloorId = validQrPass?.slotFloorId ? String(validQrPass.slotFloorId) : "";
   const hourlyReservation = hourlyReservations.checkInMatch;
@@ -157,6 +154,30 @@ const CheckInQRPage = () => {
   /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const firstAvailableMotorbikeFloor = motorbikeFloors.find((floor) => Number(floor.currentCount || 0) < Number(floor.capacity || 0));
   const effectiveMotorbikeFloorId = selectedMotorbikeFloorId || (firstAvailableMotorbikeFloor?.id ? String(firstAvailableMotorbikeFloor.id) : "");
+
+  useEffect(() => {
+    if (!hasValidatedVehicleQr) return;
+
+    setForm((prev) => ({
+      ...prev,
+
+      // Tự điền biển số lấy từ QR
+      plateNumber: monthlyQrPlateNumber,
+
+      // Tự điền loại xe lấy từ QR
+      vehicleType: validatedQrVehicleType,
+
+      // Nếu QR là xe máy thì bỏ ô đỗ ô tô cũ
+      slotId:
+        validatedQrVehicleType === "MOTORBIKE"
+          ? ""
+          : prev.slotId,
+    }));
+  }, [
+    hasValidatedVehicleQr,
+    monthlyQrPlateNumber,
+    validatedQrVehicleType,
+  ]);
 
   /* Callback nội bộ của lời gọi `useEffect`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   useEffect(() => {
@@ -252,15 +273,30 @@ const CheckInQRPage = () => {
    * @param {*} slot - Giá trị `slot` được hàm sử dụng trong quá trình xử lý.
    * @returns {*} Kết quả đã được xử lý để lớp gọi tiếp tục sử dụng.
    */
-  const isSelectableCarSlot = (slot) =>
-    (Boolean(hourlyReservedSlotId) &&
-      ["AVAILABLE", "RESERVED"].includes(slot.status) &&
-      String(slot.id) === hourlyReservedSlotId) ||
-    (!isRegisteredCustomer && slot.status === "AVAILABLE") ||
-    (isRegisteredCustomer &&
-      Boolean(registeredReservedSlotId) &&
-      ["AVAILABLE", "RESERVED"].includes(slot.status) &&
-      String(slot.id) === registeredReservedSlotId);
+  const isSelectableCarSlot = (slot) => {
+    const slotId = String(slot.id);
+    const status = String(slot.status || "").toUpperCase();
+
+    // Ô đang có xe thì tuyệt đối không được chọn
+    if (status === "OCCUPIED") {
+      return false;
+    }
+
+    // Ô trống thì cả khách gửi lẻ và khách gói tháng đều được chọn
+    if (status === "AVAILABLE") {
+      return true;
+    }
+
+    // Ô đã được đặt trước chỉ được chọn nếu đúng lượt đặt
+    if (status === "RESERVED") {
+      return (
+        slotId === String(hourlyReservedSlotId) ||
+        slotId === String(registeredReservedSlotId)
+      );
+    }
+
+    return false;
+  };
   const selectableCarSlots = currentCarSlots.filter(isSelectableCarSlot);
   /* Callback nội bộ của lời gọi `filter`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const availableCarSlots = currentCarSlots.filter((slot) => slot.status === "AVAILABLE");
@@ -272,13 +308,17 @@ const CheckInQRPage = () => {
     /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     ? selectableCarSlots.find((slot) => String(slot.id) === hourlyReservedSlotId)
     : null;
-  const fallbackCarSlot = isRegisteredCustomer && !hourlyReservation ? null : selectableCarSlots[0];
+  const fallbackCarSlot = selectableCarSlots[0] || null;
   /* Callback nội bộ của lời gọi `some`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const formSlotStillAvailable = selectableCarSlots.some((slot) => String(slot.id) === String(form.slotId));
   const selectedCarSlotId = String(
-    (formSlotStillAvailable
-      ? form.slotId
-      : hourlyPreferredCarSlot?.id || preferredCarSlot?.id || fallbackCarSlot?.id) || ""
+    (
+      formSlotStillAvailable
+        ? form.slotId
+        : hourlyPreferredCarSlot?.id ||
+        preferredCarSlot?.id ||
+        fallbackCarSlot?.id
+    ) || ""
   );
   /* Callback nội bộ của lời gọi `find`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
   const selectedSlot = currentCarSlots.find((slot) => String(slot.id) === selectedCarSlotId);
@@ -355,15 +395,35 @@ const CheckInQRPage = () => {
   const updateForm = (field, value) => {
     dispatch(clearParkingNotice());
     setFormError("");
-    /* Callback nội bộ của lời gọi `setForm`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+
+    // Khi đổi loại khách, xóa dữ liệu của loại khách trước
+    if (field === "customerType") {
+      dispatch(clearQrPassValidation());
+      dispatch(clearHourlyCheckInMatch());
+
+      setSelectedCarFloorId("");
+    }
+
     setForm((prev) => {
-      const next = { ...prev, [field]: value };
+      const next = {
+        ...prev,
+        [field]: value,
+      };
+
+      if (field === "customerType") {
+        next.qrCode = "";
+        next.tempQrCardCode = "";
+        next.slotId = "";
+      }
+
       if (field === "vehicleType" && value === "MOTORBIKE") {
         next.slotId = "";
       }
-      if (field === "vehicleType" && value === "CAR" && !next.slotId) {
+
+      if (field === "vehicleType" && value === "CAR") {
         next.slotId = String(availableCarSlots[0]?.id || "");
       }
+
       return next;
     });
   };
@@ -394,6 +454,8 @@ const CheckInQRPage = () => {
       setFormError("");
       dispatch(clearHourlyCheckInMatch());
 
+      dispatch(clearQrPassValidation());
+
       if (currentBuildingId) {
         dispatch(fetchFloorsRequest({
           buildingId: currentBuildingId,
@@ -411,11 +473,15 @@ const CheckInQRPage = () => {
           status: "READY",
         }));
       }
-      if (effectiveCarFloorId) {
-        dispatch(fetchSlotsByFloorRequest({
-          floorId: effectiveCarFloorId,
-          silent: true,
-        }));
+      const defaultCarFloorId = carFloors[0]?.id;
+
+      if (defaultCarFloorId) {
+        dispatch(
+          fetchSlotsByFloorRequest({
+            floorId: defaultCarFloorId,
+            silent: true,
+          })
+        );
       }
     },
   });
@@ -654,7 +720,6 @@ const CheckInQRPage = () => {
                   value={effectivePlateNumber}
                   onChange={(event) => updateForm("plateNumber", event.target.value.toUpperCase())}
                   placeholder="Ví dụ: 51G-123.45"
-                  readOnly={hasValidatedVehicleQr}
                 />
                 <Button type="button" variant="secondary" icon={Camera} onClick={() => setPlateScannerOpen(true)}>
                   Quét biển số
@@ -665,7 +730,6 @@ const CheckInQRPage = () => {
               <Select
                 value={effectiveVehicleType}
                 onChange={(event) => updateForm("vehicleType", event.target.value)}
-                disabled={hasValidatedVehicleQr}
                 options={[
                   { value: "MOTORBIKE", label: "Xe máy" },
                   { value: "CAR", label: "Ô tô" },
