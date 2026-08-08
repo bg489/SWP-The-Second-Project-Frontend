@@ -4,7 +4,7 @@
  * Luồng chính: State và dữ liệu API -> tính toán dữ liệu hiển thị -> render giao diện -> dispatch thao tác người dùng.
  * Các chú thích bên dưới mô tả trách nhiệm của từng hàm và khối cấu hình quan trọng.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
     Camera,
@@ -147,7 +147,7 @@ const AdminUserApprovalPage = () => {
         updatingId,
         updateError,
         updateSuccess,
-    /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
+        /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
     } = useSelector((state) => state.adminUsers);
     const { buildings, loading: buildingsLoading, error: buildingsError } = useSelector(
         /* Callback nội bộ của lời gọi `useSelector`; nhận dữ liệu từng bước và trả kết quả cho lời gọi bao ngoài. */
@@ -186,6 +186,49 @@ const AdminUserApprovalPage = () => {
         [buildings]
     );
     const accountNeedsBuilding = ["USER", "STAFF"].includes(createForm.role);
+    const [portraitPositionY, setPortraitPositionY] = useState(0);
+    const portraitPreviewRef = useRef(null);
+
+    useEffect(() => {
+        const image = portraitPreviewRef.current;
+
+        if (!image) return;
+
+        const handleWheel = (event) => {
+            // Không cho trang web scroll
+            event.preventDefault();
+
+            // Không cho sự kiện wheel chạy ra component cha
+            event.stopPropagation();
+
+            setPortraitPositionY((current) => {
+                const amount = event.deltaY > 0 ? 5 : -5;
+
+                return Math.min(
+                    100,
+                    Math.max(0, current + amount)
+                );
+            });
+        };
+
+        image.addEventListener("wheel", handleWheel, {
+            passive: false,
+        });
+
+        return () => {
+            image.removeEventListener("wheel", handleWheel);
+        };
+    }, [createForm.portraitImageUrl]);
+
+    const handlePortraitWheel = (event) => {
+        event.preventDefault();
+
+        setPortraitPositionY((current) => {
+            const direction = event.deltaY > 0 ? 5 : -5;
+
+            return Math.min(100, Math.max(0, current + direction));
+        });
+    };
 
     /**
      * Lấy nghiệp vụ `getRefreshParams` (get refresh params). Hàm xử lý dữ liệu hoặc tương tác cần thiết để tạo giao diện React tương ứng.
@@ -658,7 +701,14 @@ const AdminUserApprovalPage = () => {
                                     disabled={creating || processingImage}
                                 />
                                 {createForm.portraitImageUrl ? (
-                                    <img src={createForm.portraitImageUrl} alt="Ảnh chân dung Staff" />
+                                    <img
+                                        ref={portraitPreviewRef}
+                                        src={createForm.portraitImageUrl}
+                                        alt="Ảnh chân dung Staff"
+                                        style={{
+                                            objectPosition: `center ${portraitPositionY}%`,
+                                        }}
+                                    />
                                 ) : (
                                     <span>
                                         <Camera size={28} />
